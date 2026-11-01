@@ -8,10 +8,19 @@ import MobileBottomNav from '@/components/layout/MobileBottomNav';
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const isFieldMaps = pathname === '/field-maps' || pathname?.startsWith('/field-maps');
+  const isLoginPage = pathname === '/login';
 
   if (isFieldMaps) {
     return (
       <main className="w-full h-screen h-[100dvh] overflow-hidden p-0 m-0 flex flex-col">
+        <RoleAccessGuard>{children}</RoleAccessGuard>
+      </main>
+    );
+  }
+
+  if (isLoginPage) {
+    return (
+      <main className="w-full min-h-screen p-0 m-0 flex flex-col">
         <RoleAccessGuard>{children}</RoleAccessGuard>
       </main>
     );

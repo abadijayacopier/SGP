@@ -117,7 +117,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-gradient-to-br from-emerald-950 via-slate-900 to-green-950 flex items-center justify-center p-4 sm:p-6">
       <div className="max-w-4xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 border border-white/10">
         {/* Left Column: Branding Resmi Pemerintah Kecamatan (5 Cols) */}
-        <div className="lg:col-span-5 bg-gradient-to-br from-emerald-900 via-emerald-800 to-green-900 text-white p-8 flex flex-col justify-between relative overflow-hidden">
+        <div className="lg:col-span-5 bg-gradient-to-br from-emerald-900 via-emerald-800 to-green-900 text-white p-8 flex flex-col justify-center relative overflow-hidden">
           <div className="absolute -right-12 -bottom-12 w-64 h-64 rounded-full bg-emerald-400/10 pointer-events-none" />
 
           <div>
@@ -166,20 +166,10 @@ export default function LoginPage() {
               </div>
             </div>
           </div>
-
-          <div className="pt-8 mt-8 border-t border-emerald-700/60 space-y-1 text-[11px] text-emerald-200">
-            <div className="flex items-center justify-between">
-              <span className="font-bold text-white">BPP Kecamatan Lembeyan</span>
-              <span className="font-mono font-bold text-amber-300">TA 2026 &bull; v2.6</span>
-            </div>
-            <div className="text-[11px] text-emerald-300">
-              Developer Pengembang: <strong className="text-amber-300">Supriyanto Abadi Jaya</strong>
-            </div>
-          </div>
         </div>
 
         {/* Right Column: Form Login Bersih & Profesional (7 Cols) */}
-        <div className="lg:col-span-7 p-6 sm:p-10 flex flex-col justify-between bg-white">
+        <div className="lg:col-span-7 p-6 sm:p-10 flex flex-col justify-center bg-white">
           <div>
             <div className="flex items-center justify-between mb-6">
               <div>
@@ -302,15 +292,6 @@ export default function LoginPage() {
               </span>
               <span className="font-mono">Kec. Lembeyan</span>
             </div>
-          </div>
-
-          <div className="mt-6 pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2 text-[11px] text-slate-500">
-            <span>
-              Pengembang: <strong className="text-slate-800">Supriyanto Abadi Jaya</strong> &bull; Magetan
-            </span>
-            <span className="text-emerald-700 font-bold">
-              Kecamatan Lembeyan &bull; 2026
-            </span>
           </div>
         </div>
       </div>
