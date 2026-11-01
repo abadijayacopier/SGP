@@ -3,6 +3,7 @@
 import React, { useState } from 'react';
 import Link from 'next/link';
 import { Printer, ArrowLeft, Check, Copy, Sprout, CreditCard } from 'lucide-react';
+import { copyToClipboard } from '@/lib/clipboard';
 
 interface KartuTaniClientProps {
   petaniId: string;
@@ -19,8 +20,8 @@ export default function KartuTaniClient({
 }: KartuTaniClientProps) {
   const [copied, setCopied] = useState(false);
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(qrPayload);
+  const handleCopy = async () => {
+    await copyToClipboard(qrPayload);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

@@ -42,7 +42,9 @@
     "nipMantriTani": "NIP. 19760814 200212 1 002"
   },
   "integrasi": {
-    "googleSheetWebhookUrl": "https://script.google.com/macros/s/AKfycbx_example/exec",
+    "googleSheetWebhookUrl": "https://script.google.com/macros/s/AKfycbzp-osiTcBJeq2OMUuWVSvv9Icx6SYlWf0gV0CIqdWTjEjTmud2qMkQGulgHe0NW8FiUg/exec",
+    "googleSheetWebhookUrlErdkk": "https://script.google.com/macros/s/AKfycbzp-osiTcBJeq2OMUuWVSvv9Icx6SYlWf0gV0CIqdWTjEjTmud2qMkQGulgHe0NW8FiUg/exec",
+    "googleSheetWebhookUrlPenyaluran": "https://script.google.com/macros/s/AKfycbzp-osiTcBJeq2OMUuWVSvv9Icx6SYlWf0gV0CIqdWTjEjTmud2qMkQGulgHe0NW8FiUg/exec",
     "autoSyncOnTransaction": true,
     "autoSyncTime": "18:00",
     "kementanApiKey": ""

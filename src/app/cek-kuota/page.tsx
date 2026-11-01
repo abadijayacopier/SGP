@@ -31,6 +31,7 @@ import {
 import QrScannerModal from '@/components/ui/QrScannerModal';
 import QrCodeView from '@/components/ui/QrCodeView';
 import { hitungRekomendasiPupuk, formatRupiah } from '@/lib/calculations';
+import { copyToClipboard } from '@/lib/clipboard';
 import { useAuth } from '@/lib/auth-context';
 import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
@@ -497,9 +498,9 @@ export default function CekKuotaPage() {
     }
   };
 
-  const handleCopySchedule = () => {
+  const handleCopySchedule = async () => {
     const text = generateWaText();
-    navigator.clipboard.writeText(text);
+    await copyToClipboard(text);
     setCopiedWa(true);
     setTimeout(() => setCopiedWa(false), 3000);
   };

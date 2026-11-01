@@ -38,6 +38,7 @@ import {
   ExternalLink,
 } from 'lucide-react';
 import { showSuccess, showError, showConfirm, showToast } from '@/lib/sweetalert';
+import { copyToClipboard } from '@/lib/clipboard';
 import { formatRupiah } from '@/lib/calculations';
 
 type SettingsTab = 'INSTANSI' | 'PUPUK' | 'GIS' | 'DOKUMEN' | 'INTEGRASI' | 'BACKUP' | 'LOG_AKTIVITAS';
@@ -252,9 +253,9 @@ export default function PengaturanPage() {
     }
   };
 
-  const handleCopyScript = (scriptText: string) => {
+  const handleCopyScript = async (scriptText: string) => {
     if (!scriptText) return;
-    navigator.clipboard.writeText(scriptText);
+    await copyToClipboard(scriptText);
     setCopiedScript(true);
     showSuccess('Script Disalin', 'Kode Google Apps Script berhasil disalin ke clipboard!');
     setTimeout(() => setCopiedScript(false), 2500);

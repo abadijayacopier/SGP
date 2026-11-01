@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import QrCodeView from '@/components/ui/QrCodeView';
 import { formatRupiah, formatAngka } from '@/lib/calculations';
+import { copyToClipboard } from '@/lib/clipboard';
 
 interface PenyaluranProps {
   data: {
@@ -87,8 +88,8 @@ export default function NotaPrintClient({ data }: PenyaluranProps) {
 
   const verificationUrl = `https://pertanian.lembeyan.go.id/verifikasi/nota/${data.nomorNota}`;
 
-  const copyLink = () => {
-    navigator.clipboard.writeText(verificationUrl);
+  const copyLink = async () => {
+    await copyToClipboard(verificationUrl);
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };

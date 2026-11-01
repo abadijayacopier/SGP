@@ -65,6 +65,7 @@ import {
   ShieldCheck,
 } from 'lucide-react';
 import { showSuccess, showError, showWarning, showConfirm, showDeleteConfirm, showToast } from '@/lib/sweetalert';
+import { copyToClipboard } from '@/lib/clipboard';
 import { addGeotagWatermark } from '@/lib/watermark-camera';
 
 // Custom Marker Patok Lapangan
@@ -2552,9 +2553,9 @@ export default function FieldMapsMobile() {
                     <span className="text-emerald-400 truncate">{typeof window !== 'undefined' ? window.location.origin : 'http://...'}</span>
                     <button
                       type="button"
-                      onClick={() => {
+                      onClick={async () => {
                         if (typeof window !== 'undefined') {
-                          navigator.clipboard.writeText(window.location.origin);
+                          await copyToClipboard(window.location.origin);
                           showToast('URL Server Berhasil Disalin!', 'success');
                         }
                       }}
