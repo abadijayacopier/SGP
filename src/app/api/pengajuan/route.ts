@@ -174,6 +174,13 @@ export async function PATCH(request: Request) {
     if (status === 'DIVERIFIKASI_PPL') {
       updateData.diverifikasiOleh = verifierName || 'Iis Sugiarti, S.P (PPL Kec. Lembeyan)';
       updateData.tanggalVerifikasi = new Date();
+      updateData.disetujuiOleh = null;
+      updateData.tanggalPersetujuan = null;
+    } else if (status === 'DIAJUKAN_POKTAN') {
+      updateData.diverifikasiOleh = null;
+      updateData.tanggalVerifikasi = null;
+      updateData.disetujuiOleh = null;
+      updateData.tanggalPersetujuan = null;
     } else if (status === 'DISETUJUI_DINAS') {
       updateData.disetujuiOleh = approverName || 'Ir. Bambang Hermanto, M.Si (Admin Kec. Lembeyan)';
       updateData.tanggalPersetujuan = new Date();

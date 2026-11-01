@@ -287,6 +287,11 @@ export default function PengajuanPage() {
       confirmButtonText: isDinas ? 'Setujui & Terbitkan' : 'Verifikasi Berkas',
     });
 
+    // Jika pengguna mengklik tombol "Batal", showPrompt mengembalikan null -> Batalkan proses & jangan ubah status
+    if (note === null) {
+      return;
+    }
+
     try {
       const res = await fetch('/api/pengajuan', {
         method: 'PATCH',
@@ -296,7 +301,7 @@ export default function PengajuanPage() {
           status: newStatus,
           verifierName: currentUser.name,
           approverName: currentUser.name,
-          notes: note || undefined,
+          notes: note.trim() || undefined,
         }),
       });
       const json = await res.json();
@@ -314,6 +319,40 @@ export default function PengajuanPage() {
     }
   };
 
+  const handleResetStatus = async (item: PengajuanItem) => {
+    const confirm = await showConfirm({
+      title: 'Batalkan Persetujuan Kuota?',
+      text: `Batalkan status persetujuan berkas nomor ${item.nomorPengajuan} (${item.namaPemilik}) dan kembalikan ke status Verifikasi PPL?`,
+      confirmButtonText: 'Ya, Batalkan Kuota',
+      cancelButtonText: 'Kembali',
+    });
+    if (!confirm) return;
+
+    try {
+      const res = await fetch('/api/pengajuan', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: item.id,
+          status: 'DIVERIFIKASI_PPL',
+          notes: `Persetujuan dibatalkan oleh ${currentUser?.name || 'Admin Dinas'}`,
+        }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        showSuccess('Persetujuan Dibatalkan', 'Status pengajuan dikembalikan ke Verifikasi PPL.');
+        fetchPengajuan();
+        if (selectedPengajuan && selectedPengajuan.id === item.id) {
+          setSelectedPengajuan(json.data);
+        }
+      } else {
+        showError('Gagal Membatalkan', json.error);
+      }
+    } catch (err: any) {
+      showError('Gagal Koneksi', err.message);
+    }
+  };
+
   const handleTolakStatus = async (item: PengajuanItem) => {
     const alasan = await showPrompt({
       title: 'Tolak Pengajuan Lahan',
@@ -321,7 +360,11 @@ export default function PengajuanPage() {
       inputPlaceholder: 'Contoh: Berkas SPPT PBB tidak valid / Batas lahan tumpang tindih...',
       confirmButtonText: 'Tolak Pengajuan',
     });
-    if (!alasan) return;
+    if (alasan === null) return;
+    if (!alasan.trim()) {
+      showWarning('Alasan Diperlukan', 'Harap isi alasan penolakan berkas pengajuan.');
+      return;
+    }
 
     try {
       const res = await fetch('/api/pengajuan', {
@@ -330,7 +373,7 @@ export default function PengajuanPage() {
         body: JSON.stringify({
           id: item.id,
           status: 'DITOLAK',
-          notes: `DITOLAK: ${alasan} (Oleh: ${currentUser.name})`,
+          notes: `DITOLAK: ${alasan.trim()} (Oleh: ${currentUser.name})`,
         }),
       });
       const json = await res.json();
@@ -937,11 +980,29 @@ export default function PengajuanPage() {
                         <button
                           type="button"
                           onClick={() => handleApproveStatus(item.id, 'DISETUJUI_DINAS')}
-                          className="flex-1 min-w-[120px] inline-flex items-center justify-center gap-1 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs active:scale-95 transition shadow-xs"
+                          className="flex-1 min-w-[120px] inline-flex items-center justify-center gap-1 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs active:scale-95 transition shadow-xs cursor-pointer"
                         >
                           <CheckCircle2 className="w-3.5 h-3.5" />
                           <span>Setujui Dinas</span>
                         </button>
+                      )}
+
+                      {item.status === 'DISETUJUI_DINAS' && (
+                        <div className="flex-1 min-w-[120px] inline-flex items-center justify-between gap-1 py-1.5 px-2.5 rounded-xl bg-emerald-50 border border-emerald-200">
+                          <span className="text-[11px] font-bold text-emerald-800 flex items-center gap-1">
+                            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Kuota Terbit
+                          </span>
+                          {permissions.canApproveDinas && (
+                            <button
+                              type="button"
+                              onClick={() => handleResetStatus(item)}
+                              title="Batalkan Persetujuan Kuota Terbit & Kembalikan ke Verifikasi PPL"
+                              className="px-2 py-0.5 rounded-md text-[10px] font-bold text-amber-800 hover:text-amber-950 bg-amber-100 hover:bg-amber-200 transition cursor-pointer"
+                            >
+                              Batal Terbit
+                            </button>
+                          )}
+                        </div>
                       )}
 
                       {item.status !== 'DISETUJUI_DINAS' && item.status !== 'DITOLAK' && (
@@ -1081,9 +1142,21 @@ export default function PengajuanPage() {
                             )
                           )}
                           {item.status === 'DISETUJUI_DINAS' && (
-                            <span className="text-[11px] font-bold text-emerald-700 flex items-center gap-1 justify-end">
-                              <CheckCircle2 className="w-3.5 h-3.5" /> Kuota Terbit
-                            </span>
+                            <div className="inline-flex items-center gap-1.5 justify-end">
+                              <span className="text-[11px] font-bold text-emerald-700 flex items-center gap-1">
+                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Kuota Terbit
+                              </span>
+                              {permissions.canApproveDinas && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleResetStatus(item)}
+                                  title="Batalkan Persetujuan Kuota Terbit & Kembalikan ke Verifikasi PPL"
+                                  className="px-1.5 py-0.5 rounded-md text-[10px] font-bold text-amber-700 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition cursor-pointer shadow-2xs"
+                                >
+                                  Batal Terbit
+                                </button>
+                              )}
+                            </div>
                           )}
 
                           {/* Tombol Tolak Pengajuan */}
