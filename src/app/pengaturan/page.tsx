@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
+import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import {
   Settings,
@@ -27,11 +28,15 @@ import {
   ShieldCheck,
   Send,
   Sparkles,
+  History,
+  Activity,
+  Search,
+  Filter,
 } from 'lucide-react';
 import { showSuccess, showError, showConfirm } from '@/lib/sweetalert';
 import { formatRupiah } from '@/lib/calculations';
 
-type SettingsTab = 'INSTANSI' | 'PUPUK' | 'GIS' | 'DOKUMEN' | 'INTEGRASI' | 'BACKUP';
+type SettingsTab = 'INSTANSI' | 'PUPUK' | 'GIS' | 'DOKUMEN' | 'INTEGRASI' | 'BACKUP' | 'LOG_AKTIVITAS';
 
 export default function PengaturanPage() {
   const { currentUser, permissions } = useAuth();
@@ -125,8 +130,30 @@ export default function PengaturanPage() {
     }
   };
 
+  // State Log Aktivitas & Audit Trail
+  const [auditLogs, setAuditLogs] = useState<any[]>([]);
+  const [auditLoading, setAuditLoading] = useState(false);
+  const [logFilterCategory, setLogFilterCategory] = useState<string>('SEMUA');
+  const [logSearchQuery, setLogSearchQuery] = useState<string>('');
+
+  const fetchAuditLogs = async () => {
+    try {
+      setAuditLoading(true);
+      const res = await fetch('/api/notifikasi');
+      const json = await res.json();
+      if (json.success && json.auditLogs) {
+        setAuditLogs(json.auditLogs);
+      }
+    } catch (e) {
+      console.error('Gagal memuat log aktivitas:', e);
+    } finally {
+      setAuditLoading(false);
+    }
+  };
+
   useEffect(() => {
     fetchSettings();
+    fetchAuditLogs();
   }, []);
 
   const handleSave = async (e?: React.FormEvent) => {
@@ -289,12 +316,25 @@ export default function PengaturanPage() {
           <Database className="w-4 h-4 text-rose-600" />
           <span>Cadangan (Backup)</span>
         </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('LOG_AKTIVITAS')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition cursor-pointer shrink-0 ${
+            activeTab === 'LOG_AKTIVITAS'
+              ? 'bg-white text-emerald-800 shadow-sm'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+          }`}
+        >
+          <History className="w-4 h-4 text-emerald-600" />
+          <span>Log Aktivitas & Audit Trail</span>
+        </button>
       </div>
 
       {/* Konten Tab Pengaturan */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Kolom Kiri / Form Pengaturan (2 Kolom) */}
-        <div className="lg:col-span-2 space-y-6">
+        {/* Kolom Kiri / Form Pengaturan */}
+        <div className={`space-y-6 ${activeTab === 'LOG_AKTIVITAS' ? 'lg:col-span-3' : 'lg:col-span-2'}`}>
           {/* TAB 1: IDENTITAS INSTANSI */}
           {activeTab === 'INSTANSI' && (
             <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-5">
@@ -1049,10 +1089,213 @@ export default function PengaturanPage() {
               </div>
             </div>
           )}
+
+          {/* TAB 7: LOG AKTIVITAS & AUDIT TRAIL */}
+          {activeTab === 'LOG_AKTIVITAS' && (
+            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-slate-100 pb-4">
+                <div>
+                  <h2 className="text-base font-black text-slate-800 flex items-center gap-2">
+                    <History className="w-5 h-5 text-emerald-600" />
+                    Log Aktivitas & Jejak Audit Inspektorat
+                  </h2>
+                  <p className="text-xs text-slate-500 mt-0.5">
+                    Rekaman kronologis jejak transaksi pupuk subsidi, pengesahan e-RDKK, verifikasi lapangan PPL, dan mutasi gudang KPL se-Kecamatan Lembeyan.
+                  </p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    onClick={fetchAuditLogs}
+                    disabled={auditLoading}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-slate-200 text-xs font-bold text-slate-700 hover:bg-slate-50 transition active:scale-95 cursor-pointer"
+                  >
+                    <RefreshCw className={`w-3.5 h-3.5 ${auditLoading ? 'animate-spin text-emerald-600' : ''}`} />
+                    <span>Segarkan</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => window.print()}
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold transition shadow-xs cursor-pointer"
+                  >
+                    <Printer className="w-3.5 h-3.5 text-emerald-300" />
+                    <span>Cetak Log</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Metric Cards Summary */}
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                <div className="bg-emerald-50/70 p-3.5 rounded-2xl border border-emerald-200/80">
+                  <span className="text-[10px] text-emerald-700 font-bold uppercase block">Total Log</span>
+                  <span className="text-xl font-black text-emerald-950">{auditLogs.length}</span>
+                  <span className="text-[10px] text-slate-400 block mt-0.5">Aktivitas Sistem</span>
+                </div>
+                <div className="bg-blue-50/70 p-3.5 rounded-2xl border border-blue-200/80">
+                  <span className="text-[10px] text-blue-700 font-bold uppercase block">Jejak e-RDKK</span>
+                  <span className="text-xl font-black text-blue-950">
+                    {auditLogs.filter((l) => l.category === 'ERDKK').length}
+                  </span>
+                  <span className="text-[10px] text-slate-400 block mt-0.5">Pengajuan & Verifikasi</span>
+                </div>
+                <div className="bg-purple-50/70 p-3.5 rounded-2xl border border-purple-200/80">
+                  <span className="text-[10px] text-purple-700 font-bold uppercase block">Penyaluran Pupuk</span>
+                  <span className="text-xl font-black text-purple-950">
+                    {auditLogs.filter((l) => l.category === 'PENYALURAN').length}
+                  </span>
+                  <span className="text-[10px] text-slate-400 block mt-0.5">Transaksi Kasir</span>
+                </div>
+                <div className="bg-amber-50/70 p-3.5 rounded-2xl border border-amber-200/80">
+                  <span className="text-[10px] text-amber-700 font-bold uppercase block">Gudang KPL</span>
+                  <span className="text-xl font-black text-amber-950">
+                    {auditLogs.filter((l) => l.category === 'STOK_KIOS').length}
+                  </span>
+                  <span className="text-[10px] text-slate-400 block mt-0.5">Mutasi Pasokan DO</span>
+                </div>
+              </div>
+
+              {/* Filter & Search Bar */}
+              <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-2.5">
+                <div className="flex flex-wrap items-center gap-1.5">
+                  {(['SEMUA', 'ERDKK', 'PENYALURAN', 'STOK_KIOS'] as const).map((cat) => (
+                    <button
+                      key={cat}
+                      type="button"
+                      onClick={() => setLogFilterCategory(cat)}
+                      className={`px-3 py-1 rounded-xl text-xs font-bold transition cursor-pointer ${
+                        logFilterCategory === cat
+                          ? 'bg-emerald-600 text-white shadow-xs'
+                          : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                      }`}
+                    >
+                      {cat === 'SEMUA'
+                        ? 'Semua Kategori'
+                        : cat === 'ERDKK'
+                        ? 'e-RDKK'
+                        : cat === 'PENYALURAN'
+                        ? 'Penyaluran'
+                        : 'Gudang KPL'}
+                    </button>
+                  ))}
+                </div>
+
+                <div className="relative">
+                  <Search className="w-3.5 h-3.5 text-slate-400 absolute left-3 top-2.5" />
+                  <input
+                    type="text"
+                    placeholder="Cari aktivitas, petugas..."
+                    value={logSearchQuery}
+                    onChange={(e) => setLogSearchQuery(e.target.value)}
+                    className="pl-8 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs w-full sm:w-56 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+              </div>
+
+              {/* Log Timeline List */}
+              <div className="divide-y divide-slate-100 border border-slate-200 rounded-2xl overflow-hidden">
+                {auditLoading ? (
+                  <div className="py-12 text-center text-slate-400 text-xs">Memuat log aktivitas terkini...</div>
+                ) : auditLogs.filter((log) => {
+                    const matchCategory = logFilterCategory === 'SEMUA' || log.category === logFilterCategory;
+                    const matchSearch =
+                      !logSearchQuery ||
+                      log.action.toLowerCase().includes(logSearchQuery.toLowerCase()) ||
+                      log.actor.toLowerCase().includes(logSearchQuery.toLowerCase()) ||
+                      log.detail.toLowerCase().includes(logSearchQuery.toLowerCase());
+                    return matchCategory && matchSearch;
+                  }).length === 0 ? (
+                  <div className="py-12 text-center text-slate-400 text-xs italic">
+                    Tidak ada log aktivitas yang cocok dengan kriteria pencarian.
+                  </div>
+                ) : (
+                  auditLogs
+                    .filter((log) => {
+                      const matchCategory = logFilterCategory === 'SEMUA' || log.category === logFilterCategory;
+                      const matchSearch =
+                        !logSearchQuery ||
+                        log.action.toLowerCase().includes(logSearchQuery.toLowerCase()) ||
+                        log.actor.toLowerCase().includes(logSearchQuery.toLowerCase()) ||
+                        log.detail.toLowerCase().includes(logSearchQuery.toLowerCase());
+                      return matchCategory && matchSearch;
+                    })
+                    .map((log) => {
+                      const isErdkk = log.category === 'ERDKK';
+                      const isPenyaluran = log.category === 'PENYALURAN';
+
+                      return (
+                        <div
+                          key={log.id}
+                          className="p-4 hover:bg-slate-50 transition flex flex-col sm:flex-row sm:items-center justify-between gap-3"
+                        >
+                          <div className="flex items-start gap-3 min-w-0 flex-1">
+                            <div
+                              className={`w-9 h-9 rounded-xl flex items-center justify-center shrink-0 font-bold text-xs ${
+                                isErdkk
+                                  ? 'bg-blue-100 text-blue-800'
+                                  : isPenyaluran
+                                  ? 'bg-emerald-100 text-emerald-800'
+                                  : 'bg-amber-100 text-amber-800'
+                              }`}
+                            >
+                              {isErdkk ? 'SK' : isPenyaluran ? 'TRX' : 'GUD'}
+                            </div>
+                            <div className="min-w-0 flex-1">
+                              <div className="flex flex-wrap items-center gap-2">
+                                <span
+                                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full border ${
+                                    isErdkk
+                                      ? 'bg-blue-50 text-blue-700 border-blue-200'
+                                      : isPenyaluran
+                                      ? 'bg-emerald-50 text-emerald-700 border-emerald-200'
+                                      : 'bg-amber-50 text-amber-700 border-amber-200'
+                                  }`}
+                                >
+                                  {isErdkk ? 'Berkas e-RDKK' : isPenyaluran ? 'Penyaluran Pupuk' : 'Gudang KPL'}
+                                </span>
+                                <span className="text-[11px] font-bold text-slate-900 truncate">
+                                  {log.action}
+                                </span>
+                              </div>
+                              <p className="text-xs text-slate-600 mt-1 leading-relaxed">{log.detail}</p>
+                              <div className="flex flex-wrap items-center gap-2 mt-1.5 text-[11px] text-slate-400">
+                                <span>
+                                  Petugas: <strong className="text-slate-700">{log.actor}</strong>
+                                </span>
+                                <span>&bull;</span>
+                                <span className="font-mono">
+                                  {new Date(log.timestamp).toLocaleString('id-ID', {
+                                    day: 'numeric',
+                                    month: 'short',
+                                    year: 'numeric',
+                                    hour: '2-digit',
+                                    minute: '2-digit',
+                                  })}{' '}
+                                  WIB
+                                </span>
+                              </div>
+                            </div>
+                          </div>
+
+                          <div className="shrink-0 self-end sm:self-center">
+                            <Link
+                              href={log.href}
+                              className="inline-flex items-center gap-1 px-3 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition"
+                            >
+                              <span>Buka Modul &rarr;</span>
+                            </Link>
+                          </div>
+                        </div>
+                      );
+                    })
+                )}
+              </div>
+            </div>
+          )}
         </div>
 
-        {/* Kolom Kanan: Live Preview & Ringkasan Parameter Aktif (1 Kolom) */}
-        <div className="space-y-6">
+        {/* Kolom Kanan: Live Preview & Ringkasan Parameter Aktif (Hanya saat tab konfigurasi) */}
+        {activeTab !== 'LOG_AKTIVITAS' && (
+          <div className="space-y-6">
           {/* Live Preview Kop Surat & Instansi */}
           <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-5 space-y-4">
             <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">
@@ -1163,6 +1406,7 @@ export default function PengaturanPage() {
             </button>
           </div>
         </div>
+        )}
       </div>
 
       {/* Floating Sticky Save Bar on Mobile Smartphones */}

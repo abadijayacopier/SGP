@@ -165,48 +165,6 @@ export default function Navbar() {
 
   return (
     <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs no-print">
-      {/* Top Banner: Active Role Group Isolation & Developer Credit */}
-      <div className="bg-emerald-950 text-white text-xs py-1.5 px-4 sm:px-6 border-b border-emerald-900/60">
-        <div className="max-w-7xl mx-auto flex flex-wrap items-center justify-between gap-2">
-          {/* Active Role & Group Indicator */}
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="inline-flex items-center gap-1 bg-amber-400 text-slate-950 font-black px-2 py-0.5 rounded text-[10px] uppercase tracking-wider shrink-0">
-              <Lock className="w-3 h-3" />
-              {activePermissions.groupName}
-            </span>
-            <span className="font-bold text-emerald-200 text-[11px] truncate">
-              {activeUser.name} ({activeUser.roleLabel})
-            </span>
-            <span className="text-amber-300/90 text-[11px] font-semibold hidden md:inline whitespace-nowrap">
-              &bull; Hanya {visibleNavItems.length} Menu Diizinkan
-            </span>
-            <span className="text-emerald-300/90 text-[10px] hidden xl:inline-flex items-center gap-1 bg-emerald-900/70 px-2 py-0.5 rounded border border-emerald-800">
-              <Code2 className="w-3 h-3 text-amber-400" />
-              Dev: <strong className="text-white">Supriyanto Abadi Jaya</strong>
-            </span>
-          </div>
-
-          {/* Profile & Login Portal Actions */}
-          <div className="flex items-center gap-1.5 overflow-x-auto py-0.5">
-            <Link
-              href="/profil"
-              className="inline-flex items-center gap-1.5 bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-2.5 py-0.5 rounded-lg text-[10px] transition whitespace-nowrap shrink-0 shadow-xs"
-            >
-              <UserCircle className="w-3.5 h-3.5 text-slate-950" />
-              Profil & Sandi Saya
-            </Link>
-
-            <Link
-              href="/login"
-              className="inline-flex items-center gap-1 bg-emerald-800 hover:bg-emerald-700 text-amber-300 font-bold px-2.5 py-0.5 rounded-lg text-[11px] border border-emerald-600/60 transition whitespace-nowrap shrink-0 ml-1"
-            >
-              <KeyRound className="w-3 h-3" />
-              Ganti Akun
-            </Link>
-          </div>
-        </div>
-      </div>
-
       {/* Main Navbar */}
       <div className="max-w-7xl mx-auto px-3 sm:px-6">
         <div className="flex items-center justify-between h-16 gap-2 sm:gap-3">

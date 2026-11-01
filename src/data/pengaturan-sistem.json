@@ -37,9 +37,9 @@
     "prefixKartuTani": "KT-3509-{TAHUN}-{NIK}",
     "prefixSuratLahan": "LHN-{TAHUN}-{NO}",
     "namaKoordinatorBpp": "Iis Sugiarti, S.P",
-    "nipKoordinatorBpp": "19850412 201101 2 008",
-    "namaMantriTani": "Supriyanto (Admin Kecamatan)",
-    "nipMantriTani": "19760814 200212 1 002"
+    "nipKoordinatorBpp": "NIP. 19850412 201101 2 008",
+    "namaMantriTani": "MANTRI TANI",
+    "nipMantriTani": "NIP. 19760814 200212 1 002"
   },
   "integrasi": {
     "googleSheetWebhookUrl": "https://script.google.com/macros/s/AKfycbx_example/exec",
