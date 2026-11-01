@@ -21,6 +21,7 @@ import {
   calculatePolygonPerimeter,
   calculateDistanceMeters,
 } from '@/lib/calculations';
+import { DESA_LEMBEYAN_LIST } from '@/lib/erdkk-format';
 import {
   saveOfflineSurvey,
   getOfflineSurveys,
@@ -93,13 +94,21 @@ function MapController({
   targetPos,
   onMapClick,
   isTapMode,
+  onMapReady,
 }: {
   gpsPos: [number, number] | null;
   targetPos: [number, number] | null;
   onMapClick: (lat: number, lng: number) => void;
   isTapMode: boolean;
+  onMapReady?: (map: L.Map) => void;
 }) {
   const map = useMap();
+
+  useEffect(() => {
+    if (onMapReady) {
+      onMapReady(map);
+    }
+  }, [map, onMapReady]);
 
   useMapEvents({
     click(e) {
@@ -176,10 +185,49 @@ export default function FieldMapsMobile() {
   // Map Tile Layer
   const [activeLayer, setActiveLayer] = useState<'google' | 'esri' | 'osm'>('google');
   const [showLayerMenu, setShowLayerMenu] = useState(false);
+  const mapInstanceRef = useRef<L.Map | null>(null);
 
-  // Existing Lahan from server
-  const [existingLahan, setExistingLahan] = useState<any[]>([]);
+  // Existing Lahan from server (with offline cache fallback)
+  const [existingLahan, setExistingLahan] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('pertanian_cached_lahan_polygons');
+        if (saved) return JSON.parse(saved);
+      } catch {}
+    }
+    return [];
+  });
   const [petaniList, setPetaniList] = useState<any[]>([]);
+  const [poktanList, setPoktanList] = useState<any[]>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const saved = localStorage.getItem('pertanian_cached_poktan_list');
+        if (saved) return JSON.parse(saved);
+      } catch {}
+    }
+    return [];
+  });
+
+  // Modal Histori Petak Sawah Terdaftar
+  const [showHistoriModal, setShowHistoriModal] = useState(false);
+  const [historiSearch, setHistoriSearch] = useState('');
+
+  // Mode Jalan Pintas Pendaftaran Petani Baru (Identik dengan Desktop/Web)
+  const [isQuickAddPetani, setIsQuickAddPetani] = useState(false);
+  const [savingQuickPetani, setSavingQuickPetani] = useState(false);
+  const [quickPetaniData, setQuickPetaniData] = useState({
+    nama: '',
+    nik: '',
+    noKk: '',
+    poktanId: '',
+    tempatLahir: 'Magetan',
+    tanggalLahir: '1980-05-15',
+    namaIbuKandung: '',
+    desa: 'Kediren',
+    alamat: '',
+    kecamatan: 'Lembeyan',
+    kabupaten: 'Magetan',
+  });
 
   // Offline Queue State
   const [offlineSurveys, setOfflineSurveys] = useState<OfflineSurveyItem[]>([]);
@@ -201,6 +249,87 @@ export default function FieldMapsMobile() {
     statusIrigasi: 'Irigasi Teknis',
     catatan: '',
   });
+
+  const getPolygonColor = (komoditas: string) => {
+    const lower = (komoditas || '').toLowerCase();
+    if (lower.includes('padi') && (lower.includes('jagung') || lower.includes('kedelai') || lower.includes('bawang'))) {
+      return { color: '#059669', fillColor: '#10b981' };
+    }
+    if (lower.includes('padi')) {
+      return { color: '#16a34a', fillColor: '#22c55e' };
+    }
+    if (lower.includes('jagung')) {
+      return { color: '#d97706', fillColor: '#f59e0b' };
+    }
+    if (lower.includes('kedelai')) {
+      return { color: '#ca8a04', fillColor: '#eab308' };
+    }
+    if (lower.includes('bawang')) {
+      return { color: '#e11d48', fillColor: '#f43f5e' };
+    }
+    if (lower.includes('tembakau')) {
+      return { color: '#854d0e', fillColor: '#a16207' };
+    }
+    if (lower.includes('tebu')) {
+      return { color: '#7c3aed', fillColor: '#8b5cf6' };
+    }
+    return { color: '#059669', fillColor: '#10b981' };
+  };
+
+  const filteredExistingLahan = useMemo(() => {
+    if (!historiSearch.trim()) return existingLahan;
+    const q = historiSearch.toLowerCase().trim();
+    return existingLahan.filter(
+      (l) =>
+        (l.namaLahan && l.namaLahan.toLowerCase().includes(q)) ||
+        (l.petani?.nama && l.petani.nama.toLowerCase().includes(q)) ||
+        (l.komoditas && l.komoditas.toLowerCase().includes(q)) ||
+        (l.kodeLahan && l.kodeLahan.toLowerCase().includes(q)) ||
+        (l.desa && l.desa.toLowerCase().includes(q))
+    );
+  }, [existingLahan, historiSearch]);
+
+  const handleFitAllExistingLahan = () => {
+    if (!existingLahan || existingLahan.length === 0) {
+      showWarning('Belum Ada Petak', 'Belum ada petak sawah tersimpan di database.');
+      return;
+    }
+    const allPts: [number, number][] = [];
+    existingLahan.forEach((l) => {
+      try {
+        const c = JSON.parse(l.coordinates);
+        if (Array.isArray(c)) {
+          c.forEach((pt: any) => {
+            if (Array.isArray(pt) && pt.length >= 2) {
+              allPts.push([pt[0], pt[1]]);
+            }
+          });
+        }
+      } catch {}
+    });
+
+    if (allPts.length > 0 && mapInstanceRef.current) {
+      const b = L.latLngBounds(allPts);
+      mapInstanceRef.current.fitBounds(b, { padding: [50, 50], maxZoom: 18 });
+      showToast(`Fokus ke ${existingLahan.length} Petak Sawah Terdaftar`, 'info');
+    }
+  };
+
+  const handleFlyToLahan = (lahan: any) => {
+    try {
+      const c = JSON.parse(lahan.coordinates);
+      if (Array.isArray(c) && c.length > 0) {
+        const center = c[0];
+        if (mapInstanceRef.current) {
+          mapInstanceRef.current.flyTo(center, 18, { animate: true, duration: 1.2 });
+        } else {
+          setFlyTarget([center[0], center[1]]);
+        }
+        setShowHistoriModal(false);
+        showToast(`Fokus: ${lahan.namaLahan} (${lahan.petani?.nama || '-'})`, 'success');
+      }
+    } catch {}
+  };
 
   const POPULAR_KOMODITAS = [
     'Padi',
@@ -268,16 +397,50 @@ export default function FieldMapsMobile() {
     };
   }, []);
 
-  // Fetch Existing Lahan & Petani (with offline cache fallback)
+  // Fetch Existing Lahan, Petani & Poktan (with offline cache fallback)
   useEffect(() => {
     fetch('/api/lahan')
       .then((r) => r.json())
       .then((json) => {
         if (json.success && Array.isArray(json.data)) {
           setExistingLahan(json.data);
+          try {
+            localStorage.setItem('pertanian_cached_lahan_polygons', JSON.stringify(json.data));
+          } catch {}
         }
       })
-      .catch(() => {});
+      .catch(() => {
+        try {
+          const cached = localStorage.getItem('pertanian_cached_lahan_polygons');
+          if (cached) setExistingLahan(JSON.parse(cached));
+        } catch {}
+      });
+
+    fetch('/api/poktan')
+      .then((r) => r.json())
+      .then((json) => {
+        if (json.success && Array.isArray(json.data)) {
+          setPoktanList(json.data);
+          try {
+            localStorage.setItem('pertanian_cached_poktan_list', JSON.stringify(json.data));
+          } catch {}
+          if (json.data.length > 0 && !quickPetaniData.poktanId) {
+            setQuickPetaniData((prev) => ({ ...prev, poktanId: json.data[0].id }));
+          }
+        }
+      })
+      .catch(() => {
+        try {
+          const cached = localStorage.getItem('pertanian_cached_poktan_list');
+          if (cached) {
+            const parsed = JSON.parse(cached);
+            setPoktanList(parsed);
+            if (parsed.length > 0 && !quickPetaniData.poktanId) {
+              setQuickPetaniData((prev) => ({ ...prev, poktanId: parsed[0].id }));
+            }
+          }
+        } catch {}
+      });
 
     fetch('/api/petani')
       .then((r) => r.json())
@@ -574,6 +737,91 @@ export default function FieldMapsMobile() {
     }
   };
 
+  // Jalan Pintas Pendaftaran Petani Baru Langsung di Lapangan (Mode PWA identik Desktop)
+  const handleSaveQuickPetani = async (): Promise<string | null> => {
+    if (!quickPetaniData.nama.trim() || !quickPetaniData.nik.trim()) {
+      showWarning('Form Belum Lengkap', 'Nama Lengkap dan NIK Petani/Penggarap baru wajib diisi!');
+      return null;
+    }
+    const cleanNik = quickPetaniData.nik.replace(/\D/g, '');
+    if (cleanNik.length !== 16) {
+      showWarning('NIK Tidak Valid', 'NIK KTP Petani harus terdiri dari tepat 16 digit angka!');
+      return null;
+    }
+    const targetPoktanId = quickPetaniData.poktanId || poktanList[0]?.id;
+    if (!targetPoktanId) {
+      showWarning('Pilih Poktan', 'Pilih Kelompok Tani (Poktan) terlebih dahulu!');
+      return null;
+    }
+
+    try {
+      setSavingQuickPetani(true);
+      if (effectiveOnline) {
+        const res = await fetch('/api/petani', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            ...quickPetaniData,
+            nik: cleanNik,
+            noKk: (quickPetaniData.noKk || cleanNik).replace(/\D/g, ''),
+            poktanId: targetPoktanId,
+          }),
+        });
+        const json = await res.json();
+        if (json.success && json.data) {
+          const newPetani = json.data;
+          setPetaniList((prev) => [newPetani, ...prev]);
+          cachePetaniList([newPetani, ...petaniList]);
+          setFormData((prev) => ({
+            ...prev,
+            petaniId: newPetani.id,
+            petaniManual: '',
+          }));
+          setIsQuickAddPetani(false);
+          showSuccess(
+            'Petani Terdaftar!',
+            `Petani "${newPetani.nama}" (NIK: ${newPetani.nik}) berhasil didaftarkan dan otomatis dipilih!`
+          );
+          return newPetani.id;
+        } else {
+          showError('Gagal Menyimpan Petani', json.error || 'Terjadi kesalahan saat mendaftarkan petani.');
+          return null;
+        }
+      } else {
+        // Mode Offline: Simpan petani di memori lokal HP
+        const offlineId = `offline-petani-${Date.now()}`;
+        const targetPoktan = poktanList.find((p) => p.id === targetPoktanId);
+        const offlinePetani = {
+          id: offlineId,
+          nama: quickPetaniData.nama.trim(),
+          nik: cleanNik,
+          noKk: (quickPetaniData.noKk || cleanNik).replace(/\D/g, ''),
+          desa: quickPetaniData.desa,
+          poktanId: targetPoktanId,
+          poktan: targetPoktan || { nama: 'Poktan Lembeyan' },
+        };
+        setPetaniList((prev) => [offlinePetani, ...prev]);
+        cachePetaniList([offlinePetani, ...petaniList]);
+        setFormData((prev) => ({
+          ...prev,
+          petaniId: offlineId,
+          petaniManual: '',
+        }));
+        setIsQuickAddPetani(false);
+        showSuccess(
+          'Tersimpan di Memori HP',
+          `Petani "${offlinePetani.nama}" disimpan di HP dan siap disinkronkan saat online.`
+        );
+        return offlineId;
+      }
+    } catch (err: any) {
+      showError('Kesalahan Jaringan', err.message);
+      return null;
+    } finally {
+      setSavingQuickPetani(false);
+    }
+  };
+
   // Submit Simpan Survei Lahan
   const handleSaveLahan = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -588,23 +836,29 @@ export default function FieldMapsMobile() {
       return;
     }
 
-    const isManualPetani = !formData.petaniId || formData.petaniId === 'new';
-    if (isManualPetani && !formData.petaniManual.trim()) {
-      showWarning('Nama Petani Kosong', 'Harap isi nama petani pemilik/penggarap sawah.');
+    // Jika sedang dalam form Quick Add Petani, simpan petaninya terlebih dahulu
+    let effectivePetaniId = formData.petaniId;
+    if (isQuickAddPetani) {
+      const createdId = await handleSaveQuickPetani();
+      if (!createdId) return; // Validasi belum lengkap
+      effectivePetaniId = createdId;
+    }
+
+    if (!effectivePetaniId && !formData.petaniManual.trim()) {
+      showWarning('Pilih Petani', 'Harap pilih petani pemilik/penggarap atau gunakan form jalan pintas untuk menambah petani baru.');
       return;
     }
 
-    const selectedPetani = petaniList.find((p) => p.id === formData.petaniId);
-    const petaniNama = isManualPetani
-      ? formData.petaniManual.trim()
-      : (selectedPetani ? selectedPetani.nama : 'Petani Terdaftar');
+    const selectedPetani = petaniList.find((p) => p.id === effectivePetaniId);
+    const isManualPetani = !effectivePetaniId || effectivePetaniId === 'new';
+    const petaniNama = selectedPetani ? selectedPetani.nama : formData.petaniManual.trim() || 'Petani Terdaftar';
     const poktanNama = selectedPetani?.poktan?.nama || 'Poktan Wilayah Lembeyan';
 
     // 1. Jika Offline atau pengguna memilih simpan offline
     if (!effectiveOnline) {
       saveOfflineSurvey({
         namaLahan: formData.namaLahan,
-        petaniId: isManualPetani ? 'offline-petani' : formData.petaniId,
+        petaniId: effectivePetaniId || 'offline-petani',
         petaniNama,
         poktanNama,
         komoditas: formData.komoditas || 'Padi',
@@ -635,9 +889,9 @@ export default function FieldMapsMobile() {
     try {
       const payload = {
         namaLahan: formData.namaLahan,
-        petaniId: isManualPetani ? undefined : formData.petaniId,
+        petaniId: effectivePetaniId || undefined,
         petaniNama,
-        petaniManual: isManualPetani ? formData.petaniManual.trim() : undefined,
+        petaniManual: !effectivePetaniId ? formData.petaniManual.trim() : undefined,
         komoditas: formData.komoditas || 'Padi',
         kabupaten: 'Magetan',
         coordinates: surveyPoints,
@@ -675,11 +929,16 @@ export default function FieldMapsMobile() {
           });
         }
 
-        // Refresh existing polygons
+        // Refresh existing polygons and update cache
         fetch('/api/lahan')
           .then((r) => r.json())
           .then((d) => {
-            if (d.success) setExistingLahan(d.data);
+            if (d.success && Array.isArray(d.data)) {
+              setExistingLahan(d.data);
+              try {
+                localStorage.setItem('pertanian_cached_lahan_polygons', JSON.stringify(d.data));
+              } catch {}
+            }
           });
       } else {
         // Jika server error, tawarkan simpan ke offline queue
@@ -1046,6 +1305,9 @@ export default function FieldMapsMobile() {
             targetPos={flyTarget}
             onMapClick={handleMapTap}
             isTapMode={isTapMode}
+            onMapReady={(m) => {
+              mapInstanceRef.current = m;
+            }}
           />
 
           {/* User GPS Position Marker & Accuracy Halo */}
@@ -1071,66 +1333,109 @@ export default function FieldMapsMobile() {
             </>
           )}
 
-          {/* Existing Registered Polygons (Sawah Terdaftar) */}
+          {/* Existing Registered Polygons (Histori Petak Sawah Terdaftar) */}
           {existingLahan.map((lahan) => {
+            let coords: [number, number][] = [];
             try {
-              const coords = JSON.parse(lahan.coordinates);
-              if (!Array.isArray(coords) || coords.length < 3) return null;
-              return (
-                <Polygon
-                  key={lahan.id}
-                  positions={coords}
-                  pathOptions={{
-                    color: '#10b981',
-                    fillColor: '#10b981',
-                    fillOpacity: 0.25,
-                    weight: 2,
-                    dashArray: '3, 4',
-                  }}
-                >
-                  <Popup>
-                    <div className="p-1 text-xs space-y-1.5 min-w-[200px] max-w-[240px]">
-                      <div className="border-b border-slate-100 pb-1">
-                        <span className="text-[10px] text-slate-400 font-bold uppercase block">Petak Sawah Terdaftar</span>
-                        <strong className="block text-emerald-800 text-sm font-black">{lahan.namaLahan}</strong>
-                        <span className="text-slate-600 font-medium block">Petani: <strong>{lahan.petani?.nama || '-'}</strong></span>
-                        <span className="text-emerald-700 font-mono font-bold block text-[11px]">
-                          {lahan.luasHa} Ha ({lahan.luasM2 ? lahan.luasM2.toLocaleString('id-ID') : Math.round(lahan.luasHa * 10000)} m²) &bull; {lahan.komoditas}
-                        </span>
-                      </div>
-
-                      {lahan.fotoLahan && (
-                        <div className="rounded-xl overflow-hidden border border-slate-200 mt-1 bg-slate-50">
-                          <img
-                            src={lahan.fotoLahan}
-                            alt="Foto Sawah Geotag"
-                            className="w-full h-24 object-cover cursor-pointer hover:opacity-90 transition"
-                            onClick={() => setPreviewFotoModal(lahan.fotoLahan)}
-                          />
-                          <div className="text-[9px] text-slate-600 bg-slate-100 py-0.5 text-center font-bold">
-                            📸 Klik untuk Memperbesar Foto GPS
-                          </div>
-                        </div>
-                      )}
-
-                      <div className="pt-1.5 flex items-center gap-1.5 border-t border-slate-100">
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteLahanServer(lahan)}
-                          className="w-full py-1.5 px-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg font-bold text-[10px] flex items-center justify-center gap-1 cursor-pointer transition active:scale-95"
-                          title="Hapus petak ini jika ada salah posisi/patok untuk diukur ulang"
-                        >
-                          <Trash2 className="w-3.5 h-3.5" />
-                          Hapus / Ukur Ulang Petak
-                        </button>
-                      </div>
-                    </div>
-                  </Popup>
-                </Polygon>
-              );
+              coords = JSON.parse(lahan.coordinates);
             } catch {
               return null;
             }
+            if (!Array.isArray(coords) || coords.length < 3) return null;
+
+            const styling = getPolygonColor(lahan.komoditas);
+
+            return (
+              <Polygon
+                key={lahan.id}
+                positions={coords}
+                pathOptions={{
+                  color: styling.color,
+                  fillColor: styling.fillColor,
+                  fillOpacity: 0.55,
+                  weight: 3.5,
+                }}
+              >
+                {/* Label Permanen di Tengah Kotak Poligon: Nama Petani & Luas Sawah */}
+                <Tooltip
+                  permanent
+                  direction="center"
+                  className="lahan-polygon-label"
+                >
+                  <div
+                    style={{
+                      color: '#0f172a',
+                      textAlign: 'center',
+                      lineHeight: 1.25,
+                      fontWeight: 900,
+                    }}
+                    className="font-sans px-1 py-0.5"
+                  >
+                    <div
+                      style={{ color: '#0f172a', fontWeight: 900, fontSize: '11px' }}
+                      className="font-black tracking-tight"
+                    >
+                      {lahan.petani?.nama || lahan.namaLahan || 'Petani'}
+                    </div>
+                    <div
+                      style={{
+                        color: '#065f46',
+                        backgroundColor: '#d1fae5',
+                        border: '1px solid #34d399',
+                        fontSize: '9px',
+                        padding: '1px 5px',
+                        borderRadius: '9999px',
+                        marginTop: '2px',
+                        display: 'inline-block',
+                        fontWeight: 800,
+                      }}
+                      className="luas-pill font-mono"
+                    >
+                      {lahan.luasHa} Ha &bull; {lahan.komoditas}
+                    </div>
+                  </div>
+                </Tooltip>
+
+                <Popup>
+                  <div className="p-1 text-xs space-y-1.5 min-w-[200px] max-w-[240px]">
+                    <div className="border-b border-slate-100 pb-1">
+                      <span className="text-[10px] text-slate-400 font-bold uppercase block">Petak Sawah Terdaftar</span>
+                      <strong className="block text-emerald-800 text-sm font-black">{lahan.namaLahan}</strong>
+                      <span className="text-slate-600 font-medium block">Petani: <strong>{lahan.petani?.nama || '-'}</strong></span>
+                      <span className="text-emerald-700 font-mono font-bold block text-[11px]">
+                        {lahan.luasHa} Ha ({lahan.luasM2 ? lahan.luasM2.toLocaleString('id-ID') : Math.round(lahan.luasHa * 10000)} m²) &bull; {lahan.komoditas}
+                      </span>
+                    </div>
+
+                    {lahan.fotoLahan && (
+                      <div className="rounded-xl overflow-hidden border border-slate-200 mt-1 bg-slate-50">
+                        <img
+                          src={lahan.fotoLahan}
+                          alt="Foto Sawah Geotag"
+                          className="w-full h-24 object-cover cursor-pointer hover:opacity-90 transition"
+                          onClick={() => setPreviewFotoModal(lahan.fotoLahan)}
+                        />
+                        <div className="text-[9px] text-slate-600 bg-slate-100 py-0.5 text-center font-bold">
+                          📸 Klik untuk Memperbesar Foto GPS
+                        </div>
+                      </div>
+                    )}
+
+                    <div className="pt-1.5 flex items-center gap-1.5 border-t border-slate-100">
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteLahanServer(lahan)}
+                        className="w-full py-1.5 px-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-lg font-bold text-[10px] flex items-center justify-center gap-1 cursor-pointer transition active:scale-95"
+                        title="Hapus petak ini jika ada salah posisi/patok untuk diukur ulang"
+                      >
+                        <Trash2 className="w-3.5 h-3.5" />
+                        Hapus / Ukur Ulang Petak
+                      </button>
+                    </div>
+                  </div>
+                </Popup>
+              </Polygon>
+            );
           })}
 
           {/* Offline Pending Surveys (Poligon Antrean HP Tersimpan) */}
@@ -1225,6 +1530,29 @@ export default function FieldMapsMobile() {
 
       {/* 4. RIGHT FLOATING ACTION BUTTONS (TOUCH FIRST) */}
       <div className="absolute right-3.5 bottom-36 z-[1000] flex flex-col gap-2.5">
+        {/* Histori Petak Sawah Terdaftar */}
+        <button
+          type="button"
+          onClick={() => setShowHistoriModal(true)}
+          className="w-12 h-12 rounded-2xl bg-slate-900/90 text-emerald-400 border border-emerald-500/40 shadow-xl flex flex-col items-center justify-center active:scale-90 transition hover:bg-slate-800 relative cursor-pointer"
+          title={`Lihat Histori Petak Sawah (${existingLahan.length} Petak Terdaftar)`}
+        >
+          <CheckCircle2 className="w-5 h-5 text-emerald-400" />
+          <span className="text-[9px] font-black text-white bg-emerald-600 px-1 rounded-full absolute -top-1 -right-1 border border-slate-900 shadow-xs">
+            {existingLahan.length}
+          </span>
+        </button>
+
+        {/* Fokus ke Seluruh Petak Sawah Terdaftar */}
+        <button
+          type="button"
+          onClick={handleFitAllExistingLahan}
+          className="w-12 h-12 rounded-2xl bg-slate-900/90 text-amber-400 border border-amber-500/30 shadow-xl flex items-center justify-center active:scale-90 transition hover:bg-slate-800 cursor-pointer"
+          title="Fokuskan Peta ke Seluruh Petak Sawah yang Sudah Dipoligon"
+        >
+          <Compass className="w-5 h-5 text-amber-400" />
+        </button>
+
         {/* Center on GPS */}
         <button
           type="button"
@@ -1457,38 +1785,228 @@ export default function FieldMapsMobile() {
                 />
               </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">
-                  Pilih Petani Pemilik / Penggarap *
+              {/* Pemilihan Petani atau Jalan Pintas Pendaftaran Petani Baru */}
+              <div className="space-y-2">
+                <label className="block font-bold text-slate-700 text-xs">
+                  Petani Pemilik / Penggarap *
                 </label>
-                <select
-                  value={formData.petaniId}
-                  onChange={(e) => setFormData({ ...formData, petaniId: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                >
-                  {petaniList.map((p) => (
-                    <option key={p.id} value={p.id}>
-                      {p.nama} (NIK: {p.nik}) &bull; {p.desa || 'Kediren'}
-                    </option>
-                  ))}
-                  <option value="">+ Tulis Nama Petani Manual (Jika Belum Terdaftar)</option>
-                </select>
-              </div>
 
-              {!formData.petaniId && (
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">
-                    Nama Petani (Manual) *
-                  </label>
-                  <input
-                    type="text"
-                    placeholder="Masukkan nama petani..."
-                    value={formData.petaniManual}
-                    onChange={(e) => setFormData({ ...formData, petaniManual: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
-              )}
+                {!isQuickAddPetani ? (
+                  <div className="space-y-1.5">
+                    <select
+                      value={formData.petaniId}
+                      onChange={(e) => {
+                        if (e.target.value === '__QUICK_ADD__') {
+                          setIsQuickAddPetani(true);
+                          setFormData({ ...formData, petaniId: '' });
+                        } else {
+                          setFormData({ ...formData, petaniId: e.target.value });
+                        }
+                      }}
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs"
+                    >
+                      <option value="">-- Pilih dari Petani Terdaftar ({petaniList.length}) --</option>
+                      {petaniList.map((p) => (
+                        <option key={p.id} value={p.id}>
+                          {p.nama} (NIK: {p.nik}) &bull; Desa {p.desa || 'Kediren'}
+                        </option>
+                      ))}
+                      <option value="__QUICK_ADD__" className="font-bold text-emerald-700 bg-emerald-50">
+                        + Petani Belum Ada? Klik untuk Tambah Petani / Penggarap Baru...
+                      </option>
+                    </select>
+
+                    <div className="flex items-center justify-between text-[11px] text-slate-500">
+                      <span>*Memilih petani mengaitkan kepemilikan sawah ke akun e-RDKK.</span>
+                      <button
+                        type="button"
+                        onClick={() => setIsQuickAddPetani(true)}
+                        className="text-emerald-700 font-bold underline hover:text-emerald-800 cursor-pointer shrink-0 ml-2"
+                      >
+                        + Input Petani Baru
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  /* Panel Jalan Pintas Input Petani / Penggarap Baru (Identik dengan Mode Desktop) */
+                  <div className="bg-emerald-50/80 border-2 border-emerald-300 rounded-2xl p-3.5 space-y-3 animate-in fade-in duration-150">
+                    <div className="flex items-center justify-between border-b border-emerald-200 pb-2">
+                      <div>
+                        <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">
+                          JALAN PINTAS PENDAFTARAN PETANI
+                        </span>
+                        <h4 className="font-black text-slate-900 text-xs mt-1">
+                          Input Data Petani / Penggarap Baru
+                        </h4>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setIsQuickAddPetani(false)}
+                        className="text-[11px] text-slate-500 hover:text-slate-800 font-bold cursor-pointer"
+                      >
+                        Batal
+                      </button>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-0.5 text-[11px]">
+                          Nama Lengkap Petani / Penggarap *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          placeholder="Contoh: Suparno"
+                          value={quickPetaniData.nama}
+                          onChange={(e) => setQuickPetaniData({ ...quickPetaniData, nama: e.target.value })}
+                          className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-emerald-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-0.5 text-[11px]">
+                          NIK Sesuai KTP (16 Digit) *
+                        </label>
+                        <input
+                          type="text"
+                          required
+                          maxLength={16}
+                          placeholder="Contoh: 3520041205800003"
+                          value={quickPetaniData.nik}
+                          onChange={(e) =>
+                            setQuickPetaniData({
+                              ...quickPetaniData,
+                              nik: e.target.value.replace(/\D/g, ''),
+                            })
+                          }
+                          className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-mono font-bold focus:ring-2 focus:ring-emerald-500"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-0.5 text-[11px]">
+                          Nomor Kartu Keluarga (KK)
+                        </label>
+                        <input
+                          type="text"
+                          maxLength={16}
+                          placeholder="Kosongkan jika sama dgn NIK"
+                          value={quickPetaniData.noKk}
+                          onChange={(e) =>
+                            setQuickPetaniData({
+                              ...quickPetaniData,
+                              noKk: e.target.value.replace(/\D/g, ''),
+                            })
+                          }
+                          className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-mono focus:ring-2 focus:ring-emerald-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-0.5 text-[11px]">
+                          Kelompok Tani (Poktan) *
+                        </label>
+                        <select
+                          value={quickPetaniData.poktanId}
+                          onChange={(e) => setQuickPetaniData({ ...quickPetaniData, poktanId: e.target.value })}
+                          className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-emerald-500"
+                        >
+                          {poktanList.map((pk) => (
+                            <option key={pk.id} value={pk.id}>
+                              {pk.nama} (Desa {pk.desa})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-0.5 text-[11px]">
+                          Tempat Lahir
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Magetan"
+                          value={quickPetaniData.tempatLahir}
+                          onChange={(e) => setQuickPetaniData({ ...quickPetaniData, tempatLahir: e.target.value })}
+                          className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-0.5 text-[11px]">
+                          Tanggal Lahir
+                        </label>
+                        <input
+                          type="date"
+                          value={quickPetaniData.tanggalLahir}
+                          onChange={(e) => setQuickPetaniData({ ...quickPetaniData, tanggalLahir: e.target.value })}
+                          className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-0.5 text-[11px]">
+                          Nama Ibu Kandung
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Nama gadis ibu"
+                          value={quickPetaniData.namaIbuKandung}
+                          onChange={(e) => setQuickPetaniData({ ...quickPetaniData, namaIbuKandung: e.target.value })}
+                          className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-0.5 text-[11px]">
+                          Desa / Kelurahan (Kec. Lembeyan)
+                        </label>
+                        <select
+                          value={quickPetaniData.desa}
+                          onChange={(e) => setQuickPetaniData({ ...quickPetaniData, desa: e.target.value })}
+                          className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold"
+                        >
+                          {DESA_LEMBEYAN_LIST.map((d) => (
+                            <option key={d} value={d}>
+                              Desa / Kel. {d}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-0.5 text-[11px]">
+                        Alamat Dusun / RT / RW
+                      </label>
+                      <input
+                        type="text"
+                        placeholder="Contoh: RT 03 / RW 01, Dusun Krajan"
+                        value={quickPetaniData.alamat}
+                        onChange={(e) => setQuickPetaniData({ ...quickPetaniData, alamat: e.target.value })}
+                        className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs"
+                      />
+                    </div>
+
+                    <div className="flex items-center justify-between pt-1">
+                      <span className="text-[10px] text-emerald-800 font-medium">
+                        *Petani baru otomatis didaftarkan ke sistem e-RDKK.
+                      </span>
+                      <button
+                        type="button"
+                        disabled={savingQuickPetani}
+                        onClick={handleSaveQuickPetani}
+                        className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg shadow-xs cursor-pointer flex items-center gap-1.5 transition active:scale-95 disabled:opacity-50"
+                      >
+                        <Check className="w-3.5 h-3.5" />
+                        {savingQuickPetani ? 'Menyimpan...' : 'Daftarkan & Pilih Petani Ini'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
 
               {/* Multi-Komoditas Selector */}
               <div>
@@ -1770,6 +2288,110 @@ export default function FieldMapsMobile() {
                 </button>
               </div>
             )}
+          </div>
+        </div>
+      )}
+
+      {/* 8. DRAWER: HISTORI PETAK SAWAH TERDAFTAR */}
+      {showHistoriModal && (
+        <div className="fixed inset-0 z-[1200] bg-slate-950/70 backdrop-blur-xs flex flex-col justify-end">
+          <div className="bg-white rounded-t-3xl p-5 sm:p-6 max-h-[85vh] overflow-y-auto space-y-4 shadow-2xl border-t border-slate-200">
+            <div className="flex items-center justify-between border-b pb-3 border-slate-100">
+              <div>
+                <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                  <CheckCircle2 className="w-5 h-5 text-emerald-600" />
+                  Histori Petak Sawah Terdaftar ({existingLahan.length})
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Daftar seluruh petak sawah yang sudah selesai di-poligon di Kecamatan Lembeyan.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setShowHistoriModal(false)}
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center cursor-pointer"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {/* Quick action: Fokus Semua Petak di Peta */}
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  handleFitAllExistingLahan();
+                  setShowHistoriModal(false);
+                }}
+                className="flex-1 py-2.5 px-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-2 shadow-sm cursor-pointer transition active:scale-98"
+              >
+                <Compass className="w-4 h-4" />
+                Fokuskan Peta ke Semua Petak ({existingLahan.length})
+              </button>
+            </div>
+
+            {/* Search Box */}
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="Cari nama petani, blok sawah, atau desa..."
+                value={historiSearch}
+                onChange={(e) => setHistoriSearch(e.target.value)}
+                className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+            </div>
+
+            {/* List of Lahan */}
+            <div className="space-y-2 max-h-[50vh] overflow-y-auto pr-1">
+              {filteredExistingLahan.length === 0 ? (
+                <div className="text-center py-8 text-slate-400 text-xs font-medium">
+                  {existingLahan.length === 0
+                    ? 'Belum ada petak sawah terdaftar di database.'
+                    : 'Tidak ada petak sawah yang cocok dengan pencarian.'}
+                </div>
+              ) : (
+                filteredExistingLahan.map((lahan) => {
+                  const styling = getPolygonColor(lahan.komoditas);
+                  return (
+                    <div
+                      key={lahan.id}
+                      className="p-3 rounded-2xl bg-slate-50 border border-slate-200/80 hover:border-emerald-300 transition flex items-center justify-between gap-3"
+                    >
+                      <div className="min-w-0 flex-1 space-y-0.5">
+                        <div className="flex items-center gap-1.5 flex-wrap">
+                          <span
+                            className="w-2.5 h-2.5 rounded-full shrink-0"
+                            style={{ backgroundColor: styling.color }}
+                          />
+                          <h4 className="font-black text-slate-900 text-xs truncate">
+                            {lahan.namaLahan}
+                          </h4>
+                          <span className="text-[10px] font-bold px-1.5 py-0.2 rounded-md bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            {lahan.luasHa} Ha
+                          </span>
+                        </div>
+                        <p className="text-[11px] text-slate-600 truncate">
+                          Petani: <strong className="text-slate-800">{lahan.petani?.nama || '-'}</strong>
+                          {lahan.desa ? ` &bull; Desa ${lahan.desa}` : ''}
+                        </p>
+                        <p className="text-[10px] text-slate-400 font-mono">
+                          {lahan.kodeLahan} &bull; {lahan.komoditas}
+                        </p>
+                      </div>
+
+                      <button
+                        type="button"
+                        onClick={() => handleFlyToLahan(lahan)}
+                        className="py-2 px-3 bg-white hover:bg-emerald-50 text-emerald-700 border border-emerald-300 rounded-xl font-bold text-xs shrink-0 flex items-center gap-1.5 shadow-2xs cursor-pointer transition active:scale-95"
+                      >
+                        <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+                        Lihat di Peta
+                      </button>
+                    </div>
+                  );
+                })
+              )}
+            </div>
           </div>
         </div>
       )}
