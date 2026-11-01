@@ -469,27 +469,41 @@ export default function FieldMapsMobile() {
         } catch {}
       });
 
-    fetch('/api/petani')
-      .then((r) => r.json())
-      .then((json) => {
-        if (json.success && Array.isArray(json.data)) {
-          setPetaniList(json.data);
-          cachePetaniList(json.data);
-          if (json.data.length > 0 && !formData.petaniId) {
-            setFormData((prev) => ({ ...prev, petaniId: json.data[0].id }));
+    const loadPetani = () => {
+      fetch('/api/petani?_t=' + Date.now(), { cache: 'no-store' })
+        .then((r) => r.json())
+        .then((json) => {
+          if (json.success && Array.isArray(json.data)) {
+            setPetaniList(json.data);
+            cachePetaniList(json.data);
+            if (json.data.length > 0 && !formData.petaniId) {
+              setFormData((prev) => ({ ...prev, petaniId: json.data[0].id }));
+            }
           }
-        }
-      })
-      .catch(() => {
-        // Fallback to cached petani list
-        const cached = getCachedPetaniList();
-        if (cached && cached.length > 0) {
-          setPetaniList(cached);
-          if (!formData.petaniId) {
-            setFormData((prev) => ({ ...prev, petaniId: cached[0].id }));
+        })
+        .catch(() => {
+          // Fallback to cached petani list
+          const cached = getCachedPetaniList();
+          if (cached && cached.length > 0) {
+            setPetaniList(cached);
+            if (!formData.petaniId) {
+              setFormData((prev) => ({ ...prev, petaniId: cached[0].id }));
+            }
           }
-        }
-      });
+        });
+    };
+
+    loadPetani();
+
+    const handlePetaniSync = () => {
+      loadPetani();
+    };
+    window.addEventListener('petani-updated', handlePetaniSync);
+    window.addEventListener('storage', handlePetaniSync);
+    return () => {
+      window.removeEventListener('petani-updated', handlePetaniSync);
+      window.removeEventListener('storage', handlePetaniSync);
+    };
   }, []);
 
   // Continuous High-Accuracy GPS Geolocation Watcher with Android Fused Fallback
@@ -797,18 +811,34 @@ export default function FieldMapsMobile() {
         const json = await res.json();
         if (json.success && json.data) {
           const newPetani = json.data;
-          setPetaniList((prev) => [newPetani, ...prev]);
-          cachePetaniList([newPetani, ...petaniList]);
+          setPetaniList((prev) => [newPetani, ...prev.filter((p) => p.id !== newPetani.id)]);
+          cachePetaniList([newPetani, ...petaniList.filter((p) => p.id !== newPetani.id)]);
           setFormData((prev) => ({
             ...prev,
             petaniId: newPetani.id,
             petaniManual: '',
           }));
           setIsQuickAddPetani(false);
-          showSuccess(
-            'Petani Terdaftar!',
-            `Petani "${newPetani.nama}" (NIK: ${newPetani.nik}) berhasil didaftarkan dan otomatis dipilih!`
-          );
+
+          if (json.alreadyExisted) {
+            showSuccess(
+              'Petani Ditemukan!',
+              `Petani "${newPetani.nama}" (NIK: ${newPetani.nik}) sudah terdaftar dan otomatis dipilih!`
+            );
+          } else {
+            showSuccess(
+              'Petani Terdaftar!',
+              `Petani baru "${newPetani.nama}" (NIK: ${newPetani.nik}) berhasil didaftarkan dan otomatis dipilih!`
+            );
+          }
+
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('petani-updated', { detail: newPetani }));
+            try {
+              localStorage.setItem('pertanian_last_petani_update', Date.now().toString());
+            } catch {}
+          }
+
           return newPetani.id;
         } else {
           showError('Gagal Menyimpan Petani', json.error || 'Terjadi kesalahan saat mendaftarkan petani.');
@@ -864,7 +894,7 @@ export default function FieldMapsMobile() {
     }
 
     // Jika sedang dalam form Quick Add Petani, simpan petaninya terlebih dahulu
-    let effectivePetaniId = formData.petaniId;
+    let effectivePetaniId = formData.petaniId || (petaniList.length > 0 ? petaniList[0].id : '');
     if (isQuickAddPetani) {
       const createdId = await handleSaveQuickPetani();
       if (!createdId) return; // Validasi belum lengkap

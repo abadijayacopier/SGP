@@ -40,7 +40,7 @@ import {
 } from '@/lib/sweetalert';
 import type { OverlapResult } from '@/lib/calculations';
 import { DESA_LEMBEYAN_LIST, DESA_COORDINATES_LEMBEYAN } from '@/lib/erdkk-format';
-import { getOfflineSurveys } from '@/lib/offline-gis';
+import { getOfflineSurveys, cachePetaniList, getCachedPetaniList } from '@/lib/offline-gis';
 
 export default function PetaPage() {
   const { currentUser, permissions } = useAuth();
@@ -164,22 +164,28 @@ export default function PetaPage() {
   // Load Petani List with their registered blocks count
   const fetchPetani = async () => {
     try {
-      let url = '/api/petani';
+      const timestamp = Date.now();
+      let url = `/api/petani?_t=${timestamp}`;
       if (currentUser.role === 'PETANI' && currentUser.petaniId) {
-        url = `/api/petani?petaniId=${currentUser.petaniId}`;
+        url += `&petaniId=${currentUser.petaniId}`;
       } else if (currentUser.role === 'POKTAN' && currentUser.poktanId) {
-        url = `/api/petani?poktanId=${currentUser.poktanId}`;
+        url += `&poktanId=${currentUser.poktanId}`;
       }
-      const res = await fetch(url);
+      const res = await fetch(url, { cache: 'no-store' });
       const json = await res.json();
-      if (json.success) {
+      if (json.success && Array.isArray(json.data)) {
         setPetaniList(json.data);
+        cachePetaniList(json.data);
         if (json.data.length > 0 && !formData.petaniId) {
           setFormData((prev) => ({ ...prev, petaniId: json.data[0].id }));
         }
       }
     } catch (e) {
       console.error(e);
+      const cached = getCachedPetaniList();
+      if (cached && cached.length > 0) {
+        setPetaniList(cached);
+      }
     }
   };
 
@@ -206,19 +212,34 @@ export default function PetaPage() {
     fetchPetani();
     fetchPoktan();
 
+    const handlePetaniUpdated = () => {
+      fetchPetani();
+    };
+    window.addEventListener('petani-updated', handlePetaniUpdated);
+    window.addEventListener('storage', handlePetaniUpdated);
+
     const checkOffline = () => {
       const surveys = getOfflineSurveys();
       setOfflineCount(surveys.filter((s) => s.syncStatus !== 'SUCCESS').length);
     };
     checkOffline();
     window.addEventListener('offline-surveys-changed', checkOffline);
-    return () => window.removeEventListener('offline-surveys-changed', checkOffline);
+    return () => {
+      window.removeEventListener('petani-updated', handlePetaniUpdated);
+      window.removeEventListener('storage', handlePetaniUpdated);
+      window.removeEventListener('offline-surveys-changed', checkOffline);
+    };
   }, [currentUser.role, currentUser.petaniId, currentUser.poktanId]);
 
   // Simpan Cepat Petani Baru dari dalam Modal Digitasi Lahan
   const handleSaveQuickPetani = async (): Promise<string | null> => {
     if (!quickPetaniData.nama.trim() || !quickPetaniData.nik.trim()) {
       showWarning('Form Belum Lengkap', 'Nama Lengkap dan NIK Petani/Penggarap baru wajib diisi!');
+      return null;
+    }
+    const cleanNik = quickPetaniData.nik.replace(/\D/g, '');
+    if (cleanNik.length !== 16) {
+      showWarning('NIK Tidak Valid', 'NIK KTP Petani harus terdiri dari tepat 16 digit angka!');
       return null;
     }
     const targetPoktanId = quickPetaniData.poktanId || poktanList[0]?.id;
@@ -234,22 +255,41 @@ export default function PetaPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           ...quickPetaniData,
-          noKk: quickPetaniData.noKk || quickPetaniData.nik,
+          nik: cleanNik,
+          noKk: (quickPetaniData.noKk || cleanNik).replace(/\D/g, ''),
           poktanId: targetPoktanId,
         }),
       });
       const json = await res.json();
       if (json.success && json.data) {
-        const newPetani = json.data;
-        setPetaniList((prev) => [newPetani, ...prev]);
+        const savedPetani = json.data;
+        setPetaniList((prev) => [savedPetani, ...prev.filter((p) => p.id !== savedPetani.id)]);
+        try {
+          cachePetaniList([savedPetani, ...petaniList.filter((p) => p.id !== savedPetani.id)]);
+        } catch {}
+
         setFormData((prev) => ({
           ...prev,
-          petaniId: newPetani.id,
+          petaniId: savedPetani.id,
           kabupaten: quickPetaniData.kabupaten || prev.kabupaten || 'Magetan',
         }));
         setIsQuickAddPetani(false);
-        showSuccess('Petani Terdaftar', `Petani ${newPetani.nama} berhasil ditambahkan dan dipilih!`);
-        return newPetani.id;
+
+        if (json.alreadyExisted) {
+          showSuccess('Petani Ditemukan', `Petani "${savedPetani.nama}" (NIK: ${savedPetani.nik}) sudah terdaftar dan otomatis dipilih!`);
+        } else {
+          showSuccess('Petani Terdaftar', `Petani baru "${savedPetani.nama}" berhasil didaftarkan dan dipilih!`);
+        }
+
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('petani-updated', { detail: savedPetani }));
+          try {
+            localStorage.setItem('pertanian_last_petani_update', Date.now().toString());
+          } catch {}
+        }
+
+        fetchPetani();
+        return savedPetani.id;
       } else {
         showError('Gagal Menyimpan', json.error || 'Terjadi kesalahan saat menyimpan petani.');
         return null;
@@ -282,7 +322,7 @@ export default function PetaPage() {
   const handleSubmitLahan = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    let targetPetaniId = formData.petaniId;
+    let targetPetaniId = formData.petaniId || (petaniList.length > 0 ? petaniList[0].id : '');
 
     // Jika user sedang membuka form jalan pintas Petani Baru dan langsung klik Simpan Petak Lahan,
     // daftarkan petani baru tersebut secara otomatis terlebih dahulu!
@@ -1193,7 +1233,7 @@ export default function PetaPage() {
                 {!isQuickAddPetani ? (
                   <>
                     <select
-                      value={formData.petaniId}
+                      value={formData.petaniId || (petaniList.length > 0 ? petaniList[0].id : '')}
                       onChange={(e) => {
                         if (e.target.value === '__QUICK_ADD__') {
                           if (desaFilter !== 'SEMUA') {
@@ -1397,10 +1437,7 @@ export default function PetaPage() {
                         type="button"
                         disabled={savingQuickPetani}
                         onClick={async () => {
-                          const newId = await handleSaveQuickPetani();
-                          if (newId) {
-                            showSuccess('Petani Terdaftar', `Petani "${quickPetaniData.nama}" berhasil didaftarkan dan otomatis dipilih!`);
-                          }
+                          await handleSaveQuickPetani();
                         }}
                         className="px-3 py-1.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] shadow-xs transition cursor-pointer shrink-0"
                       >

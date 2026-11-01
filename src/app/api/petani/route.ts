@@ -1,6 +1,9 @@
 import { NextResponse } from 'next/server';
 import { prisma } from '@/lib/prisma';
 
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -52,7 +55,16 @@ export async function GET(request: Request) {
       };
     });
 
-    return NextResponse.json({ success: true, data: enrichedList });
+    return NextResponse.json(
+      { success: true, data: enrichedList },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate, proxy-revalidate',
+          Pragma: 'no-cache',
+          Expires: '0',
+        },
+      }
+    );
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
@@ -83,11 +95,52 @@ export async function POST(request: Request) {
       );
     }
 
+    const cleanNik = String(nik).trim().replace(/\D/g, '');
+    const cleanNoKk = noKk ? String(noKk).trim().replace(/\D/g, '') : cleanNik;
+
+    if (!cleanNik || cleanNik.length < 10) {
+      return NextResponse.json(
+        { success: false, error: 'NIK tidak valid (minimal 10 digit angka)' },
+        { status: 400 }
+      );
+    }
+
+    // Cek apakah NIK sudah terdaftar sebelumnya untuk mencegah crash constraint P2002
+    const existingPetani = await prisma.petani.findUnique({
+      where: { nik: cleanNik },
+      include: {
+        poktan: true,
+        lahan: true,
+      },
+    });
+
+    if (existingPetani) {
+      // Petani sudah ada di database, kembalikan data petani yang sudah terdaftar
+      const sumLahan = existingPetani.lahan?.reduce((sum, l) => sum + (Number(l.luasHa) || 0), 0) || 0;
+      return NextResponse.json(
+        {
+          success: true,
+          data: {
+            ...existingPetani,
+            totalLuasLahan: sumLahan > 0 ? sumLahan : Number(existingPetani.totalLuasLahan) || 0,
+          },
+          alreadyExisted: true,
+          message: `Petani dengan NIK ${cleanNik} sudah terdaftar atas nama ${existingPetani.nama}. Data otomatis dipilih.`,
+        },
+        {
+          status: 200,
+          headers: {
+            'Cache-Control': 'no-store, no-cache, must-revalidate',
+          },
+        }
+      );
+    }
+
     const newPetani = await prisma.petani.create({
       data: {
-        nik,
-        nama,
-        noKk: noKk || nik,
+        nik: cleanNik,
+        nama: String(nama).trim(),
+        noKk: cleanNoKk,
         tempatLahir: tempatLahir || 'Magetan',
         tanggalLahir: tanggalLahir || null,
         namaIbuKandung: namaIbuKandung || null,
@@ -102,10 +155,19 @@ export async function POST(request: Request) {
       },
       include: {
         poktan: true,
+        lahan: true,
       },
     });
 
-    return NextResponse.json({ success: true, data: newPetani }, { status: 201 });
+    return NextResponse.json(
+      { success: true, data: newPetani },
+      {
+        status: 201,
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        },
+      }
+    );
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }

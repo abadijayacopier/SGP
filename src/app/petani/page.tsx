@@ -88,15 +88,16 @@ export default function PetaniPage() {
     try {
       setLoading(true);
       // Akun PETANI hanya melihat dirinya sendiri; POKTAN hanya melihat anggota Poktannya
-      let url = '/api/petani';
+      const timestamp = Date.now();
+      let url = `/api/petani?_t=${timestamp}`;
       if (currentUser.role === 'PETANI' && currentUser.petaniId) {
-        url = `/api/petani?petaniId=${currentUser.petaniId}`;
+        url += `&petaniId=${currentUser.petaniId}`;
       } else if (currentUser.role === 'POKTAN' && currentUser.poktanId) {
-        url = `/api/petani?poktanId=${currentUser.poktanId}`;
+        url += `&poktanId=${currentUser.poktanId}`;
       } else if (filterPoktan !== 'SEMUA') {
-        url = `/api/petani?poktanId=${filterPoktan}`;
+        url += `&poktanId=${filterPoktan}`;
       }
-      const res = await fetch(url);
+      const res = await fetch(url, { cache: 'no-store' });
       const json = await res.json();
       if (json.success) {
         setPetaniList(json.data);
@@ -171,6 +172,17 @@ export default function PetaniPage() {
     fetchPetani();
     fetchPoktan();
     fetchKades();
+
+    const handlePetaniSync = () => {
+      fetchPetani();
+      fetchPoktan();
+    };
+    window.addEventListener('petani-updated', handlePetaniSync);
+    window.addEventListener('storage', handlePetaniSync);
+    return () => {
+      window.removeEventListener('petani-updated', handlePetaniSync);
+      window.removeEventListener('storage', handlePetaniSync);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterPoktan, currentUser.role, currentUser.poktanId, currentUser.petaniId]);
 
@@ -225,6 +237,18 @@ export default function PetaniPage() {
       if (json.success) {
         showSuccess('Petani Dihapus', `Data petani "${p.nama}" berhasil dihapus.`);
         if (selectedPetani?.id === p.id) setDetailModalOpen(false);
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('petani-updated'));
+          try {
+            localStorage.setItem('pertanian_last_petani_update', Date.now().toString());
+          } catch {}
+        }
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('petani-updated', { detail: json.data }));
+          try {
+            localStorage.setItem('pertanian_last_petani_update', Date.now().toString());
+          } catch {}
+        }
         fetchPetani();
         fetchPoktan();
       } else {
@@ -275,6 +299,12 @@ export default function PetaniPage() {
           kabupaten: 'Magetan',
           poktanId: poktanList[0]?.id || '',
         });
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('petani-updated', { detail: json.data }));
+          try {
+            localStorage.setItem('pertanian_last_petani_update', Date.now().toString());
+          } catch {}
+        }
         fetchPetani();
         fetchPoktan();
       } else {
