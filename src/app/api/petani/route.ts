@@ -192,34 +192,85 @@ export async function PATCH(request: Request) {
       poktanId,
     } = body;
 
-    if (!id) {
-      return NextResponse.json({ success: false, error: 'ID Petani wajib disertakan' }, { status: 400 });
+    const cleanNik = nik ? String(nik).trim().replace(/\D/g, '') : undefined;
+    const cleanNoKk = noKk ? String(noKk).trim().replace(/\D/g, '') : cleanNik;
+
+    // 1. Cari petani berdasarkan id
+    let targetPetani = id ? await prisma.petani.findUnique({ where: { id } }) : null;
+
+    // 2. Jika ID tidak ditemukan (misal ID lama / session sebelumnya), cari berdasarkan NIK
+    if (!targetPetani && cleanNik) {
+      targetPetani = await prisma.petani.findUnique({ where: { nik: cleanNik } });
     }
 
-    const updated = await prisma.petani.update({
-      where: { id },
-      data: {
-        nik,
-        nama,
-        noKk,
-        tempatLahir: tempatLahir !== undefined ? tempatLahir : undefined,
-        tanggalLahir: tanggalLahir !== undefined ? tanggalLahir : undefined,
-        namaIbuKandung: namaIbuKandung !== undefined ? namaIbuKandung : undefined,
-        telepon: telepon || null,
-        alamat,
-        desa,
-        kecamatan: kecamatan || 'Lembeyan',
-        kabupaten: kabupaten || 'Magetan',
-        poktanId,
-      },
-      include: {
-        poktan: true,
-        lahan: true,
-        alokasiPupuk: true,
-      },
-    });
+    let updated;
+    if (targetPetani) {
+      updated = await prisma.petani.update({
+        where: { id: targetPetani.id },
+        data: {
+          nik: cleanNik || targetPetani.nik,
+          nama: nama ? String(nama).trim() : targetPetani.nama,
+          noKk: cleanNoKk || targetPetani.noKk,
+          tempatLahir: tempatLahir !== undefined ? tempatLahir : undefined,
+          tanggalLahir: tanggalLahir !== undefined ? tanggalLahir : undefined,
+          namaIbuKandung: namaIbuKandung !== undefined ? namaIbuKandung : undefined,
+          telepon: telepon !== undefined ? (telepon || null) : undefined,
+          alamat: alamat !== undefined ? alamat : targetPetani.alamat,
+          desa: desa !== undefined ? desa : targetPetani.desa,
+          kecamatan: kecamatan || targetPetani.kecamatan || 'Lembeyan',
+          kabupaten: kabupaten || targetPetani.kabupaten || 'Magetan',
+          poktanId: poktanId || targetPetani.poktanId,
+        },
+        include: {
+          poktan: true,
+          lahan: true,
+          alokasiPupuk: true,
+        },
+      });
+    } else {
+      // 3. Jika benar-benar belum ada di database, buat baru agar data pengguna aman
+      if (!cleanNik || !nama || !poktanId) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: 'Data petani tidak ditemukan untuk diperbarui. Pastikan NIK, Nama, dan Kelompok Tani terisi.',
+          },
+          { status: 404 }
+        );
+      }
+      updated = await prisma.petani.create({
+        data: {
+          nik: cleanNik,
+          nama: String(nama).trim(),
+          noKk: cleanNoKk || cleanNik,
+          tempatLahir: tempatLahir || 'Magetan',
+          tanggalLahir: tanggalLahir || null,
+          namaIbuKandung: namaIbuKandung || null,
+          telepon: telepon || null,
+          alamat: alamat || 'Lembeyan',
+          desa: desa || 'Kediren',
+          kecamatan: kecamatan || 'Lembeyan',
+          kabupaten: kabupaten || 'Magetan',
+          poktanId,
+          statusVerifikasi: 'TERVERIFIKASI',
+          totalLuasLahan: 0,
+        },
+        include: {
+          poktan: true,
+          lahan: true,
+          alokasiPupuk: true,
+        },
+      });
+    }
 
-    return NextResponse.json({ success: true, data: updated });
+    return NextResponse.json(
+      { success: true, data: updated },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        },
+      }
+    );
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
@@ -234,6 +285,13 @@ export async function DELETE(request: Request) {
       return NextResponse.json({ success: false, error: 'ID Petani wajib disertakan' }, { status: 400 });
     }
 
+    // Cek keberadaan petani terlebih dahulu
+    const target = await prisma.petani.findUnique({ where: { id } });
+    if (!target) {
+      // Jika data sudah tidak ada di database, kembalikan status sukses agar UI sinkron
+      return NextResponse.json({ success: true, message: 'Petani sudah terhapus di database' });
+    }
+
     // Hapus relasi anak terlebih dahulu agar tidak melanggar foreign key constraint
     await prisma.penyaluranPupuk.deleteMany({ where: { petaniId: id } });
     await prisma.alokasiPupuk.deleteMany({ where: { petaniId: id } });
@@ -241,7 +299,14 @@ export async function DELETE(request: Request) {
     await prisma.lahan.deleteMany({ where: { petaniId: id } });
     await prisma.petani.delete({ where: { id } });
 
-    return NextResponse.json({ success: true });
+    return NextResponse.json(
+      { success: true },
+      {
+        headers: {
+          'Cache-Control': 'no-store, no-cache, must-revalidate',
+        },
+      }
+    );
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
