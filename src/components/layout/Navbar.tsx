@@ -141,9 +141,9 @@ export default function Navbar() {
     return null;
   }
 
-  // Gunakan fallback default saat SSR agar initial HTML identik 100% dan bebas hydration error
-  const activeUser = isMounted ? currentUser : DEMO_USERS.ADMIN_DINAS;
-  const activePermissions = isMounted ? permissions : ROLE_PERMISSIONS.ADMIN_DINAS;
+  // Gunakan currentUser langsung (diinisialisasi sinkron dari sesi/cache) agar bebas lag & bebas hydration flicker
+  const activeUser = currentUser;
+  const activePermissions = permissions;
   const visibleNavItems = activePermissions.menuItems;
 
   const handleLogout = () => {

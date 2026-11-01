@@ -273,7 +273,7 @@ export const ROLE_PERMISSIONS: Record<
 export const DEMO_USERS: Record<UserRole, UserSession> = {
   ADMIN_DINAS: {
     username: 'admin',
-    name: 'Supriyanti',
+    name: 'MANTRI TANI',
     role: 'ADMIN_DINAS',
     roleLabel: 'Admin Kecamatan Lembeyan',
     wilayah: 'Pemerintah Kecamatan Lembeyan',
@@ -308,8 +308,8 @@ export const DEMO_USERS: Record<UserRole, UserSession> = {
     avatarText: 'PK',
   },
   KIOS: {
-    username: 'kios_bumisubur',
-    name: 'BUMI SUBUR',
+    username: 'kios_subur',
+    name: 'Hj. Siti Romlah',
     role: 'KIOS',
     roleLabel: 'Petugas Kios Resmi (KPL)',
     wilayah: 'Kios Resmi Kec. Lembeyan',
@@ -369,7 +369,33 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [currentUser, setCurrentUser] = useState<UserSession>(DEMO_USERS.ADMIN_DINAS);
+  const [currentUser, setCurrentUser] = useState<UserSession>(() => {
+    if (typeof window !== 'undefined') {
+      try {
+        const savedSession = localStorage.getItem('pertanian_user_session');
+        if (savedSession) {
+          const parsed = JSON.parse(savedSession) as UserSession;
+          if (parsed && parsed.role && ROLE_PERMISSIONS[parsed.role]) {
+            if (parsed.roleLabel === 'Admin Dinas Pertanian') {
+              parsed.roleLabel = 'Admin Kecamatan Lembeyan';
+            }
+            if (parsed.username === 'ppl_sugeng' || parsed.username === 'ppl_lembeyan') {
+              parsed.username = 'ppl_iissugiarti';
+            }
+            if (parsed.username === 'kios_subur') {
+              parsed.username = 'kios_bumisubur';
+            }
+            return parsed;
+          }
+        }
+        const savedRole = localStorage.getItem('pertanian_role') as UserRole;
+        if (savedRole && DEMO_USERS[savedRole]) {
+          return DEMO_USERS[savedRole];
+        }
+      } catch {}
+    }
+    return DEMO_USERS.ADMIN_DINAS;
+  });
   const [customMatrix, setCustomMatrix] = useState<Record<UserRole, any> | null>(null);
   const [isMounted, setIsMounted] = useState(false);
 

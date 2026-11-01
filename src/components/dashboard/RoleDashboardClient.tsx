@@ -60,9 +60,9 @@ export default function RoleDashboardClient({
   petaniSample,
   stokKiosList,
 }: DashboardProps) {
-  const { currentUser, permissions, isMounted } = useAuth();
-  const activeUser = isMounted ? currentUser : DEMO_USERS.ADMIN_DINAS;
-  const activePermissions = isMounted ? permissions : ROLE_PERMISSIONS.ADMIN_DINAS;
+  const { currentUser, permissions } = useAuth();
+  const activeUser = currentUser;
+  const activePermissions = permissions;
   const role = activeUser.role;
 
   // ===== Isolasi data sesuai akun yang login =====
@@ -101,9 +101,20 @@ export default function RoleDashboardClient({
     ? recentPenyaluran.filter((p) => p.namaKios === myKios)
     : recentPenyaluran;
 
-  // Sapaan Waktu Dinamis (Pagi, Siang, Sore, Malam)
+  // Sapaan Waktu Dinamis (Pagi, Siang, Sore, Malam) diselaraskan ke WIB (Asia/Jakarta)
   const getGreeting = () => {
-    const hour = new Date().getHours();
+    let hour = 12;
+    try {
+      const formatter = new Intl.DateTimeFormat('en-US', {
+        timeZone: 'Asia/Jakarta',
+        hour: 'numeric',
+        hour12: false,
+      });
+      hour = parseInt(formatter.format(new Date()), 10);
+    } catch {
+      hour = new Date().getHours();
+    }
+
     if (hour >= 4 && hour < 11) {
       return {
         text: 'Selamat Pagi',
@@ -140,12 +151,13 @@ export default function RoleDashboardClient({
   };
 
   const timeGreeting = getGreeting();
-  const formattedToday = new Date().toLocaleDateString('id-ID', {
+  const formattedToday = new Intl.DateTimeFormat('id-ID', {
+    timeZone: 'Asia/Jakarta',
     weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric',
-  });
+  }).format(new Date());
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
@@ -160,15 +172,15 @@ export default function RoleDashboardClient({
                 {timeGreeting.icon === 'Sun' && <Sun className="w-3.5 h-3.5 text-amber-300" />}
                 {timeGreeting.icon === 'Sunset' && <Sunset className="w-3.5 h-3.5 text-amber-300" />}
                 {timeGreeting.icon === 'Moon' && <Moon className="w-3.5 h-3.5 text-indigo-200" />}
-                <span>{timeGreeting.text} &bull; {timeGreeting.period}</span>
+                <span suppressHydrationWarning>{timeGreeting.text} &bull; {timeGreeting.period}</span>
               </span>
-              <span className="text-xs text-white/80 font-mono bg-black/20 px-2.5 py-0.5 rounded-full">
+              <span suppressHydrationWarning className="text-xs text-white/80 font-mono bg-black/20 px-2.5 py-0.5 rounded-full">
                 📅 {formattedToday}
               </span>
             </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex flex-wrap items-center gap-2">
-              <span>{timeGreeting.text},</span>
-              <span className={timeGreeting.accent}>{activeUser.name}</span>
+              <span suppressHydrationWarning>{timeGreeting.text},</span>
+              <span suppressHydrationWarning className={timeGreeting.accent}>{activeUser.name}</span>
             </h1>
             <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed max-w-2xl">
               Selamat datang di Sistem Informasi Pertanian & Pemetaan Spasial GIS Kecamatan Lembeyan. Anda saat ini aktif dengan wewenang{' '}
@@ -259,7 +271,7 @@ export default function RoleDashboardClient({
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
                 Balai Penyuluhan Pertanian (BPP) Kecamatan Lembeyan
               </h1>
-              <p className="text-blue-100/90 text-xs sm:text-sm leading-relaxed">
+              <p className="text-blue-100/90 text-xs sm:text-sm leading-relaxed" suppressHydrationWarning>
                 {timeGreeting.text} dan selamat bertugas, <strong>{activeUser.name}</strong>. Halaman ini dikhususkan bagi
                 Penyuluh Pertanian Lapangan (PPL) untuk melakukan{' '}
                 <strong>Digitasi Poligon Peta GIS</strong>,{' '}
@@ -413,7 +425,7 @@ export default function RoleDashboardClient({
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
                 Portal Pengurus Kelompok Tani &mdash; Kecamatan Lembeyan
               </h1>
-              <p className="text-emerald-100 text-xs sm:text-sm leading-relaxed">
+              <p className="text-emerald-100 text-xs sm:text-sm leading-relaxed" suppressHydrationWarning>
                 {timeGreeting.text}, <strong>{activeUser.name}</strong> ({activeUser.wilayah}). Hak
                 akses Anda difokuskan khusus untuk{' '}
                 <strong>Pendataan Anggota Petani & Poktan</strong> serta{' '}
@@ -572,7 +584,7 @@ export default function RoleDashboardClient({
                   PORTAL MANDIRI PETANI PENERIMA SUBSIDI
                 </span>
               </div>
-              <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
+              <h1 className="text-2xl sm:text-3xl font-black tracking-tight" suppressHydrationWarning>
                 {timeGreeting.text}, Bpk/Ibu {myPetaniData.nama}
               </h1>
               <p className="text-emerald-100 text-xs sm:text-sm leading-relaxed">

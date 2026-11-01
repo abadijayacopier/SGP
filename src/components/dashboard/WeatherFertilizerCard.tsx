@@ -33,10 +33,18 @@ export default function WeatherFertilizerCard() {
 
   if (loading) {
     return (
-      <div className="bg-white rounded-3xl border border-slate-200/80 p-5 shadow-xs animate-pulse">
-        <div className="h-4 bg-slate-200 rounded w-1/3 mb-3" />
-        <div className="h-16 bg-slate-100 rounded-2xl mb-3" />
-        <div className="h-4 bg-slate-200 rounded w-1/2" />
+      <div className="bg-gradient-to-br from-slate-900 via-slate-900 to-emerald-950 text-white rounded-3xl p-5 sm:p-6 shadow-xl border border-emerald-800/40 space-y-5 animate-pulse min-h-[220px]">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 border-b border-white/10 pb-4">
+          <div className="flex items-center gap-2">
+            <div className="h-5 bg-white/20 rounded-full w-48" />
+            <div className="h-4 bg-white/10 rounded w-24" />
+          </div>
+          <div className="h-6 bg-white/10 rounded-full w-36" />
+        </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="h-28 bg-white/5 rounded-2xl border border-white/5" />
+          <div className="md:col-span-2 h-28 bg-white/5 rounded-2xl border border-white/5" />
+        </div>
       </div>
     );
   }
