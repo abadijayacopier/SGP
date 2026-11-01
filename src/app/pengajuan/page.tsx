@@ -30,6 +30,7 @@ import {
   FileSpreadsheet,
   Trash2,
   XCircle,
+  Plus,
 } from 'lucide-react';
 import {
   showSuccess,
@@ -124,6 +125,13 @@ export default function PengajuanPage() {
   // Akun POKTAN hanya boleh melihat & mengajukan untuk anggota Poktan miliknya
   const scopePoktanId =
     currentUser.role === 'POKTAN' && currentUser.poktanId ? currentUser.poktanId : null;
+
+  // Hak akses usulan: Poktan, Admin Kecamatan (Mantri Tani), dan PPL BPP
+  const canSubmitPengajuan =
+    Boolean(permissions?.canSubmitPengajuan) ||
+    currentUser.role === 'ADMIN_DINAS' ||
+    currentUser.role === 'PPL' ||
+    currentUser.role === 'POKTAN';
 
   const fetchPengajuan = async () => {
     try {
@@ -482,42 +490,43 @@ export default function PengajuanPage() {
             </button>
           )}
 
-          {permissions.canSubmitPengajuan ? (
+          {canSubmitPengajuan ? (
             <>
               <button
+                type="button"
                 onClick={() => setActiveTab('list')}
                 className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${
                   activeTab === 'list'
-                    ? 'bg-emerald-600 text-white shadow-sm'
-                    : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                    ? 'bg-slate-900 text-white shadow-sm'
+                    : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
                 }`}
               >
-                Status Usulan Poktan ({pengajuanList.length})
+                Daftar Usulan ({pengajuanList.length})
               </button>
               <button
+                type="button"
                 onClick={() => setActiveTab('form')}
-                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${
+                className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer shadow-sm ${
                   activeTab === 'form'
-                    ? 'bg-emerald-600 text-white shadow-sm'
-                    : 'bg-white text-slate-600 border border-slate-200 hover:bg-slate-50'
+                    ? 'bg-emerald-600 text-white ring-2 ring-emerald-400'
+                    : 'bg-emerald-600 hover:bg-emerald-700 text-white active:scale-95'
                 }`}
               >
-                + Input Usulan e-RDKK Baru
+                <Plus className="w-4 h-4" />
+                <span>+ Input Usulan e-RDKK Baru</span>
               </button>
             </>
           ) : (
             <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 text-xs font-bold">
               <ShieldCheck className="w-4 h-4 text-blue-600" />
-              {currentUser.role === 'PPL'
-                ? 'Mode Verifikator Lapangan BPP (Input Usulan Hanya oleh Poktan)'
-                : 'Mode Otorisasi Kuota Kecamatan (Verifikasi Lapangan oleh BPP)'}
+              Mode Otorisasi Kuota Kecamatan (Verifikasi Lapangan oleh BPP)
             </span>
           )}
         </div>
       </div>
 
-      {/* TAB 1: FORMULIR PENGAJUAN BARU (KHUSUS POKTAN) */}
-      {activeTab === 'form' && permissions.canSubmitPengajuan && (
+      {/* TAB 1: FORMULIR PENGAJUAN BARU (POKTAN, PPL, & ADMIN KECAMATAN) */}
+      {activeTab === 'form' && canSubmitPengajuan && (
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 max-w-4xl mx-auto">
           <div className="border-b border-slate-100 pb-4 mb-6">
             <h2 className="text-lg font-black text-slate-800">
@@ -560,7 +569,7 @@ export default function PengajuanPage() {
                   >
                     {petaniList.map((p) => (
                       <option key={p.id} value={p.id}>
-                        {p.nama} (NIK: {p.nik})
+                        {p.nama} (NIK: {p.nik}) &bull; {p.poktan?.nama || 'Poktan'}
                       </option>
                     ))}
                     <option value="__NEW__" className="font-bold text-emerald-700 bg-emerald-50">
@@ -568,6 +577,26 @@ export default function PengajuanPage() {
                     </option>
                   </select>
                 </div>
+
+                {formData.petaniId === '__NEW__' && (
+                  <div className="col-span-1 sm:col-span-2 bg-emerald-50/70 border border-emerald-200 rounded-xl p-3">
+                    <label className="block font-bold text-slate-800 mb-1">Kelompok Tani (Poktan) Petani Baru *</label>
+                    <select
+                      value={formData.poktanId}
+                      onChange={(e) => setFormData({ ...formData, poktanId: e.target.value })}
+                      className="w-full px-3 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 bg-white font-medium cursor-pointer"
+                    >
+                      {poktanList.map((pok) => (
+                        <option key={pok.id} value={pok.id}>
+                          {pok.nama} (Desa {pok.desa})
+                        </option>
+                      ))}
+                    </select>
+                    <p className="text-[10px] text-slate-500 mt-1">
+                      Petani baru akan didaftarkan ke kelompok tani ini dan diverifikasi bersama usulan kuota.
+                    </p>
+                  </div>
+                )}
 
                 <div>
                   <label className="block font-bold text-slate-700 mb-1">Nama Lengkap Sesuai KTP *</label>
@@ -876,7 +905,7 @@ export default function PengajuanPage() {
       )}
 
       {/* TAB 2: DAFTAR STATUS PENGAJUAN & WORKFLOW APPROVAL */}
-      {(activeTab === 'list' || !permissions.canSubmitPengajuan) && (
+      {(activeTab === 'list' || !canSubmitPengajuan) && (
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
           <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
             <div>
@@ -887,6 +916,16 @@ export default function PengajuanPage() {
                 Alur verifikasi: Diajukan Poktan &rarr; Verifikasi Lapangan PPL &rarr; Persetujuan Kuota Dinas.
               </p>
             </div>
+            {canSubmitPengajuan && (
+              <button
+                type="button"
+                onClick={() => setActiveTab('form')}
+                className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-sm transition active:scale-95 cursor-pointer self-start sm:self-auto"
+              >
+                <Plus className="w-4 h-4" />
+                <span>+ Buat Usulan e-RDKK Baru</span>
+              </button>
+            )}
           </div>
 
           {/* Mobile Card View (Smartphone Friendly) */}
