@@ -443,31 +443,35 @@ export default function FieldMapsMobile() {
         } catch {}
       });
 
-    fetch('/api/poktan')
-      .then((r) => r.json())
-      .then((json) => {
-        if (json.success && Array.isArray(json.data)) {
-          setPoktanList(json.data);
-          try {
-            localStorage.setItem('pertanian_cached_poktan_list', JSON.stringify(json.data));
-          } catch {}
-          if (json.data.length > 0 && !quickPetaniData.poktanId) {
-            setQuickPetaniData((prev) => ({ ...prev, poktanId: json.data[0].id }));
-          }
-        }
-      })
-      .catch(() => {
-        try {
-          const cached = localStorage.getItem('pertanian_cached_poktan_list');
-          if (cached) {
-            const parsed = JSON.parse(cached);
-            setPoktanList(parsed);
-            if (parsed.length > 0 && !quickPetaniData.poktanId) {
-              setQuickPetaniData((prev) => ({ ...prev, poktanId: parsed[0].id }));
+    const loadPoktan = () => {
+      fetch('/api/poktan?_t=' + Date.now(), { cache: 'no-store' })
+        .then((r) => r.json())
+        .then((json) => {
+          if (json.success && Array.isArray(json.data)) {
+            setPoktanList(json.data);
+            try {
+              localStorage.setItem('pertanian_cached_poktan_list', JSON.stringify(json.data));
+            } catch {}
+            if (json.data.length > 0 && !quickPetaniData.poktanId) {
+              setQuickPetaniData((prev) => ({ ...prev, poktanId: json.data[0].id }));
             }
           }
-        } catch {}
-      });
+        })
+        .catch(() => {
+          try {
+            const cached = localStorage.getItem('pertanian_cached_poktan_list');
+            if (cached) {
+              const parsed = JSON.parse(cached);
+              setPoktanList(parsed);
+              if (parsed.length > 0 && !quickPetaniData.poktanId) {
+                setQuickPetaniData((prev) => ({ ...prev, poktanId: parsed[0].id }));
+              }
+            }
+          } catch {}
+        });
+    };
+
+    loadPoktan();
 
     const loadPetani = () => {
       fetch('/api/petani?_t=' + Date.now(), { cache: 'no-store' })
@@ -495,14 +499,17 @@ export default function FieldMapsMobile() {
 
     loadPetani();
 
-    const handlePetaniSync = () => {
+    const handleDataSync = () => {
       loadPetani();
+      loadPoktan();
     };
-    window.addEventListener('petani-updated', handlePetaniSync);
-    window.addEventListener('storage', handlePetaniSync);
+    window.addEventListener('petani-updated', handleDataSync);
+    window.addEventListener('poktan-updated', handleDataSync);
+    window.addEventListener('storage', handleDataSync);
     return () => {
-      window.removeEventListener('petani-updated', handlePetaniSync);
-      window.removeEventListener('storage', handlePetaniSync);
+      window.removeEventListener('petani-updated', handleDataSync);
+      window.removeEventListener('poktan-updated', handleDataSync);
+      window.removeEventListener('storage', handleDataSync);
     };
   }, []);
 

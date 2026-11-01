@@ -191,7 +191,7 @@ export default function PetaPage() {
 
   const fetchPoktan = async () => {
     try {
-      const res = await fetch('/api/poktan');
+      const res = await fetch(`/api/poktan?_t=${Date.now()}`, { cache: 'no-store' });
       const json = await res.json();
       if (json.success && Array.isArray(json.data)) {
         setPoktanList(json.data);
@@ -212,11 +212,13 @@ export default function PetaPage() {
     fetchPetani();
     fetchPoktan();
 
-    const handlePetaniUpdated = () => {
+    const handleDataUpdated = () => {
       fetchPetani();
+      fetchPoktan();
     };
-    window.addEventListener('petani-updated', handlePetaniUpdated);
-    window.addEventListener('storage', handlePetaniUpdated);
+    window.addEventListener('petani-updated', handleDataUpdated);
+    window.addEventListener('poktan-updated', handleDataUpdated);
+    window.addEventListener('storage', handleDataUpdated);
 
     const checkOffline = () => {
       const surveys = getOfflineSurveys();
@@ -225,8 +227,9 @@ export default function PetaPage() {
     checkOffline();
     window.addEventListener('offline-surveys-changed', checkOffline);
     return () => {
-      window.removeEventListener('petani-updated', handlePetaniUpdated);
-      window.removeEventListener('storage', handlePetaniUpdated);
+      window.removeEventListener('petani-updated', handleDataUpdated);
+      window.removeEventListener('poktan-updated', handleDataUpdated);
+      window.removeEventListener('storage', handleDataUpdated);
       window.removeEventListener('offline-surveys-changed', checkOffline);
     };
   }, [currentUser.role, currentUser.petaniId, currentUser.poktanId]);

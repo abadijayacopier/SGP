@@ -68,8 +68,9 @@ export default function PetaniPage() {
   });
   const [submitting, setSubmitting] = useState(false);
 
-  // Modal Tambah Poktan Baru
+  // Modal Tambah / Edit Poktan
   const [poktanModalOpen, setPoktanModalOpen] = useState(false);
+  const [editingPoktanId, setEditingPoktanId] = useState<string | null>(null);
   const [poktanFormData, setPoktanFormData] = useState({
     nama: '',
     ketua: '',
@@ -111,7 +112,7 @@ export default function PetaniPage() {
 
   const fetchPoktan = async () => {
     try {
-      const res = await fetch('/api/poktan');
+      const res = await fetch(`/api/poktan?_t=${Date.now()}`, { cache: 'no-store' });
       const json = await res.json();
       if (json.success) {
         const myPoktanId = currentUser.poktanId;
@@ -178,9 +179,11 @@ export default function PetaniPage() {
       fetchPoktan();
     };
     window.addEventListener('petani-updated', handlePetaniSync);
+    window.addEventListener('poktan-updated', handlePetaniSync);
     window.addEventListener('storage', handlePetaniSync);
     return () => {
       window.removeEventListener('petani-updated', handlePetaniSync);
+      window.removeEventListener('poktan-updated', handlePetaniSync);
       window.removeEventListener('storage', handlePetaniSync);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -239,14 +242,10 @@ export default function PetaniPage() {
         if (selectedPetani?.id === p.id) setDetailModalOpen(false);
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('petani-updated'));
+          window.dispatchEvent(new CustomEvent('poktan-updated'));
           try {
             localStorage.setItem('pertanian_last_petani_update', Date.now().toString());
-          } catch {}
-        }
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('petani-updated', { detail: json.data }));
-          try {
-            localStorage.setItem('pertanian_last_petani_update', Date.now().toString());
+            localStorage.setItem('pertanian_last_poktan_update', Date.now().toString());
           } catch {}
         }
         fetchPetani();
@@ -301,8 +300,10 @@ export default function PetaniPage() {
         });
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('petani-updated', { detail: json.data }));
+          window.dispatchEvent(new CustomEvent('poktan-updated'));
           try {
             localStorage.setItem('pertanian_last_petani_update', Date.now().toString());
+            localStorage.setItem('pertanian_last_poktan_update', Date.now().toString());
           } catch {}
         }
         fetchPetani();
@@ -317,6 +318,75 @@ export default function PetaniPage() {
     }
   };
 
+  const handleOpenCreatePoktan = () => {
+    setEditingPoktanId(null);
+    setPoktanFormData({
+      nama: '',
+      ketua: '',
+      kontak: '',
+      desa: 'Kediren',
+      kecamatan: 'Lembeyan',
+      kabupaten: 'Magetan',
+    });
+    setPoktanModalOpen(true);
+  };
+
+  const handleOpenEditPoktan = (pok: any) => {
+    setEditingPoktanId(pok.id);
+    setPoktanFormData({
+      nama: pok.nama || '',
+      ketua: pok.ketua || '',
+      kontak: pok.kontak || '',
+      desa: pok.desa || 'Kediren',
+      kecamatan: pok.kecamatan || 'Lembeyan',
+      kabupaten: pok.kabupaten || 'Magetan',
+    });
+    setPoktanModalOpen(true);
+  };
+
+  const handleDeletePoktan = async (pok: any) => {
+    const anggotaCount = pok.anggota?.length || 0;
+    if (anggotaCount > 0) {
+      showWarning(
+        'Tidak Dapat Dihapus',
+        `Kelompok Tani <strong>${pok.nama}</strong> masih memiliki <strong>${anggotaCount}</strong> anggota petani terdaftar.<br/><span class="text-xs text-slate-500 mt-2 block">Silakan pindahkan anggota ke Kelompok Tani lain atau hapus data petani terlebih dahulu sebelum menghapus Poktan ini.</span>`
+      );
+      return;
+    }
+
+    const confirmDelete = await showDeleteConfirm(
+      pok.nama,
+      `Hapus kelompok tani <strong>${pok.nama}</strong> (Desa ${pok.desa})?<br/><span class="text-xs text-rose-600 block mt-1 font-semibold">Tindakan ini tidak dapat dibatalkan.</span>`
+    );
+    if (!confirmDelete) return;
+
+    try {
+      const res = await fetch(`/api/poktan?id=${pok.id}`, { method: 'DELETE' });
+      const json = await res.json();
+      if (json.success) {
+        showSuccess('Poktan Dihapus', `Kelompok Tani "${pok.nama}" berhasil dihapus.`);
+        if (filterPoktan === pok.id) setFilterPoktan('SEMUA');
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('poktan-updated'));
+          try {
+            localStorage.setItem('pertanian_last_poktan_update', Date.now().toString());
+          } catch {}
+        }
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('poktan-updated'));
+          try {
+            localStorage.setItem('pertanian_last_poktan_update', Date.now().toString());
+          } catch {}
+        }
+        fetchPoktan();
+      } else {
+        showError('Gagal Menghapus', json.error || 'Gagal menghapus kelompok tani.');
+      }
+    } catch (err: any) {
+      showError('Terjadi Kesalahan', err.message);
+    }
+  };
+
   const handleSubmitPoktan = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!poktanFormData.nama || !poktanFormData.ketua || !poktanFormData.desa) {
@@ -326,15 +396,23 @@ export default function PetaniPage() {
 
     try {
       setSubmittingPoktan(true);
+      const method = editingPoktanId ? 'PATCH' : 'POST';
+      const payload = editingPoktanId ? { ...poktanFormData, id: editingPoktanId } : poktanFormData;
       const res = await fetch('/api/poktan', {
-        method: 'POST',
+        method,
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(poktanFormData),
+        body: JSON.stringify(payload),
       });
       const json = await res.json();
       if (json.success) {
-        showSuccess('Poktan Ditambahkan', `Kelompok Tani "${poktanFormData.nama}" berhasil ditambahkan!`);
+        showSuccess(
+          editingPoktanId ? 'Poktan Diperbarui' : 'Poktan Ditambahkan',
+          editingPoktanId
+            ? `Data Kelompok Tani "${poktanFormData.nama}" berhasil diperbarui!`
+            : `Kelompok Tani "${poktanFormData.nama}" berhasil ditambahkan!`
+        );
         setPoktanModalOpen(false);
+        setEditingPoktanId(null);
         setPoktanFormData({
           nama: '',
           ketua: '',
@@ -343,6 +421,12 @@ export default function PetaniPage() {
           kecamatan: 'Lembeyan',
           kabupaten: 'Magetan',
         });
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('poktan-updated'));
+          try {
+            localStorage.setItem('pertanian_last_poktan_update', Date.now().toString());
+          } catch {}
+        }
         fetchPoktan();
       } else {
         showError('Gagal Menyimpan', json.error);
@@ -419,8 +503,8 @@ export default function PetaniPage() {
           {permissions.canDigitasiGis && (
             <>
               <button
-                onClick={() => setPoktanModalOpen(true)}
-                className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 font-bold text-xs px-3.5 py-2.5 rounded-xl shadow-2xs transition"
+                onClick={handleOpenCreatePoktan}
+                className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 font-bold text-xs px-3.5 py-2.5 rounded-xl shadow-2xs transition cursor-pointer"
               >
                 <Plus className="w-4 h-4 text-emerald-600" />
                 Tambah Poktan
@@ -816,17 +900,45 @@ export default function PetaniPage() {
                   </div>
                 </div>
 
-                <div className="pt-2 flex items-center gap-2">
+                <div className="pt-3 border-t border-slate-100 flex items-center gap-2">
                   <button
+                    type="button"
                     onClick={() => {
                       setFilterPoktan(pok.id);
                       setActiveTab('petani');
                     }}
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl transition shadow-2xs"
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-emerald-700 text-white font-bold text-xs py-2.5 rounded-xl transition shadow-2xs cursor-pointer"
                   >
                     <Users className="w-3.5 h-3.5" />
-                    Lihat Daftar Anggota ({anggota.length})
+                    Lihat Anggota ({anggota.length})
                   </button>
+
+                  {(permissions.canDigitasiGis ||
+                    currentUser.role === 'ADMIN_DINAS' ||
+                    currentUser.role === 'PPL' ||
+                    (currentUser.role === 'POKTAN' && currentUser.poktanId === pok.id)) && (
+                    <div className="flex items-center gap-1.5 shrink-0">
+                      <button
+                        type="button"
+                        onClick={() => handleOpenEditPoktan(pok)}
+                        title="Edit Data Poktan"
+                        className="p-2.5 rounded-xl border border-slate-200 text-slate-700 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 transition cursor-pointer"
+                      >
+                        <Edit3 className="w-4 h-4" />
+                      </button>
+
+                      {(currentUser.role === 'ADMIN_DINAS' || currentUser.role === 'PPL') && (
+                        <button
+                          type="button"
+                          onClick={() => handleDeletePoktan(pok)}
+                          title="Hapus Kelompok Tani"
+                          className="p-2.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 hover:border-rose-300 transition cursor-pointer"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             );
@@ -1045,11 +1157,15 @@ export default function PetaniPage() {
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="font-black text-slate-800 text-lg flex items-center gap-2">
                 <Building2 className="w-5 h-5 text-emerald-600" />
-                Daftarkan Kelompok Tani (Poktan)
+                {editingPoktanId ? 'Edit Data Kelompok Tani (Poktan)' : 'Daftarkan Kelompok Tani (Poktan)'}
               </h3>
               <button
-                onClick={() => setPoktanModalOpen(false)}
-                className="p-1.5 rounded-full text-slate-400 hover:bg-slate-100"
+                type="button"
+                onClick={() => {
+                  setPoktanModalOpen(false);
+                  setEditingPoktanId(null);
+                }}
+                className="p-1.5 rounded-full text-slate-400 hover:bg-slate-100 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
@@ -1117,17 +1233,24 @@ export default function PetaniPage() {
               <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
                 <button
                   type="button"
-                  onClick={() => setPoktanModalOpen(false)}
-                  className="px-4 py-2 rounded-xl text-slate-600 font-semibold hover:bg-slate-100"
+                  onClick={() => {
+                    setPoktanModalOpen(false);
+                    setEditingPoktanId(null);
+                  }}
+                  className="px-4 py-2 rounded-xl text-slate-600 font-semibold hover:bg-slate-100 cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={submittingPoktan}
-                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-md transition"
+                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-md transition cursor-pointer disabled:opacity-50"
                 >
-                  {submittingPoktan ? 'Menyimpan...' : 'Simpan Poktan'}
+                  {submittingPoktan
+                    ? 'Menyimpan...'
+                    : editingPoktanId
+                    ? 'Simpan Perubahan'
+                    : 'Simpan Poktan'}
                 </button>
               </div>
             </form>
