@@ -95,7 +95,12 @@ function syncErdkkKementan() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName("e-RDKK_Kementan");
   if (!sheet) {
-    sheet = ss.insertSheet("e-RDKK_Kementan");
+    if (ss.getSheets().length === 1 && ss.getActiveSheet().getLastRow() === 0) {
+      sheet = ss.getActiveSheet();
+      sheet.setName("e-RDKK_Kementan");
+    } else {
+      sheet = ss.insertSheet("e-RDKK_Kementan");
+    }
   }
 
   sheet.clear();
@@ -155,7 +160,12 @@ function syncPenyaluranPupuk() {
   var ss = SpreadsheetApp.getActiveSpreadsheet();
   var sheet = ss.getSheetByName("Penyaluran_Pupuk");
   if (!sheet) {
-    sheet = ss.insertSheet("Penyaluran_Pupuk");
+    if (ss.getSheets().length === 1 && ss.getActiveSheet().getLastRow() === 0) {
+      sheet = ss.getActiveSheet();
+      sheet.setName("Penyaluran_Pupuk");
+    } else {
+      sheet = ss.insertSheet("Penyaluran_Pupuk");
+    }
   }
 
   sheet.clear();
@@ -209,9 +219,14 @@ function doPost(e) {
     var ss = SpreadsheetApp.getActiveSpreadsheet();
     var sheet = ss.getSheetByName(sheetName);
     
-    // Jika tab sheet belum ada, otomatis dibuatkan tab sheet baru
+    // Jika tab sheet belum ada, gunakan sheet aktif jika masih kosong atau buat sheet baru
     if (!sheet) {
-      sheet = ss.insertSheet(sheetName);
+      if (ss.getSheets().length === 1 && ss.getActiveSheet().getLastRow() === 0) {
+        sheet = ss.getActiveSheet();
+        sheet.setName(sheetName);
+      } else {
+        sheet = ss.insertSheet(sheetName);
+      }
     }
     
     // Bersihkan sheet untuk memperbarui data terkini
