@@ -20,6 +20,25 @@ body {
   -moz-osx-font-smoothing: grayscale;
 }
 
+/* Pastikan seluruh form input, select, textarea, option, dan button mewarisi font aplikasi secara konsisten */
+input,
+select,
+textarea,
+button,
+optgroup,
+option {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+select option,
+select optgroup {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif !important;
+  color: #0f172a;
+  background-color: #ffffff;
+}
+
 /* Cegah auto-zoom paksa iOS Safari saat pengguna menyentuh kolom input pada smartphone */
 @media screen and (max-width: 768px) {
   input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
@@ -68,14 +87,20 @@ body {
 
 /* Mode Digitasi Gambar Poligon GIS: Cursor Crosshair Presisi (Ganti Icon Tangan/Grab) */
 .leaflet-container.leaflet-drawing-mode,
+.leaflet-container.leaflet-drawing-mode *,
 .leaflet-container.leaflet-drawing-mode.leaflet-grab,
 .leaflet-container.leaflet-drawing-mode .leaflet-grab,
 .leaflet-container.leaflet-drawing-mode .leaflet-pane,
 .leaflet-container.leaflet-drawing-mode .leaflet-tile-pane,
 .leaflet-container.leaflet-drawing-mode .leaflet-overlay-pane,
+.leaflet-container.leaflet-drawing-mode .leaflet-tile-container,
+.leaflet-container.leaflet-drawing-mode .leaflet-tile,
+.leaflet-container.leaflet-drawing-mode .leaflet-image-layer,
 .leaflet-container.leaflet-drawing-mode .leaflet-interactive,
 .leaflet-container.leaflet-drawing-mode svg,
-.leaflet-container.leaflet-drawing-mode path {
+.leaflet-container.leaflet-drawing-mode path,
+.leaflet-drawing-mode,
+.leaflet-drawing-mode * {
   cursor: crosshair !important;
 }
 
@@ -89,6 +114,8 @@ body {
 }
 
 /* Patok batas tetap bisa digeser (move) saat mode gambar */
+.leaflet-container.leaflet-drawing-mode .custom-patok-field,
+.leaflet-container.leaflet-drawing-mode .custom-patok-field *,
 .leaflet-container.leaflet-drawing-mode .custom-patok-marker,
 .leaflet-container.leaflet-drawing-mode .custom-patok-marker * {
   cursor: move !important;

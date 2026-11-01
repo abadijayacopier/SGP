@@ -94,12 +94,14 @@ function MapController({
   targetPos,
   onMapClick,
   isTapMode,
+  isDrawing,
   onMapReady,
 }: {
   gpsPos: [number, number] | null;
   targetPos: [number, number] | null;
   onMapClick: (lat: number, lng: number) => void;
   isTapMode: boolean;
+  isDrawing: boolean;
   onMapReady?: (map: L.Map) => void;
 }) {
   const map = useMap();
@@ -110,9 +112,33 @@ function MapController({
     }
   }, [map, onMapReady]);
 
+  // Efek ganti cursor menjadi crosshair (+) saat membuat atau menambah titik patok poligon
+  useEffect(() => {
+    const container = map.getContainer();
+    if (isTapMode || isDrawing) {
+      container.classList.add('leaflet-drawing-mode');
+      container.style.cursor = 'crosshair';
+      const targets = container.querySelectorAll<HTMLElement>(
+        '.leaflet-pane, .leaflet-tile-pane, .leaflet-overlay-pane, .leaflet-tile, svg'
+      );
+      targets.forEach((el) => {
+        el.style.cursor = 'crosshair';
+      });
+    } else {
+      container.classList.remove('leaflet-drawing-mode');
+      container.style.cursor = '';
+      const targets = container.querySelectorAll<HTMLElement>(
+        '.leaflet-pane, .leaflet-tile-pane, .leaflet-overlay-pane, .leaflet-tile, svg'
+      );
+      targets.forEach((el) => {
+        el.style.cursor = '';
+      });
+    }
+  }, [isTapMode, isDrawing, map]);
+
   useMapEvents({
     click(e) {
-      if (isTapMode) {
+      if (isTapMode || isDrawing) {
         onMapClick(e.latlng.lat, e.latlng.lng);
       }
     },
@@ -1319,7 +1345,7 @@ export default function FieldMapsMobile() {
           zoom={16}
           maxZoom={22}
           zoomControl={false}
-          className="w-full h-full"
+          className={`w-full h-full ${isTapMode || surveyPoints.length > 0 ? 'leaflet-drawing-mode' : ''}`}
         >
           <TileLayer
             url={tileUrl}
@@ -1333,6 +1359,7 @@ export default function FieldMapsMobile() {
             targetPos={flyTarget}
             onMapClick={handleMapTap}
             isTapMode={isTapMode}
+            isDrawing={isTapMode || surveyPoints.length > 0}
             onMapReady={(m) => {
               mapInstanceRef.current = m;
             }}
@@ -1623,9 +1650,10 @@ export default function FieldMapsMobile() {
             setIsTapMode(next);
             if (next) {
               setIsWalkTracking(false);
+              showToast('Mode Buat Titik Aktif: Klik pada peta untuk menaruh patok batas', 'info');
             }
           }}
-          className={`w-12 h-12 rounded-2xl border shadow-xl flex items-center justify-center active:scale-90 transition ${
+          className={`w-12 h-12 rounded-2xl border shadow-xl flex items-center justify-center active:scale-90 transition cursor-pointer ${
             isTapMode
               ? 'bg-amber-500 text-slate-950 font-black border-amber-300'
               : 'bg-slate-900/90 text-amber-300 border-white/20 hover:bg-slate-800'
@@ -1776,15 +1804,15 @@ export default function FieldMapsMobile() {
 
       {/* 6. BOTTOM DRAWER: INPUT IDENTITAS LAHAN & PETANI */}
       {showSaveDrawer && (
-        <div className="fixed inset-0 z-[1200] bg-slate-950/70 backdrop-blur-xs flex flex-col justify-end">
-          <div className="bg-white rounded-t-3xl p-5 sm:p-6 max-h-[85vh] overflow-y-auto space-y-4 shadow-2xl border-t border-slate-200">
+        <div className="fixed inset-0 z-[1200] bg-slate-950/70 backdrop-blur-xs flex flex-col justify-end font-sans">
+          <div className="bg-white rounded-t-3xl p-5 sm:p-6 max-h-[85vh] overflow-y-auto space-y-4 shadow-2xl border-t border-slate-200 font-sans text-slate-800">
             <div className="flex items-center justify-between border-b pb-3 border-slate-100">
               <div>
-                <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2 font-sans">
                   <Save className="w-5 h-5 text-emerald-600" />
                   Simpan Petak Sawah Hasil Ukur
                 </h3>
-                <p className="text-xs text-slate-500">
+                <p className="text-xs text-slate-500 font-sans">
                   Hasil ukur: <strong className="text-emerald-700">{surveyArea.luasHa} Ha</strong> (
                   {surveyArea.luasM2} m²) &bull; {surveyPoints.length} Titik Patok
                 </p>
@@ -1792,15 +1820,15 @@ export default function FieldMapsMobile() {
               <button
                 type="button"
                 onClick={() => setShowSaveDrawer(false)}
-                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center"
+                className="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 text-slate-600 flex items-center justify-center cursor-pointer"
               >
                 <X className="w-4 h-4" />
               </button>
             </div>
 
-            <form onSubmit={handleSaveLahan} className="space-y-3.5 text-xs">
+            <form onSubmit={handleSaveLahan} className="space-y-3.5 text-xs font-sans">
               <div>
-                <label className="block font-bold text-slate-700 mb-1">
+                <label className="block font-bold text-slate-700 mb-1 font-sans">
                   Nama Petak Sawah / Blok Hamparan *
                 </label>
                 <input
@@ -1809,18 +1837,18 @@ export default function FieldMapsMobile() {
                   placeholder="Misal: Sawah Blok Glundengan Kidul"
                   value={formData.namaLahan}
                   onChange={(e) => setFormData({ ...formData, namaLahan: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-sans font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
 
               {/* Pemilihan Petani atau Jalan Pintas Pendaftaran Petani Baru */}
-              <div className="space-y-2">
-                <label className="block font-bold text-slate-700 text-xs">
+              <div className="space-y-2 font-sans">
+                <label className="block font-bold text-slate-700 text-xs font-sans">
                   Petani Pemilik / Penggarap *
                 </label>
 
                 {!isQuickAddPetani ? (
-                  <div className="space-y-1.5">
+                  <div className="space-y-1.5 font-sans">
                     <select
                       value={formData.petaniId}
                       onChange={(e) => {
@@ -1831,15 +1859,15 @@ export default function FieldMapsMobile() {
                           setFormData({ ...formData, petaniId: e.target.value });
                         }
                       }}
-                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs"
+                      className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-sans font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 text-xs cursor-pointer"
                     >
-                      <option value="">-- Pilih dari Petani Terdaftar ({petaniList.length}) --</option>
+                      <option value="" className="font-sans">-- Pilih dari Petani Terdaftar ({petaniList.length}) --</option>
                       {petaniList.map((p) => (
-                        <option key={p.id} value={p.id}>
+                        <option key={p.id} value={p.id} className="font-sans">
                           {p.nama} (NIK: {p.nik}) &bull; Desa {p.desa || 'Kediren'}
                         </option>
                       ))}
-                      <option value="__QUICK_ADD__" className="font-bold text-emerald-700 bg-emerald-50">
+                      <option value="__QUICK_ADD__" className="font-sans font-bold text-emerald-700 bg-emerald-50">
                         + Petani Belum Ada? Klik untuk Tambah Petani / Penggarap Baru...
                       </option>
                     </select>
@@ -1857,28 +1885,28 @@ export default function FieldMapsMobile() {
                   </div>
                 ) : (
                   /* Panel Jalan Pintas Input Petani / Penggarap Baru (Identik dengan Mode Desktop) */
-                  <div className="bg-emerald-50/80 border-2 border-emerald-300 rounded-2xl p-3.5 space-y-3 animate-in fade-in duration-150">
-                    <div className="flex items-center justify-between border-b border-emerald-200 pb-2">
+                  <div className="bg-emerald-50/80 border-2 border-emerald-300 rounded-2xl p-3.5 space-y-3 animate-in fade-in duration-150 font-sans">
+                    <div className="flex items-center justify-between border-b border-emerald-200 pb-2 font-sans">
                       <div>
-                        <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300">
+                        <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300 font-sans">
                           JALAN PINTAS PENDAFTARAN PETANI
                         </span>
-                        <h4 className="font-black text-slate-900 text-xs mt-1">
+                        <h4 className="font-black text-slate-900 text-xs mt-1 font-sans">
                           Input Data Petani / Penggarap Baru
                         </h4>
                       </div>
                       <button
                         type="button"
                         onClick={() => setIsQuickAddPetani(false)}
-                        className="text-[11px] text-slate-500 hover:text-slate-800 font-bold cursor-pointer"
+                        className="text-[11px] text-slate-500 hover:text-slate-800 font-bold cursor-pointer font-sans"
                       >
                         Batal
                       </button>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 font-sans">
                       <div>
-                        <label className="block font-bold text-slate-700 mb-0.5 text-[11px]">
+                        <label className="block font-bold text-slate-700 mb-0.5 text-[11px] font-sans">
                           Nama Lengkap Petani / Penggarap *
                         </label>
                         <input
@@ -1887,11 +1915,11 @@ export default function FieldMapsMobile() {
                           placeholder="Contoh: Suparno"
                           value={quickPetaniData.nama}
                           onChange={(e) => setQuickPetaniData({ ...quickPetaniData, nama: e.target.value })}
-                          className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-emerald-500"
+                          className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-sans font-semibold focus:ring-2 focus:ring-emerald-500"
                         />
                       </div>
                       <div>
-                        <label className="block font-bold text-slate-700 mb-0.5 text-[11px]">
+                        <label className="block font-bold text-slate-700 mb-0.5 text-[11px] font-sans">
                           NIK Sesuai KTP (16 Digit) *
                         </label>
                         <input
@@ -1911,9 +1939,9 @@ export default function FieldMapsMobile() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 font-sans">
                       <div>
-                        <label className="block font-bold text-slate-700 mb-0.5 text-[11px]">
+                        <label className="block font-bold text-slate-700 mb-0.5 text-[11px] font-sans">
                           Nomor Kartu Keluarga (KK)
                         </label>
                         <input
@@ -1931,16 +1959,16 @@ export default function FieldMapsMobile() {
                         />
                       </div>
                       <div>
-                        <label className="block font-bold text-slate-700 mb-0.5 text-[11px]">
+                        <label className="block font-bold text-slate-700 mb-0.5 text-[11px] font-sans">
                           Kelompok Tani (Poktan) *
                         </label>
                         <select
                           value={quickPetaniData.poktanId}
                           onChange={(e) => setQuickPetaniData({ ...quickPetaniData, poktanId: e.target.value })}
-                          className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold focus:ring-2 focus:ring-emerald-500"
+                          className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-sans font-semibold focus:ring-2 focus:ring-emerald-500 cursor-pointer"
                         >
                           {poktanList.map((pk) => (
-                            <option key={pk.id} value={pk.id}>
+                            <option key={pk.id} value={pk.id} className="font-sans">
                               {pk.nama} (Desa {pk.desa})
                             </option>
                           ))}
@@ -1948,9 +1976,9 @@ export default function FieldMapsMobile() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 font-sans">
                       <div>
-                        <label className="block font-bold text-slate-700 mb-0.5 text-[11px]">
+                        <label className="block font-bold text-slate-700 mb-0.5 text-[11px] font-sans">
                           Tempat Lahir
                         </label>
                         <input
@@ -1958,25 +1986,25 @@ export default function FieldMapsMobile() {
                           placeholder="Magetan"
                           value={quickPetaniData.tempatLahir}
                           onChange={(e) => setQuickPetaniData({ ...quickPetaniData, tempatLahir: e.target.value })}
-                          className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs"
+                          className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-sans"
                         />
                       </div>
                       <div>
-                        <label className="block font-bold text-slate-700 mb-0.5 text-[11px]">
+                        <label className="block font-bold text-slate-700 mb-0.5 text-[11px] font-sans">
                           Tanggal Lahir
                         </label>
                         <input
                           type="date"
                           value={quickPetaniData.tanggalLahir}
                           onChange={(e) => setQuickPetaniData({ ...quickPetaniData, tanggalLahir: e.target.value })}
-                          className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs"
+                          className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-sans"
                         />
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 font-sans">
                       <div>
-                        <label className="block font-bold text-slate-700 mb-0.5 text-[11px]">
+                        <label className="block font-bold text-slate-700 mb-0.5 text-[11px] font-sans">
                           Nama Ibu Kandung
                         </label>
                         <input
@@ -1984,21 +2012,21 @@ export default function FieldMapsMobile() {
                           placeholder="Nama gadis ibu"
                           value={quickPetaniData.namaIbuKandung}
                           onChange={(e) => setQuickPetaniData({ ...quickPetaniData, namaIbuKandung: e.target.value })}
-                          className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs"
+                          className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-sans"
                         />
                       </div>
                       <div>
-                        <label className="block font-bold text-slate-700 mb-0.5 text-[11px]">
+                        <label className="block font-bold text-slate-700 mb-0.5 text-[11px] font-sans">
                           Desa / Kelurahan (Kec. Lembeyan)
                         </label>
                         <select
                           value={quickPetaniData.desa}
                           onChange={(e) => setQuickPetaniData({ ...quickPetaniData, desa: e.target.value })}
-                          className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-semibold"
+                          className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-sans font-semibold cursor-pointer"
                         >
                           {DESA_LEMBEYAN_LIST.map((d) => (
-                            <option key={d} value={d}>
-                              Desa / Kel. {d}
+                            <option key={d} value={d} className="font-sans">
+                              {d}
                             </option>
                           ))}
                         </select>
@@ -2006,7 +2034,7 @@ export default function FieldMapsMobile() {
                     </div>
 
                     <div>
-                      <label className="block font-bold text-slate-700 mb-0.5 text-[11px]">
+                      <label className="block font-bold text-slate-700 mb-0.5 text-[11px] font-sans">
                         Alamat Dusun / RT / RW
                       </label>
                       <input
@@ -2014,19 +2042,19 @@ export default function FieldMapsMobile() {
                         placeholder="Contoh: RT 03 / RW 01, Dusun Krajan"
                         value={quickPetaniData.alamat}
                         onChange={(e) => setQuickPetaniData({ ...quickPetaniData, alamat: e.target.value })}
-                        className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs"
+                        className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-sans"
                       />
                     </div>
 
-                    <div className="flex items-center justify-between pt-1">
-                      <span className="text-[10px] text-emerald-800 font-medium">
+                    <div className="flex items-center justify-between pt-1 font-sans">
+                      <span className="text-[10px] text-emerald-800 font-medium font-sans">
                         *Petani baru otomatis didaftarkan ke sistem e-RDKK.
                       </span>
                       <button
                         type="button"
                         disabled={savingQuickPetani}
                         onClick={handleSaveQuickPetani}
-                        className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg shadow-xs cursor-pointer flex items-center gap-1.5 transition active:scale-95 disabled:opacity-50"
+                        className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs px-3.5 py-1.5 rounded-lg shadow-xs cursor-pointer flex items-center gap-1.5 transition active:scale-95 disabled:opacity-50 font-sans"
                       >
                         <Check className="w-3.5 h-3.5" />
                         {savingQuickPetani ? 'Menyimpan...' : 'Daftarkan & Pilih Petani Ini'}
@@ -2037,16 +2065,16 @@ export default function FieldMapsMobile() {
               </div>
 
               {/* Multi-Komoditas Selector */}
-              <div>
-                <div className="flex items-center justify-between mb-1.5">
-                  <label className="block font-bold text-slate-700">
+              <div className="font-sans">
+                <div className="flex items-center justify-between mb-1.5 font-sans">
+                  <label className="block font-bold text-slate-700 font-sans">
                     Komoditas Tanam (Bisa Pilih &gt; 1 / Tumpang Sari) *
                   </label>
-                  <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                  <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200 font-sans">
                     Multi-Komoditas
                   </span>
                 </div>
-                <div className="flex flex-wrap gap-1.5 mb-2">
+                <div className="flex flex-wrap gap-1.5 mb-2 font-sans">
                   {POPULAR_KOMODITAS.map((k) => {
                     const isSelected = (formData.komoditas || '')
                       .toLowerCase()
@@ -2085,40 +2113,40 @@ export default function FieldMapsMobile() {
 
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Nomor Pipil / SPPT</label>
+                  <label className="block font-bold text-slate-700 mb-1 font-sans">Nomor Pipil / SPPT</label>
                   <input
                     type="text"
                     placeholder="Contoh: 35.20.040.005"
                     value={formData.nomorPipil}
                     onChange={(e) => setFormData({ ...formData, nomorPipil: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-sans font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
                   />
                 </div>
 
                 <div>
-                  <label className="block font-bold text-slate-700 mb-1">Status Penguasaan</label>
+                  <label className="block font-bold text-slate-700 mb-1 font-sans">Status Penguasaan</label>
                   <select
                     value={formData.statusKepemilikan}
                     onChange={(e) => setFormData({ ...formData, statusKepemilikan: e.target.value })}
-                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-sans font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
                   >
-                    <option value="Milik Sendiri">Milik Sendiri</option>
-                    <option value="Sewa">Sewa / Sakap</option>
-                    <option value="Bagi Hasil">Bagi Hasil</option>
+                    <option value="Milik Sendiri" className="font-sans">Milik Sendiri</option>
+                    <option value="Sewa" className="font-sans">Sewa / Sakap</option>
+                    <option value="Bagi Hasil" className="font-sans">Bagi Hasil</option>
                   </select>
                 </div>
               </div>
 
               <div>
-                <label className="block font-bold text-slate-700 mb-1">Jenis Irigasi</label>
+                <label className="block font-bold text-slate-700 mb-1 font-sans">Jenis Irigasi</label>
                 <select
                   value={formData.statusIrigasi}
                   onChange={(e) => setFormData({ ...formData, statusIrigasi: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-sans font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
                 >
-                  <option value="Irigasi Teknis">Irigasi Teknis</option>
-                  <option value="Pompa Sumur Dangkal">Pompa Sumur Dangkal</option>
-                  <option value="Tadah Hujan">Tadah Hujan</option>
+                  <option value="Irigasi Teknis" className="font-sans">Irigasi Teknis</option>
+                  <option value="Pompa Sumur Dangkal" className="font-sans">Pompa Sumur Dangkal</option>
+                  <option value="Tadah Hujan" className="font-sans">Tadah Hujan</option>
                 </select>
               </div>
 
