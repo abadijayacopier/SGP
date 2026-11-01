@@ -35,6 +35,7 @@ interface DbUser {
   username: string;
   name: string;
   role: UserRole;
+  nip?: string | null;
   phone?: string | null;
   email?: string | null;
   wilayah?: string | null;
@@ -90,6 +91,7 @@ export default function UsersManagementPage() {
     username: '',
     name: '',
     role: 'PPL' as UserRole,
+    nip: '',
     phone: '',
     email: '',
     wilayah: 'BPP Kec. Lembeyan',
@@ -178,6 +180,7 @@ export default function UsersManagementPage() {
       username: '',
       name: '',
       role: 'PPL',
+      nip: '',
       phone: '',
       email: '',
       wilayah: 'BPP Kec. Lembeyan',
@@ -192,6 +195,7 @@ export default function UsersManagementPage() {
       username: u.username,
       name: u.name,
       role: u.role,
+      nip: u.nip || '',
       phone: u.phone || '',
       email: u.email || '',
       wilayah: u.wilayah || '',
@@ -601,7 +605,104 @@ export default function UsersManagementPage() {
           </div>
         </div>
 
-        <div className="overflow-x-auto">
+        {/* Mobile User Card View */}
+        <div className="block lg:hidden divide-y divide-slate-100">
+          {filteredUsers.length === 0 ? (
+            <div className="p-8 text-center text-slate-400 text-xs">
+              Tidak ada pengguna yang sesuai pencarian.
+            </div>
+          ) : (
+            filteredUsers.map((u) => {
+              const meta = ROLE_BADGE_MAP[u.role] || ROLE_BADGE_MAP.PETANI;
+              const isActive = currentUser.username === u.username;
+
+              return (
+                <div key={u.id} className="p-4 hover:bg-slate-50/80 transition space-y-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="flex items-center gap-2.5 min-w-0 flex-1">
+                      <div className="w-9 h-9 rounded-xl bg-emerald-700 text-white font-black text-xs flex items-center justify-center shrink-0">
+                        {meta.avatar}
+                      </div>
+                      <div className="min-w-0 flex-1">
+                        <div className="font-bold text-slate-900 text-sm leading-tight truncate">
+                          {u.name}
+                        </div>
+                        <div className="text-[11px] font-mono text-slate-500 truncate mt-0.5">
+                          @{u.username}
+                        </div>
+                      </div>
+                    </div>
+                    <span className={`shrink-0 text-[10px] font-bold px-2 py-0.5 rounded-full border ${meta.badge}`}>
+                      {meta.label}
+                    </span>
+                  </div>
+
+                  {u.nip && (
+                    <div className="text-[11px] bg-slate-50 px-2.5 py-1 rounded-lg border border-slate-200 text-emerald-800 font-semibold font-mono">
+                      {u.nip}
+                    </div>
+                  )}
+
+                  <div className="flex flex-wrap items-center gap-2 text-[11px] text-slate-500">
+                    {u.wilayah && (
+                      <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md border border-slate-200">
+                        📍 {u.wilayah}
+                      </span>
+                    )}
+                    {u.kiosName && (
+                      <span className="bg-amber-50 text-amber-800 px-2 py-0.5 rounded-md border border-amber-200 font-semibold">
+                        🏪 KPL: {u.kiosName}
+                      </span>
+                    )}
+                    {u.phone && (
+                      <span className="font-mono text-slate-600">
+                        📞 {u.phone}
+                      </span>
+                    )}
+                  </div>
+
+                  <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+                    <button
+                      type="button"
+                      onClick={() => handleSwitchToUser(u)}
+                      className={`flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition shadow-xs ${
+                        isActive
+                          ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
+                          : 'bg-emerald-600 hover:bg-emerald-700 text-white active:scale-95'
+                      }`}
+                    >
+                      <LogIn className="w-3.5 h-3.5" />
+                      <span>{isActive ? 'Sedang Digunakan' : 'Gunakan Akun'}</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => handleOpenEdit(u)}
+                      className="p-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-100 active:scale-95 transition"
+                      title="Edit User"
+                    >
+                      <Edit3 className="w-4 h-4" />
+                    </button>
+
+                    {u.username !== 'admin' && (
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteUser(u)}
+                        className="p-2 rounded-xl border border-rose-200 text-rose-600 bg-rose-50 hover:bg-rose-100 active:scale-95 transition"
+                        title="Hapus User"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Desktop User Table View */}
+        <div className="hidden lg:block overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 text-slate-600 uppercase text-[10px] font-bold tracking-wider border-b border-slate-200">
               <tr>
@@ -634,7 +735,10 @@ export default function UsersManagementPage() {
                             )}
                           </div>
                           <div className="text-[11px] font-mono text-slate-500">
-                            Username: <strong>{u.username}</strong> &bull; Sandi: 123456
+                            Username: <strong>{u.username}</strong>
+                            {u.nip && (
+                              <span className="ml-2 text-emerald-800 font-bold">&bull; {u.nip}</span>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -765,16 +869,29 @@ export default function UsersManagementPage() {
                 </div>
               </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 mb-1">Nama Lengkap & Gelar *</label>
-                <input
-                  type="text"
-                  required
-                  placeholder="Contoh: Ir. Hendra Kusuma, S.P"
-                  value={formData.name}
-                  onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500"
-                />
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Nama Lengkap & Gelar *</label>
+                  <input
+                    type="text"
+                    required
+                    placeholder="Contoh: Ir. Hendra Kusuma, S.P"
+                    value={formData.name}
+                    onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">NIP / Nomor Registrasi Jabatan</label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: NIP. 19850412 201101 2 008"
+                    value={formData.nip}
+                    onChange={(e) => setFormData({ ...formData, nip: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl font-mono focus:ring-2 focus:ring-emerald-500"
+                  />
+                </div>
               </div>
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">

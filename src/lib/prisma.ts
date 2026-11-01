@@ -13,20 +13,44 @@ function createPrismaClient(): PrismaClient {
   // Salin file SQLite ke /tmp/dev.db agar dapat dibaca dan ditulisi di Vercel.
   if (process.env.VERCEL) {
     const tmpDbPath = path.join('/tmp', 'dev.db');
-    const sourceDbPath = path.join(process.cwd(), 'prisma', 'dev.db');
+
+    // Daftar kemungkinan lokasi file database di lingkungan serverless Vercel
+    const candidatePaths = [
+      path.join(process.cwd(), 'prisma', 'dev.db'),
+      path.join(process.cwd(), 'public', 'dev.db'),
+      path.join('/var', 'task', 'prisma', 'dev.db'),
+      path.join('/var', 'task', 'public', 'dev.db'),
+      path.join(process.cwd(), '.next', 'server', 'prisma', 'dev.db'),
+      path.resolve('prisma/dev.db'),
+      path.resolve('public/dev.db'),
+    ];
 
     try {
-      if (!fs.existsSync(tmpDbPath)) {
-        if (fs.existsSync(sourceDbPath)) {
-          fs.copyFileSync(sourceDbPath, tmpDbPath);
-        } else {
-          // Buat file kosong jika file sumber belum ada
-          fs.writeFileSync(tmpDbPath, '');
+      const isTmpValid = fs.existsSync(tmpDbPath) && fs.statSync(tmpDbPath).size > 1024;
+      if (!isTmpValid) {
+        let copied = false;
+        for (const candidate of candidatePaths) {
+          try {
+            if (fs.existsSync(candidate) && fs.statSync(candidate).size > 1024) {
+              fs.copyFileSync(candidate, tmpDbPath);
+              copied = true;
+              break;
+            }
+          } catch (e) {
+            // Abaikan error pada candidate individual dan coba candidate berikutnya
+          }
+        }
+
+        if (!copied && !fs.existsSync(tmpDbPath)) {
+          console.warn('[Prisma Vercel Bridge] Master dev.db tidak ditemukan di candidate paths.');
         }
       }
-      datasourceUrl = `file:${tmpDbPath}`;
+
+      if (fs.existsSync(tmpDbPath)) {
+        datasourceUrl = `file:${tmpDbPath}`;
+      }
     } catch (err) {
-      console.error('[Prisma Vercel Bridge] Gagal menyalin dev.db ke /tmp:', err);
+      console.error('[Prisma Vercel Bridge] Gagal menginisialisasi database di /tmp:', err);
     }
   }
 

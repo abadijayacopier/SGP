@@ -177,40 +177,15 @@ export async function POST(request: Request) {
       kodeLahan = `LHN-2026-${String(nextNum).padStart(3, '0')}`;
     }
 
-    let newLahan;
-    try {
-      newLahan = await prisma.lahan.create({
-        data: {
-          kodeLahan,
-          namaLahan,
-          petaniId: finalPetaniId,
-          komoditas,
-          luasHa,
-          luasM2,
-          kabupaten: kabupaten || 'Magetan',
-          statusKepemilikan: statusKepemilikan || 'Milik Sendiri',
-          statusIrigasi: statusIrigasi || 'Irigasi Teknis',
-          nomorPipil: nomorPipil || null,
-          batasUtara: batasUtara || null,
-          batasSelatan: batasSelatan || null,
-          batasTimur: batasTimur || null,
-          batasBarat: batasBarat || null,
-          coordinates: JSON.stringify(coordinates),
-          centerLat,
-          centerLng,
-          fotoLahan: body.fotoLahan || null,
-          statusVerifikasi: 'TERVERIFIKASI',
-        },
-        include: {
-          petani: {
-            include: { poktan: true },
-          },
-        },
-      });
-    } catch (createErr: any) {
-      // Fallback pencegah tabrakan unique constraint
-      if (createErr?.code === 'P2002' || String(createErr?.message).includes('kodeLahan')) {
-        kodeLahan = `LHN-2026-${Date.now().toString().slice(-4)}-${Math.floor(100 + Math.random() * 900)}`;
+    let newLahan = null;
+    let attempts = 0;
+    while (!newLahan && attempts < 5) {
+      attempts++;
+      try {
+        if (attempts > 1) {
+          nextNum++;
+          kodeLahan = `LHN-2026-${String(nextNum).padStart(3, '0')}-${Math.floor(100 + Math.random() * 900)}`;
+        }
         newLahan = await prisma.lahan.create({
           data: {
             kodeLahan,
@@ -239,7 +214,10 @@ export async function POST(request: Request) {
             },
           },
         });
-      } else {
+      } catch (createErr: any) {
+        if ((createErr?.code === 'P2002' || String(createErr?.message).includes('kodeLahan')) && attempts < 5) {
+          continue;
+        }
         throw createErr;
       }
     }

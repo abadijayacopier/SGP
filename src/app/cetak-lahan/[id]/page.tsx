@@ -30,20 +30,15 @@ const BULAN_INDONESIA = [
 export default async function CetakLahanPage({ params }: Props) {
   const { id } = await params;
 
-  let lahan = await prisma.lahan.findUnique({
-    where: { id },
-    include: {
-      petani: {
-        include: {
-          poktan: true,
-        },
-      },
-    },
-  });
+  let lahan: any = null;
+  let pplUser: any = null;
+  let allLahanList: any[] = [];
+  let petaniUser: any = null;
+  let poktanUser: any = null;
 
-  if (!lahan) {
-    lahan = await prisma.lahan.findFirst({
-      where: { petaniId: id },
+  try {
+    lahan = await prisma.lahan.findUnique({
+      where: { id },
       include: {
         petani: {
           include: {
@@ -52,46 +47,67 @@ export default async function CetakLahanPage({ params }: Props) {
         },
       },
     });
-  }
 
-  const [pplUser, allLahanList] = await Promise.all([
-    prisma.user.findFirst({
-      where: { role: 'PPL' },
-      orderBy: { updatedAt: 'desc' },
-    }),
-    prisma.lahan.findMany({
-      include: {
-        petani: {
-          select: { id: true, nama: true, desa: true },
+    if (!lahan) {
+      lahan = await prisma.lahan.findFirst({
+        where: { petaniId: id },
+        include: {
+          petani: {
+            include: {
+              poktan: true,
+            },
+          },
         },
-      },
-      orderBy: { kodeLahan: 'asc' },
-    }),
-  ]);
+      });
+    }
+
+    const [pplResult, lahanListResult] = await Promise.all([
+      prisma.user.findFirst({
+        where: { role: 'PPL' },
+        orderBy: { updatedAt: 'desc' },
+      }),
+      prisma.lahan.findMany({
+        include: {
+          petani: {
+            select: { id: true, nama: true, desa: true },
+          },
+        },
+        orderBy: { kodeLahan: 'asc' },
+      }),
+    ]);
+    pplUser = pplResult;
+    allLahanList = lahanListResult;
+
+    if (lahan) {
+      const userResults = await Promise.all([
+        prisma.user.findFirst({
+          where: {
+            OR: [
+              { username: lahan.petani?.nik || '' },
+              { role: 'PETANI', name: lahan.petani?.nama || '' },
+            ],
+          },
+        }),
+        prisma.user.findFirst({
+          where: {
+            role: 'POKTAN',
+            OR: [
+              { poktanId: lahan.petani?.poktanId || '' },
+              { name: { contains: lahan.petani?.poktan?.ketua || 'Suparman' } },
+            ],
+          },
+        }),
+      ]);
+      petaniUser = userResults[0];
+      poktanUser = userResults[1];
+    }
+  } catch (err) {
+    console.error('[CetakLahanPage] Database error:', err);
+  }
 
   if (!lahan) {
     notFound();
   }
-
-  const [petaniUser, poktanUser] = await Promise.all([
-    prisma.user.findFirst({
-      where: {
-        OR: [
-          { username: lahan.petani?.nik || '' },
-          { role: 'PETANI', name: lahan.petani?.nama || '' },
-        ],
-      },
-    }),
-    prisma.user.findFirst({
-      where: {
-        role: 'POKTAN',
-        OR: [
-          { poktanId: lahan.petani?.poktanId || '' },
-          { name: { contains: lahan.petani?.poktan?.ketua || 'Suparman' } },
-        ],
-      },
-    }),
-  ]);
 
   const petaniSig =
     petaniUser?.signatureUrl ||

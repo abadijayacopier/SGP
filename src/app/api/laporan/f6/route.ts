@@ -222,11 +222,11 @@ export async function GET(request: Request) {
         stampUrl: pplUser?.stampUrl || generateOfficialStampSvg('PPL', 'BPP Kecamatan Lembeyan'),
       },
       koordinator: {
-        nama: adminUser?.name || 'Supriyanti',
+        nama: adminUser?.name || 'Supriyanto (Admin Kecamatan)',
         jabatan: 'Koordinator BPP / Admin Kecamatan Lembeyan',
         instansi: 'Pemerintah Kecamatan Lembeyan',
         nip: adminUser?.nip || getDefaultNipForRole('ADMIN_DINAS'),
-        signatureUrl: adminUser?.signatureUrl || generateAutoSignatureSvg(adminUser?.name || 'Supriyanti'),
+        signatureUrl: adminUser?.signatureUrl || generateAutoSignatureSvg(adminUser?.name || 'Supriyanto'),
         stampUrl: adminUser?.stampUrl || generateOfficialStampSvg('ADMIN_DINAS', 'Pemerintah Kecamatan Lembeyan'),
       },
     };

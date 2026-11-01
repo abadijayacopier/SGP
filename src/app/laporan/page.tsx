@@ -97,10 +97,10 @@ export default function LaporanPage() {
     signatureUrl: string;
     stampUrl: string;
   }>({
-    name: 'Supriyanti',
+    name: 'Supriyanto',
     wilayah: 'Pemerintah Kecamatan Lembeyan',
     nip: getDefaultNipForRole('ADMIN_DINAS'),
-    signatureUrl: generateAutoSignatureSvg('Supriyanti'),
+    signatureUrl: generateAutoSignatureSvg('Supriyanto'),
     stampUrl: generateOfficialStampSvg('ADMIN_DINAS', 'Pemerintah Kecamatan Lembeyan'),
   });
   const [loading, setLoading] = useState(true);

@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { prisma } from '@/lib/prisma';
 
 const settingsFilePath = path.join(process.cwd(), 'src', 'data', 'pengaturan-sistem.json');
 
@@ -43,9 +44,9 @@ const defaultSettings = {
     prefixKartuTani: 'KT-3509-{TAHUN}-{NIK}',
     prefixSuratLahan: 'LHN-{TAHUN}-{NO}',
     namaKoordinatorBpp: 'Iis Sugiarti, S.P',
-    nipKoordinatorBpp: '19780512 200501 2 008',
-    namaMantriTani: 'Ir. Hendro Supriyanto',
-    nipMantriTani: '19820315 200801 1 012',
+    nipKoordinatorBpp: '19850412 201101 2 008',
+    namaMantriTani: 'Supriyanto (Admin Kecamatan)',
+    nipMantriTani: '19760814 200212 1 002',
   },
   integrasi: {
     googleSheetWebhookUrl: 'https://script.google.com/macros/s/AKfycbx_example/exec',
@@ -100,6 +101,26 @@ function writeSettings(data: any) {
 export async function GET() {
   try {
     const settings = readSettings();
+
+    // Sinkronkan nama & NIP pejabat dengan data User riil di Database
+    try {
+      const [pplUser, adminUser] = await Promise.all([
+        prisma.user.findFirst({ where: { role: 'PPL' }, orderBy: { updatedAt: 'desc' } }),
+        prisma.user.findFirst({ where: { role: 'ADMIN_DINAS' }, orderBy: { updatedAt: 'desc' } }),
+      ]);
+
+      if (pplUser) {
+        settings.dokumen.namaKoordinatorBpp = pplUser.name;
+        if (pplUser.nip) settings.dokumen.nipKoordinatorBpp = pplUser.nip;
+      }
+      if (adminUser) {
+        settings.dokumen.namaMantriTani = adminUser.name;
+        if (adminUser.nip) settings.dokumen.nipMantriTani = adminUser.nip;
+      }
+    } catch (dbErr) {
+      console.warn('Gagal sinkron data user ke pengaturan:', dbErr);
+    }
+
     return NextResponse.json({ success: true, data: settings });
   } catch (err: any) {
     return NextResponse.json({ success: false, error: err.message }, { status: 500 });
@@ -127,9 +148,33 @@ export async function POST(request: Request) {
       return NextResponse.json({ success: false, error: 'Gagal menulis file pengaturan' }, { status: 500 });
     }
 
+    // Sinkronkan balik perubahan nama/NIP pejabat dokumen ke database User
+    try {
+      if (updated.dokumen?.namaKoordinatorBpp || updated.dokumen?.nipKoordinatorBpp) {
+        await prisma.user.updateMany({
+          where: { role: 'PPL' },
+          data: {
+            ...(updated.dokumen.namaKoordinatorBpp ? { name: updated.dokumen.namaKoordinatorBpp } : {}),
+            ...(updated.dokumen.nipKoordinatorBpp ? { nip: updated.dokumen.nipKoordinatorBpp } : {}),
+          },
+        });
+      }
+      if (updated.dokumen?.namaMantriTani || updated.dokumen?.nipMantriTani) {
+        await prisma.user.updateMany({
+          where: { role: 'ADMIN_DINAS' },
+          data: {
+            ...(updated.dokumen.namaMantriTani ? { name: updated.dokumen.namaMantriTani } : {}),
+            ...(updated.dokumen.nipMantriTani ? { nip: updated.dokumen.nipMantriTani } : {}),
+          },
+        });
+      }
+    } catch (syncErr) {
+      console.warn('Gagal sinkron balik pengaturan ke user database:', syncErr);
+    }
+
     return NextResponse.json({
       success: true,
-      message: 'Pengaturan sistem berhasil disimpan!',
+      message: 'Pengaturan sistem & data pejabat berhasil disimpan dan disinkronkan ke database!',
       data: updated,
     });
   } catch (err: any) {

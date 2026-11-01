@@ -46,6 +46,11 @@ export default function BukuKasPoktanPage() {
 
   const [ledgerData, setLedgerData] = useState<any[]>([]);
   const [summaryData, setSummaryData] = useState<any>(null);
+  const [pejabatData, setPejabatData] = useState<{
+    ppl: { nama: string; nip: string };
+    ketuaPoktan: { nama: string; nip: string };
+    bendaharaPoktan: { nama: string };
+  } | null>(null);
 
   const [activeTab, setActiveTab] = useState<'jurnal' | 'pembagian' | 'cetak'>('jurnal');
   const [filterJenis, setFilterJenis] = useState<'SEMUA' | 'PEMASUKAN' | 'PENGELUARAN' | 'KASIR'>('SEMUA');
@@ -95,6 +100,9 @@ export default function BukuKasPoktanPage() {
       if (json.success) {
         setLedgerData(json.data.ledger || []);
         setSummaryData(json.data.summary || null);
+        if (json.data.pejabat) {
+          setPejabatData(json.data.pejabat);
+        }
       }
     } catch (err: any) {
       console.error(err);
@@ -779,22 +787,27 @@ export default function BukuKasPoktanPage() {
               <div>
                 <p className="text-slate-600 mb-16">Mengetahui,<br/><strong>Ketua Kelompok Tani</strong></p>
                 <p className="font-bold border-b border-slate-400 inline-block px-4 pb-0.5">
-                  {rule.pihakMengetahui?.ketuaPoktan || 'Samsi'}
+                  {pejabatData?.ketuaPoktan?.nama || rule.pihakMengetahui?.ketuaPoktan || 'H. Suparman'}
                 </p>
+                {pejabatData?.ketuaPoktan?.nip && (
+                  <p className="text-[10px] text-slate-500 font-mono mt-0.5">{pejabatData.ketuaPoktan.nip}</p>
+                )}
               </div>
 
               <div>
                 <p className="text-slate-600 mb-16">Penyuluh Lapangan,<br/><strong>PPL BPP Kec. Lembeyan</strong></p>
                 <p className="font-bold border-b border-slate-400 inline-block px-4 pb-0.5">
-                  Iis Sugiarti, S.P
+                  {pejabatData?.ppl?.nama || 'Iis Sugiarti, S.P'}
                 </p>
-                <p className="text-[10px] text-slate-500 font-mono">NIP. 19850412 201101 2 008</p>
+                <p className="text-[10px] text-slate-500 font-mono mt-0.5">
+                  {pejabatData?.ppl?.nip || 'NIP. 19850412 201101 2 008'}
+                </p>
               </div>
 
               <div>
                 <p className="text-slate-600 mb-16">Pengelola Pembukuan,<br/><strong>Bendahara Poktan</strong></p>
                 <p className="font-bold border-b border-slate-400 inline-block px-4 pb-0.5">
-                  {rule.pihakMengetahui?.bendaharaPoktan || 'Kasdi Mulyono'}
+                  {pejabatData?.bendaharaPoktan?.nama || rule.pihakMengetahui?.bendaharaPoktan || 'Kasdi Mulyono'}
                 </p>
               </div>
             </div>

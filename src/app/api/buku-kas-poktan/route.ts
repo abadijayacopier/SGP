@@ -1,6 +1,8 @@
 import { NextResponse } from 'next/server';
 import fs from 'fs';
 import path from 'path';
+import { prisma } from '@/lib/prisma';
+import { getDefaultNipForRole } from '@/lib/signature-utils';
 import { getStokHargaPoktanRecord } from '@/lib/stok-harga-poktan';
 
 const bukuKasFilePath = path.join(process.cwd(), 'src', 'data', 'buku-kas-poktan.json');
@@ -156,10 +158,48 @@ export async function GET(request: Request) {
 
     const saldoKasSaatIni = totalPemasukan - totalPengeluaran;
 
+    // Ambil data pejabat PPL & Ketua Poktan langsung dari Database
+    const pplUser = await prisma.user.findFirst({
+      where: { role: 'PPL' },
+      orderBy: { updatedAt: 'desc' },
+    });
+    let poktanKetua = record?.pihakMengetahui?.ketuaPoktan;
+    let poktanKetuaNip = 'Reg. Poktan: 521/014/LMB/2026';
+    if (poktanId && poktanId !== 'SEMUA') {
+      const dbPoktan = await prisma.poktan.findUnique({ where: { id: poktanId } });
+      if (dbPoktan) {
+        poktanKetua = dbPoktan.ketua;
+      }
+      const dbPoktanUser = await prisma.user.findFirst({
+        where: { role: 'POKTAN', poktanId },
+      });
+      if (dbPoktanUser?.nip) {
+        poktanKetuaNip = dbPoktanUser.nip;
+      }
+    } else {
+      const firstPoktan = await prisma.poktan.findFirst();
+      if (firstPoktan) {
+        poktanKetua = firstPoktan.ketua;
+      }
+    }
+
     return NextResponse.json({
       success: true,
       data: {
         ledger: combinedLedger,
+        pejabat: {
+          ppl: {
+            nama: pplUser?.name || 'Iis Sugiarti, S.P',
+            nip: pplUser?.nip || getDefaultNipForRole('PPL', pplUser?.username),
+          },
+          ketuaPoktan: {
+            nama: poktanKetua || 'H. Suparman',
+            nip: poktanKetuaNip,
+          },
+          bendaharaPoktan: {
+            nama: record?.pihakMengetahui?.bendaharaPoktan || 'Kasdi Mulyono',
+          },
+        },
         summary: {
           saldoKasSaatIni,
           totalPemasukan,

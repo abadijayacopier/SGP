@@ -44,21 +44,12 @@ export default async function CetakKalenderTanamPage({ params, searchParams }: P
   const musimParam = query.mt || 'MT-1';
   const tglTanamStr = query.tgl || new Date().toISOString().slice(0, 10);
 
-  let lahan = await prisma.lahan.findUnique({
-    where: { id },
-    include: {
-      petani: {
-        include: {
-          poktan: true,
-        },
-      },
-    },
-  });
+  let lahan: any = null;
+  let pplUser: any = null;
 
-  // Fallback: jika id yang dikirim adalah petaniId, ambil petak lahan pertama miliknya
-  if (!lahan) {
-    lahan = await prisma.lahan.findFirst({
-      where: { petaniId: id },
+  try {
+    lahan = await prisma.lahan.findUnique({
+      where: { id },
       include: {
         petani: {
           include: {
@@ -67,12 +58,28 @@ export default async function CetakKalenderTanamPage({ params, searchParams }: P
         },
       },
     });
-  }
 
-  const pplUser = await prisma.user.findFirst({
-    where: { role: 'PPL' },
-    orderBy: { updatedAt: 'desc' },
-  });
+    // Fallback: jika id yang dikirim adalah petaniId, ambil petak lahan pertama miliknya
+    if (!lahan) {
+      lahan = await prisma.lahan.findFirst({
+        where: { petaniId: id },
+        include: {
+          petani: {
+            include: {
+              poktan: true,
+            },
+          },
+        },
+      });
+    }
+
+    pplUser = await prisma.user.findFirst({
+      where: { role: 'PPL' },
+      orderBy: { updatedAt: 'desc' },
+    });
+  } catch (err) {
+    console.error('[CetakKalenderTanamPage] Database fetch error:', err);
+  }
 
   if (!lahan) {
     notFound();
@@ -241,7 +248,7 @@ export default async function CetakKalenderTanamPage({ params, searchParams }: P
   const formatTglCetak = `${tglCetak.getDate()} ${BULAN_INDONESIA[tglCetak.getMonth()]} ${tglCetak.getFullYear()}`;
 
   const pplName = pplUser?.name || 'Iis Sugiarti, S.P';
-  const pplNip = pplUser ? getDefaultNipForRole('PPL', pplUser.username) : 'NIP. 19850412 201101 2 008';
+  const pplNip = pplUser?.nip || getDefaultNipForRole('PPL', pplUser?.username);
   const signatureSvg = generateAutoSignatureSvg(pplName, '#1e3a8a');
   const stampSvg = generateOfficialStampSvg('PPL', 'BPP KEC. LEMBEYAN');
 

@@ -37,7 +37,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { username, name, role, phone, email, wilayah, kiosName, poktanId } = body;
+    const { username, name, role, phone, email, wilayah, kiosName, poktanId, nip } = body;
 
     if (!username || !name || !role) {
       return NextResponse.json(
@@ -57,11 +57,14 @@ export async function POST(req: Request) {
       );
     }
 
+    const resolvedNip = nip?.trim() || getDefaultNipForRole(role, username);
+
     const created = await prisma.user.create({
       data: {
         username: username.trim(),
         name: name.trim(),
         role,
+        nip: resolvedNip,
         phone: phone || null,
         email: email || null,
         wilayah: wilayah || 'Kecamatan Lembeyan',
@@ -117,7 +120,7 @@ export async function POST(req: Request) {
 export async function PATCH(req: Request) {
   try {
     const body = await req.json();
-    const { id, username, name, role, phone, email, wilayah, kiosName, poktanId } = body;
+    const { id, username, name, role, phone, email, wilayah, kiosName, poktanId, nip } = body;
 
     if (!id) {
       return NextResponse.json({ success: false, error: 'ID User wajib disertakan' }, { status: 400 });
@@ -143,6 +146,7 @@ export async function PATCH(req: Request) {
         ...(cleanUsername ? { username: cleanUsername } : {}),
         name,
         role,
+        ...(nip !== undefined ? { nip: nip ? nip.trim() : null } : {}),
         phone: phone || null,
         email: email || null,
         wilayah: wilayah || null,

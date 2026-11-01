@@ -25,45 +25,60 @@ export const dynamic = 'force-dynamic';
 export default async function CetakKartuTaniPage({ params }: Props) {
   const { id } = await params;
 
-  const [petani, pplUser] = await Promise.all([
-    prisma.petani.findUnique({
-      where: { id },
-      include: {
-        poktan: true,
-        lahan: true,
-        alokasiPupuk: true,
-        penyaluranPupuk: {
-          orderBy: { tanggalPenyaluran: 'desc' },
-          take: 1,
+  let petani: any = null;
+  let pplUser: any = null;
+  let petaniUser: any = null;
+  let poktanUser: any = null;
+
+  try {
+    const results = await Promise.all([
+      prisma.petani.findUnique({
+        where: { id },
+        include: {
+          poktan: true,
+          lahan: true,
+          alokasiPupuk: true,
+          penyaluranPupuk: {
+            orderBy: { tanggalPenyaluran: 'desc' },
+            take: 1,
+          },
         },
-      },
-    }),
-    prisma.user.findFirst({
-      where: { role: 'PPL' },
-      orderBy: { updatedAt: 'desc' },
-    }),
-  ]);
+      }),
+      prisma.user.findFirst({
+        where: { role: 'PPL' },
+        orderBy: { updatedAt: 'desc' },
+      }),
+    ]);
+    petani = results[0];
+    pplUser = results[1];
+
+    if (petani) {
+      const userResults = await Promise.all([
+        prisma.user.findFirst({
+          where: {
+            OR: [{ username: petani.nik }, { role: 'PETANI', name: petani.nama }],
+          },
+        }),
+        prisma.user.findFirst({
+          where: {
+            role: 'POKTAN',
+            OR: [
+              { poktanId: petani.poktanId },
+              { name: { contains: petani.poktan?.ketua || 'Suparman' } },
+            ],
+          },
+        }),
+      ]);
+      petaniUser = userResults[0];
+      poktanUser = userResults[1];
+    }
+  } catch (err) {
+    console.error('[CetakKartuTaniPage] Database query error:', err);
+  }
 
   if (!petani) {
     notFound();
   }
-
-  const [petaniUser, poktanUser] = await Promise.all([
-    prisma.user.findFirst({
-      where: {
-        OR: [{ username: petani.nik }, { role: 'PETANI', name: petani.nama }],
-      },
-    }),
-    prisma.user.findFirst({
-      where: {
-        role: 'POKTAN',
-        OR: [
-          { poktanId: petani.poktanId },
-          { name: { contains: petani.poktan?.ketua || 'Suparman' } },
-        ],
-      },
-    }),
-  ]);
 
   const petaniSig =
     petaniUser?.signatureUrl || generateAutoSignatureSvg(petani.nama);
@@ -258,7 +273,7 @@ export default async function CetakKartuTaniPage({ params }: Props) {
                     Daftar Blok Sawah Terdaftar ({petani.lahan.length} Petak):
                   </span>
                   <div className="flex flex-wrap gap-1">
-                    {petani.lahan.map((l) => (
+                    {petani.lahan.map((l: any) => (
                       <span
                         key={l.id}
                         className="text-[8px] sm:text-[9px] font-mono font-bold bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded text-slate-700"
@@ -308,7 +323,7 @@ export default async function CetakKartuTaniPage({ params }: Props) {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">
-                {petani.lahan.map((l, idx) => {
+                {petani.lahan.map((l: any, idx: number) => {
                   let pts: [number, number][] = [];
                   try {
                     pts = JSON.parse(l.coordinates || '[]');

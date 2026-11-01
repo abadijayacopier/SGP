@@ -285,32 +285,32 @@ export default function Navbar() {
               </button>
 
               {notifOpen && isMounted && typeof document !== 'undefined' && createPortal(
-                <div className="fixed inset-0 z-[9999] flex items-start justify-center pt-16 px-3 sm:px-6 pointer-events-auto no-print">
+                <div className="fixed inset-0 z-[9999] flex items-center justify-center sm:items-start sm:justify-end sm:pt-20 sm:pr-8 p-3 pointer-events-auto no-print">
                   {/* Backdrop Overlay */}
                   <div
-                    className="fixed inset-0 bg-slate-950/40 backdrop-blur-2xs transition-opacity"
+                    className="fixed inset-0 bg-slate-950/50 backdrop-blur-xs transition-opacity"
                     onClick={() => setNotifOpen(false)}
                   />
 
                   {/* Notification Dropdown Container */}
                   <div
                     ref={notifRef}
-                    className="relative z-10 w-full max-w-sm sm:max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200/90 overflow-hidden flex flex-col max-h-[calc(100vh-5.5rem)] animate-in fade-in zoom-in-95 duration-150 sm:mr-4 md:mr-10 lg:mr-24 sm:self-start sm:ml-auto"
+                    className="relative z-10 w-full max-w-[360px] sm:max-w-md bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[85vh] animate-in fade-in zoom-in-95 duration-150"
                   >
-                    <div className="p-3.5 bg-emerald-950 text-white flex items-center justify-between shrink-0">
-                      <div>
-                        <p className="text-xs font-black flex items-center gap-1.5">
-                          <Bell className="w-3.5 h-3.5 text-amber-400" />
-                          Notifikasi & Log Audit Inspektorat
+                    <div className="p-3 bg-emerald-950 text-white flex items-center justify-between shrink-0">
+                      <div className="min-w-0 flex-1 pr-2">
+                        <p className="text-xs font-black flex items-center gap-1.5 truncate">
+                          <Bell className="w-3.5 h-3.5 text-amber-400 shrink-0" />
+                          <span>Notifikasi & Log Audit</span>
                         </p>
-                        <p className="text-[10px] text-emerald-300">
-                          Pantauan Berkas e-RDKK, Gudang Kios KPL & Jejak Aktivitas
+                        <p className="text-[10px] text-emerald-300 truncate">
+                          e-RDKK, Gudang Kios & Jejak Aktivitas
                         </p>
                       </div>
                       <button
                         type="button"
                         onClick={() => setNotifOpen(false)}
-                        className="text-emerald-300 hover:text-white p-1 rounded-lg hover:bg-emerald-900/50 transition cursor-pointer"
+                        className="text-emerald-300 hover:text-white p-1 rounded-lg hover:bg-emerald-900/50 transition cursor-pointer shrink-0"
                       >
                         <X className="w-4 h-4" />
                       </button>
@@ -321,26 +321,26 @@ export default function Navbar() {
                       <button
                         type="button"
                         onClick={() => setNotifTab('alerts')}
-                        className={`py-1.5 rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                        className={`py-1.5 px-1 rounded-lg transition cursor-pointer flex items-center justify-center gap-1 truncate ${
                           notifTab === 'alerts'
                             ? 'bg-white text-emerald-800 shadow-2xs'
                             : 'text-slate-600 hover:text-slate-900'
                         }`}
                       >
-                        <AlertTriangle className="w-3.5 h-3.5 text-amber-500" />
-                        Pemberitahuan ({notifData.alerts.length})
+                        <AlertTriangle className="w-3.5 h-3.5 text-amber-500 shrink-0" />
+                        <span className="truncate">Notif ({notifData.alerts.length})</span>
                       </button>
                       <button
                         type="button"
                         onClick={() => setNotifTab('audit')}
-                        className={`py-1.5 rounded-lg transition cursor-pointer flex items-center justify-center gap-1.5 ${
+                        className={`py-1.5 px-1 rounded-lg transition cursor-pointer flex items-center justify-center gap-1 truncate ${
                           notifTab === 'audit'
                             ? 'bg-white text-emerald-800 shadow-2xs'
                             : 'text-slate-600 hover:text-slate-900'
                         }`}
                       >
-                        <History className="w-3.5 h-3.5 text-emerald-600" />
-                        Audit Trail ({notifData.auditLogs.length})
+                        <History className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                        <span className="truncate">Audit Trail ({notifData.auditLogs.length})</span>
                       </button>
                     </div>
 
@@ -398,18 +398,18 @@ export default function Navbar() {
                       )}
                     </div>
 
-                    <div className="p-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between text-[11px] shrink-0">
+                    <div className="p-2.5 bg-slate-50 border-t border-slate-100 flex items-center justify-between gap-2 text-[11px] shrink-0">
                       <Link
                         href="/cetak-erdkk"
                         onClick={() => setNotifOpen(false)}
-                        className="font-bold text-emerald-700 hover:underline"
+                        className="font-bold text-emerald-700 hover:underline truncate"
                       >
-                        Cetak SK & Lampiran e-RDKK &rarr;
+                        Cetak SK & Lampiran &rarr;
                       </Link>
                       <Link
                         href="/laporan"
                         onClick={() => setNotifOpen(false)}
-                        className="font-bold text-slate-600 hover:text-slate-900"
+                        className="font-bold text-slate-600 hover:text-slate-900 shrink-0"
                       >
                         Buka Laporan
                       </Link>

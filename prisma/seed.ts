@@ -15,13 +15,14 @@ async function main() {
   await prisma.stokKios.deleteMany();
   await prisma.user.deleteMany();
 
-  // 1. Data User / Demo Roles
+  // 1. Data User / Demo Roles dengan Nama & NIP Resmi Tersimpan di Database
   await prisma.user.createMany({
     data: [
       {
         username: 'admin',
-        name: 'Supriyanti',
+        name: 'Supriyanto (Admin Kecamatan)',
         role: 'ADMIN_DINAS',
+        nip: 'NIP. 19760814 200212 1 002',
         phone: '081234567890',
         email: 'admin@pertanian.lembeyan.go.id',
         wilayah: 'Pemerintah Kecamatan Lembeyan',
@@ -30,6 +31,7 @@ async function main() {
         username: 'ppl_iissugiarti',
         name: 'Iis Sugiarti, S.P',
         role: 'PPL',
+        nip: 'NIP. 19850412 201101 2 008',
         phone: '081398765432',
         email: 'iis.ppl@pertanian.lembeyan.go.id',
         wilayah: 'BPP Kecamatan Lembeyan',
@@ -38,6 +40,7 @@ async function main() {
         username: 'poktan_suparman',
         name: 'H. Suparman',
         role: 'POKTAN',
+        nip: 'Reg. Poktan: 521/014/LMB/2026',
         phone: '085233445566',
         email: 'poktan.tanimakmur@gmail.com',
         wilayah: 'Desa Kediren, Kec. Lembeyan',
@@ -46,6 +49,7 @@ async function main() {
         username: 'kios_subur',
         name: 'Hj. Siti Romlah',
         role: 'KIOS',
+        nip: 'Reg. KPL: KPL-LMB-008/2026',
         phone: '082155667788',
         email: 'kios.tanisubur@gmail.com',
         kiosName: 'UD. Tani Subur Barokah',
@@ -55,6 +59,7 @@ async function main() {
         username: 'petani_sukirno',
         name: 'Sukirno',
         role: 'PETANI',
+        nip: 'NIK: 3509012304750001',
         phone: '087811223344',
         wilayah: 'Desa Kediren, Kec. Lembeyan',
       },

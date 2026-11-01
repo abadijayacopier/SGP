@@ -6,27 +6,36 @@ import { getDefaultNipForRole } from '@/lib/signature-utils';
 export const dynamic = 'force-dynamic';
 
 export default async function CetakErdkkPage() {
-  const [pengajuanList, officialUsers] = await Promise.all([
-    prisma.pengajuanLahan.findMany({
-      include: {
-        poktan: true,
-        petani: true,
-      },
-      orderBy: { createdAt: 'desc' },
-    }),
-    prisma.user.findMany({
-      where: {
-        role: { in: ['ADMIN_DINAS', 'PPL'] },
-      },
-    }),
-  ]);
+  let pengajuanList: any[] = [];
+  let officialUsers: any[] = [];
+
+  try {
+    const results = await Promise.all([
+      prisma.pengajuanLahan.findMany({
+        include: {
+          poktan: true,
+          petani: true,
+        },
+        orderBy: { createdAt: 'desc' },
+      }),
+      prisma.user.findMany({
+        where: {
+          role: { in: ['ADMIN_DINAS', 'PPL'] },
+        },
+      }),
+    ]);
+    pengajuanList = results[0];
+    officialUsers = results[1];
+  } catch (err) {
+    console.error('[CetakErdkkPage] Database fetch error:', err);
+  }
 
   const adminUser = officialUsers.find((u) => u.role === 'ADMIN_DINAS');
   const pplUser = officialUsers.find((u) => u.role === 'PPL');
 
   const adminPejabat = {
-    nama: adminUser?.name || 'Ir. Bambang Hermanto, M.Si',
-    jabatan: 'Koordinator Pertanian Kecamatan Lembeyan',
+    nama: adminUser?.name || 'Supriyanto (Admin Kecamatan)',
+    jabatan: 'Koordinator Pertanian / Admin Kecamatan Lembeyan',
     instansi: 'Pemerintah Kecamatan Lembeyan',
     nip: adminUser?.nip || getDefaultNipForRole('ADMIN_DINAS', adminUser?.username),
     signatureUrl: adminUser?.signatureUrl || null,
