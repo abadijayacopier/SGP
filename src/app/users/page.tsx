@@ -661,11 +661,11 @@ export default function UsersManagementPage() {
                     )}
                   </div>
 
-                  <div className="flex items-center gap-2 pt-2 border-t border-slate-100">
+                  <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100">
                     <button
                       type="button"
                       onClick={() => handleSwitchToUser(u)}
-                      className={`flex-1 inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition shadow-xs ${
+                      className={`flex-1 min-w-[130px] inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl text-xs font-bold transition shadow-xs ${
                         isActive
                           ? 'bg-emerald-100 text-emerald-800 border border-emerald-300'
                           : 'bg-emerald-600 hover:bg-emerald-700 text-white active:scale-95'

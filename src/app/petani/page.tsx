@@ -547,13 +547,13 @@ export default function PetaniPage() {
 
                     {/* Action Buttons: Kartu Tani, Blok Sawah, Edit, Hapus */}
                     <div
-                      className="flex items-center gap-1.5 pt-2 border-t border-slate-100"
+                      className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-100"
                       onClick={(e) => e.stopPropagation()}
                     >
                       <Link
                         href={`/cetak-kartu-tani/${item.id}`}
                         target="_blank"
-                        className="flex-1 inline-flex items-center justify-center gap-1 bg-amber-400 hover:bg-amber-500 active:scale-95 text-slate-950 font-black text-xs py-2 px-2.5 rounded-xl shadow-xs transition"
+                        className="flex-1 min-w-[110px] inline-flex items-center justify-center gap-1 bg-amber-400 hover:bg-amber-500 active:scale-95 text-slate-950 font-black text-xs py-2 px-2.5 rounded-xl shadow-xs transition"
                       >
                         <CreditCard className="w-3.5 h-3.5" />
                         <span>Kartu Tani</span>
@@ -565,7 +565,7 @@ export default function PetaniPage() {
                           setSelectedPetani(item);
                           setDetailModalOpen(true);
                         }}
-                        className="flex-1 inline-flex items-center justify-center gap-1 bg-slate-900 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs py-2 px-2.5 rounded-xl shadow-xs transition"
+                        className="flex-1 min-w-[110px] inline-flex items-center justify-center gap-1 bg-slate-900 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs py-2 px-2.5 rounded-xl shadow-xs transition"
                       >
                         <span>Blok Sawah</span>
                         <ChevronRight className="w-3.5 h-3.5" />

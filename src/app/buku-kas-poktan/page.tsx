@@ -465,7 +465,94 @@ export default function BukuKasPoktanPage() {
 
           {/* Table Ledger */}
           <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
-            <div className="overflow-x-auto">
+            {/* Mobile Card View (Smartphone Friendly) */}
+            <div className="block lg:hidden divide-y divide-slate-100">
+              {filteredLedger.length === 0 ? (
+                <div className="py-12 text-center text-slate-400 text-xs">
+                  Belum ada catatan buku kas pada filter ini.
+                </div>
+              ) : (
+                filteredLedger.map((item) => {
+                  const isAuto = item.isOtomatisKasir;
+                  const dateObj = new Date(item.tanggal);
+                  const formattedDate = dateObj.toLocaleDateString('id-ID', {
+                    day: 'numeric',
+                    month: 'short',
+                    year: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit',
+                  });
+
+                  return (
+                    <div key={item.id} className="p-4 hover:bg-slate-50/80 transition space-y-2.5">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0 flex-1">
+                          <div className="flex items-center gap-1.5 mb-1">
+                            {isAuto ? (
+                              <span className="bg-amber-100 text-amber-900 border border-amber-300 font-black text-[9px] px-1.5 py-0.5 rounded uppercase">
+                                ⚡ Kasir Otomatis
+                              </span>
+                            ) : (
+                              <span className="bg-slate-100 text-slate-700 font-bold text-[9px] px-1.5 py-0.5 rounded uppercase">
+                                Manual
+                              </span>
+                            )}
+                            <strong className="text-slate-900 font-bold text-xs truncate">{item.kategoriLabel}</strong>
+                          </div>
+                          {item.nomorNota ? (
+                            <span className="font-mono font-bold text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200 text-[11px]">
+                              {item.nomorNota}
+                            </span>
+                          ) : (
+                            <span className="font-mono text-slate-400 text-[10px]">{item.id}</span>
+                          )}
+                        </div>
+
+                        <div className="text-right shrink-0">
+                          {item.jenis === 'PEMASUKAN' ? (
+                            <span className="font-black text-sm text-emerald-600 block leading-tight">
+                              + {formatRupiah(item.nominal)}
+                            </span>
+                          ) : (
+                            <span className="font-black text-sm text-rose-600 block leading-tight">
+                              - {formatRupiah(item.nominal)}
+                            </span>
+                          )}
+                          <span className="text-[10px] text-slate-400 font-mono block mt-0.5">
+                            {formattedDate} WIB
+                          </span>
+                        </div>
+                      </div>
+
+                      <p className="text-[11px] text-slate-600 leading-relaxed bg-slate-50 p-2 rounded-xl border border-slate-100">
+                        {item.keterangan}
+                        {item.penerimaAtauPenyetor && (
+                          <span className="block text-[10px] text-slate-400 mt-0.5">
+                            Pihak: <strong className="text-slate-700">{item.penerimaAtauPenyetor}</strong>
+                          </span>
+                        )}
+                      </p>
+
+                      {!isAuto && (
+                        <div className="flex items-center justify-end pt-1">
+                          <button
+                            type="button"
+                            onClick={() => handleDeleteEntry(item)}
+                            className="inline-flex items-center gap-1 text-xs font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 px-3 py-1.5 rounded-xl border border-rose-200 transition active:scale-95"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                            <span>Hapus Catatan</span>
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })
+              )}
+            </div>
+
+            {/* Desktop Table View */}
+            <div className="hidden lg:block overflow-x-auto">
               <table className="w-full text-left text-xs">
                 <thead className="bg-slate-50 border-b border-slate-200 text-slate-600 uppercase font-black tracking-wider text-[10px]">
                   <tr>

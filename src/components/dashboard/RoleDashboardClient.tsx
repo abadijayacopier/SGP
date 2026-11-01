@@ -26,6 +26,10 @@ import {
   Code2,
   Compass,
   UserCircle,
+  Sun,
+  Sunrise,
+  Sunset,
+  Moon,
 } from 'lucide-react';
 
 interface DashboardProps {
@@ -90,8 +94,95 @@ export default function RoleDashboardClient({
     ? recentPenyaluran.filter((p) => p.namaKios === myKios)
     : recentPenyaluran;
 
+  // Sapaan Waktu Dinamis (Pagi, Siang, Sore, Malam)
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour >= 4 && hour < 11) {
+      return {
+        text: 'Selamat Pagi',
+        icon: 'Sunrise',
+        period: 'Pagi Hari',
+        bg: 'from-emerald-900 via-teal-900 to-slate-900',
+        accent: 'text-amber-300',
+      };
+    } else if (hour >= 11 && hour < 15) {
+      return {
+        text: 'Selamat Siang',
+        icon: 'Sun',
+        period: 'Siang Hari',
+        bg: 'from-emerald-950 via-green-900 to-teal-950',
+        accent: 'text-amber-300',
+      };
+    } else if (hour >= 15 && hour < 18) {
+      return {
+        text: 'Selamat Sore',
+        icon: 'Sunset',
+        period: 'Sore Hari',
+        bg: 'from-amber-950 via-emerald-950 to-slate-950',
+        accent: 'text-amber-200',
+      };
+    } else {
+      return {
+        text: 'Selamat Malam',
+        icon: 'Moon',
+        period: 'Malam Hari',
+        bg: 'from-slate-950 via-indigo-950 to-emerald-950',
+        accent: 'text-indigo-200',
+      };
+    }
+  };
+
+  const timeGreeting = getGreeting();
+  const formattedToday = new Date().toLocaleDateString('id-ID', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric',
+  });
+
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
+      {/* Sapaan Pengguna Login Dinamis Berdasarkan Waktu */}
+      <div className={`rounded-3xl p-5 sm:p-6 text-white shadow-xl relative overflow-hidden border border-white/10 bg-gradient-to-r ${timeGreeting.bg}`}>
+        <div className="absolute -right-8 -bottom-8 w-48 h-48 bg-white/5 rounded-full blur-2xl pointer-events-none" />
+        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-4">
+          <div className="space-y-1.5 min-w-0">
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-white/10 backdrop-blur-md border border-white/20 text-white">
+                {timeGreeting.icon === 'Sunrise' && <Sunrise className="w-3.5 h-3.5 text-amber-300" />}
+                {timeGreeting.icon === 'Sun' && <Sun className="w-3.5 h-3.5 text-amber-300" />}
+                {timeGreeting.icon === 'Sunset' && <Sunset className="w-3.5 h-3.5 text-amber-300" />}
+                {timeGreeting.icon === 'Moon' && <Moon className="w-3.5 h-3.5 text-indigo-200" />}
+                <span>{timeGreeting.text} &bull; {timeGreeting.period}</span>
+              </span>
+              <span className="text-xs text-white/80 font-mono bg-black/20 px-2.5 py-0.5 rounded-full">
+                📅 {formattedToday}
+              </span>
+            </div>
+            <h1 className="text-2xl sm:text-3xl font-black tracking-tight text-white flex flex-wrap items-center gap-2">
+              <span>{timeGreeting.text},</span>
+              <span className={timeGreeting.accent}>{activeUser.name}</span>
+            </h1>
+            <p className="text-xs sm:text-sm text-emerald-100/90 leading-relaxed max-w-2xl">
+              Selamat datang di Sistem Informasi Pertanian & Pemetaan Spasial GIS Kecamatan Lembeyan. Anda saat ini aktif dengan wewenang{' '}
+              <strong className="text-white underline decoration-amber-400">{activeUser.roleLabel}</strong>
+              {activeUser.wilayah ? ` wilayah kerja ${activeUser.wilayah}` : ''}.
+            </p>
+          </div>
+
+          <div className="flex items-center gap-2.5 shrink-0">
+            <div className="bg-white/10 backdrop-blur-md px-4 py-2.5 rounded-2xl border border-white/15 text-left md:text-right">
+              <span className="text-[10px] text-emerald-200 font-bold block uppercase tracking-wider">
+                Status Sistem BPP
+              </span>
+              <span className="text-xs font-black text-white flex items-center gap-1.5 md:justify-end">
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" />
+                Online & Siap Bertugas
+              </span>
+            </div>
+          </div>
+        </div>
+      </div>
       {/* Banner Informasi Pemisahan Hak Akses Aktif */}
       <div className="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-2xs space-y-3">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
@@ -166,7 +257,7 @@ export default function RoleDashboardClient({
                 Balai Penyuluhan Pertanian (BPP) Kecamatan Lembeyan
               </h1>
               <p className="text-blue-100/90 text-xs sm:text-sm leading-relaxed">
-                Selamat bertugas, <strong>{activeUser.name}</strong>. Halaman ini dikhususkan bagi
+                {timeGreeting.text} dan selamat bertugas, <strong>{activeUser.name}</strong>. Halaman ini dikhususkan bagi
                 Penyuluh Pertanian Lapangan (PPL) untuk melakukan{' '}
                 <strong>Digitasi Poligon Peta GIS</strong>,{' '}
                 <strong>Verifikasi Lapangan Berkas e-RDKK</strong>, dan{' '}
@@ -323,7 +414,7 @@ export default function RoleDashboardClient({
                 Portal Pengurus Kelompok Tani &mdash; Kecamatan Lembeyan
               </h1>
               <p className="text-emerald-100 text-xs sm:text-sm leading-relaxed">
-                Selamat datang, <strong>{activeUser.name}</strong> ({activeUser.wilayah}). Hak
+                {timeGreeting.text}, <strong>{activeUser.name}</strong> ({activeUser.wilayah}). Hak
                 akses Anda difokuskan khusus untuk{' '}
                 <strong>Pendataan Anggota Petani & Poktan</strong> serta{' '}
                 <strong>Pendaftaran Usulan e-RDKK Kolektif</strong> beserta unggah foto KTP, KK, dan
@@ -488,7 +579,7 @@ export default function RoleDashboardClient({
                 </span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
-                Selamat Datang, Bpk/Ibu {myPetaniData.nama}
+                {timeGreeting.text}, Bpk/Ibu {myPetaniData.nama}
               </h1>
               <p className="text-emerald-100 text-xs sm:text-sm leading-relaxed">
                 NIK: <strong>{myPetaniData.nik}</strong> &bull; Kelompok Tani:{' '}

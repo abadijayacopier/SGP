@@ -846,7 +846,123 @@ export default function PengajuanPage() {
             </div>
           </div>
 
-          <div className="overflow-x-auto">
+          {/* Mobile Card View (Smartphone Friendly) */}
+          <div className="block lg:hidden divide-y divide-slate-100">
+            {pengajuanList.length === 0 ? (
+              <div className="py-8 text-center text-slate-400 text-xs italic">
+                Belum ada pengajuan lahan yang terdaftar.
+              </div>
+            ) : (
+              pengajuanList.map((item) => {
+                let badge = {
+                  bg: 'bg-amber-50 text-amber-800 border-amber-200',
+                  label: 'Diajukan ke Poktan',
+                };
+                if (item.status === 'DIVERIFIKASI_PPL') {
+                  badge = {
+                    bg: 'bg-blue-50 text-blue-800 border-blue-200',
+                    label: 'Diverifikasi PPL',
+                  };
+                } else if (item.status === 'DISETUJUI_DINAS') {
+                  badge = {
+                    bg: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+                    label: 'Disetujui Dinas (Aktif)',
+                  };
+                } else if (item.status === 'DITOLAK') {
+                  badge = {
+                    bg: 'bg-rose-50 text-rose-800 border-rose-200',
+                    label: 'Ditolak',
+                  };
+                }
+
+                return (
+                  <div key={item.id} className="p-4 hover:bg-slate-50/80 transition space-y-3">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="min-w-0 flex-1">
+                        <span className="font-mono text-[10px] font-bold text-slate-600 bg-slate-100 px-2 py-0.5 rounded border border-slate-200">
+                          {item.nomorPengajuan}
+                        </span>
+                        <h4 className="font-black text-slate-900 text-sm mt-1 leading-tight truncate">
+                          {item.namaPemilik}
+                        </h4>
+                        <p className="text-[11px] font-mono text-slate-500 mt-0.5">
+                          NIK: {item.nikPemilik} &bull; {item.poktan?.nama}
+                        </p>
+                      </div>
+                      <span className={`shrink-0 inline-block px-2.5 py-0.5 rounded-full text-[10px] font-bold border ${badge.bg}`}>
+                        {badge.label}
+                      </span>
+                    </div>
+
+                    <div className="flex flex-wrap items-center gap-2 text-[11px] bg-slate-50 p-2.5 rounded-xl border border-slate-100">
+                      <span className="font-bold text-emerald-800">
+                        🌾 {item.komoditasRencana} ({item.luasHa} Ha)
+                      </span>
+                      <span>&bull;</span>
+                      <span className="text-slate-600">
+                        📜 Pipil: {item.nomorPipil || '-'}
+                      </span>
+                      <span>&bull;</span>
+                      <span className="text-slate-500">
+                        📍 Ds. {item.desa}
+                      </span>
+                    </div>
+
+                    {/* Tombol Aksi Lengkap & Responsif */}
+                    <div className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-100">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setSelectedPengajuan(item);
+                          setPreviewModalOpen(true);
+                        }}
+                        className="flex-1 min-w-[120px] inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold text-xs active:scale-95 transition"
+                      >
+                        <Eye className="w-3.5 h-3.5" />
+                        <span>Lihat Berkas</span>
+                      </button>
+
+                      {item.status === 'DIAJUKAN_POKTAN' && permissions.canVerifyPpl && (
+                        <button
+                          type="button"
+                          onClick={() => handleApproveStatus(item.id, 'DIVERIFIKASI_PPL')}
+                          className="flex-1 min-w-[120px] inline-flex items-center justify-center gap-1 py-2 px-3 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs active:scale-95 transition shadow-xs"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Verifikasi PPL</span>
+                        </button>
+                      )}
+
+                      {item.status === 'DIVERIFIKASI_PPL' && permissions.canApproveDinas && (
+                        <button
+                          type="button"
+                          onClick={() => handleApproveStatus(item.id, 'DISETUJUI_DINAS')}
+                          className="flex-1 min-w-[120px] inline-flex items-center justify-center gap-1 py-2 px-3 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs active:scale-95 transition shadow-xs"
+                        >
+                          <CheckCircle2 className="w-3.5 h-3.5" />
+                          <span>Setujui Dinas</span>
+                        </button>
+                      )}
+
+                      {item.status !== 'DISETUJUI_DINAS' && item.status !== 'DITOLAK' && (
+                        <button
+                          type="button"
+                          onClick={() => handleTolakStatus(item)}
+                          className="p-2 rounded-xl bg-rose-50 text-rose-700 hover:bg-rose-100 border border-rose-200 font-bold text-xs active:scale-95 transition"
+                          title="Tolak Pengajuan"
+                        >
+                          Tolak
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                );
+              })
+            )}
+          </div>
+
+          {/* Desktop Table View */}
+          <div className="hidden lg:block overflow-x-auto">
             <table className="w-full text-left text-xs">
               <thead className="bg-slate-50 text-slate-600 uppercase text-[10px] font-bold tracking-wider border-b border-slate-200">
                 <tr>

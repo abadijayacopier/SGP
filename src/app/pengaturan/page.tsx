@@ -103,9 +103,23 @@ export default function PengaturanPage() {
       const json = await res.json();
       if (json.success && json.data) {
         setSettings(json.data);
+        if (typeof window !== 'undefined') {
+          localStorage.setItem('pertanian_settings_cache', JSON.stringify(json.data));
+        }
+      } else if (typeof window !== 'undefined') {
+        const cached = localStorage.getItem('pertanian_settings_cache');
+        if (cached) {
+          try { setSettings(JSON.parse(cached)); } catch (e) {}
+        }
       }
     } catch (e: any) {
       console.error('Gagal memuat pengaturan:', e);
+      if (typeof window !== 'undefined') {
+        const cached = localStorage.getItem('pertanian_settings_cache');
+        if (cached) {
+          try { setSettings(JSON.parse(cached)); } catch (err) {}
+        }
+      }
     } finally {
       setLoading(false);
     }
@@ -127,7 +141,12 @@ export default function PengaturanPage() {
       const json = await res.json();
       if (json.success) {
         showSuccess('Pengaturan Disimpan', 'Parameter sistem berhasil diperbarui secara permanen!');
-        setSettings(json.data);
+        if (json.data) {
+          setSettings(json.data);
+          if (typeof window !== 'undefined') {
+            localStorage.setItem('pertanian_settings_cache', JSON.stringify(json.data));
+          }
+        }
       } else {
         showError('Gagal Menyimpan', json.error || 'Terjadi kesalahan saat menyimpan pengaturan.');
       }

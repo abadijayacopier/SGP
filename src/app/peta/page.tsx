@@ -821,7 +821,121 @@ export default function PetaPage() {
           )}
         </div>
 
-        <div className="overflow-x-auto">
+        {/* Mobile Card View (Smartphone Friendly) */}
+        <div className="block lg:hidden divide-y divide-slate-100">
+          {filteredLahan.length === 0 ? (
+            <div className="py-8 text-center text-slate-400 text-xs italic">
+              Tidak ada petak sawah yang sesuai pencarian.
+            </div>
+          ) : (
+            filteredLahan.map((item) => {
+              const countPetaniBlok = lahanList.filter((l) => l.petani?.id === item.petani?.id).length;
+              const isSelected = selectedLahanId === item.id;
+
+              return (
+                <div
+                  key={item.id}
+                  className={`p-4 transition space-y-3 cursor-pointer ${
+                    isSelected ? 'bg-emerald-50/70 border-l-4 border-emerald-600' : 'hover:bg-slate-50/80'
+                  }`}
+                  onClick={() => setSelectedLahanId(item.id)}
+                >
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <span className="font-mono text-[10px] font-bold bg-emerald-100 text-emerald-900 border border-emerald-300 px-2 py-0.5 rounded">
+                        {item.kodeLahan}
+                      </span>
+                      <h4 className="font-black text-slate-900 text-sm mt-1 leading-tight truncate">
+                        {item.namaLahan}
+                      </h4>
+                      <p className="text-[11px] text-slate-600 mt-0.5">
+                        👤 <strong>{item.petani?.nama || '-'}</strong> ({countPetaniBlok} Blok) &bull; {item.petani?.poktan?.nama}
+                      </p>
+                    </div>
+
+                    <div className="text-right shrink-0">
+                      <span className="font-black text-emerald-800 text-sm block leading-tight">
+                        {item.luasHa} Ha
+                      </span>
+                      <span className="text-[10px] text-slate-400">
+                        {item.luasM2.toLocaleString('id-ID')} m²
+                      </span>
+                    </div>
+                  </div>
+
+                  <div className="flex flex-wrap items-center gap-1.5 text-[11px]">
+                    <span className="bg-emerald-50 text-emerald-800 font-bold px-2 py-0.5 rounded-md border border-emerald-200">
+                      🌾 {item.komoditas}
+                    </span>
+                    <span className="bg-slate-100 text-slate-700 px-2 py-0.5 rounded-md border border-slate-200">
+                      📜 Pipil: {item.nomorPipil || '-'}
+                    </span>
+                    <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md border border-slate-200">
+                      {item.statusKepemilikan}
+                    </span>
+                  </div>
+
+                  {/* Tombol Aksi Touch-Friendly Responsif */}
+                  <div
+                    className="flex flex-wrap items-center gap-1.5 pt-2 border-t border-slate-100"
+                    onClick={(e) => e.stopPropagation()}
+                  >
+                    <button
+                      type="button"
+                      onClick={() => setSelectedLahanId(item.id)}
+                      className="flex-1 min-w-[90px] inline-flex items-center justify-center gap-1 py-2 px-2.5 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs active:scale-95 transition"
+                    >
+                      <Compass className="w-3.5 h-3.5 text-emerald-600" />
+                      <span>Peta</span>
+                    </button>
+
+                    <Link
+                      href={`/cetak-lahan/${item.id}`}
+                      target="_blank"
+                      className="flex-1 min-w-[100px] inline-flex items-center justify-center gap-1 py-2 px-2.5 rounded-xl bg-slate-900 hover:bg-emerald-700 text-white font-bold text-xs active:scale-95 transition shadow-xs"
+                    >
+                      <Printer className="w-3.5 h-3.5 text-emerald-300" />
+                      <span>Cetak</span>
+                    </Link>
+
+                    <Link
+                      href={`/cek-kuota?tab=kalkulator&lahanId=${item.id}`}
+                      className="flex-1 min-w-[110px] inline-flex items-center justify-center gap-1 py-2 px-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-bold text-xs active:scale-95 transition"
+                    >
+                      <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                      <span>Kalender</span>
+                    </Link>
+
+                    {item.fotoLahan && (
+                      <button
+                        type="button"
+                        onClick={() => setPreviewFotoLahan(item.fotoLahan || null)}
+                        className="p-2 rounded-xl bg-emerald-50 text-emerald-800 border border-emerald-200 hover:bg-emerald-100 active:scale-95 transition"
+                        title="Foto Watermark GPS"
+                      >
+                        <Camera className="w-4 h-4 text-emerald-600" />
+                      </button>
+                    )}
+
+                    {permissions.canVerifyPpl && (
+                      <button
+                        type="button"
+                        onClick={() => handleDeleteLahan(item)}
+                        className="p-2 rounded-xl bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 active:scale-95 transition"
+                        title="Hapus Petak Lahan"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    )}
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
+
+        {/* Desktop Table View */}
+        <div className="hidden lg:block overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead className="bg-slate-50 text-slate-600 uppercase text-[10px] font-bold tracking-wider border-b border-slate-200">
               <tr>

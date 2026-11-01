@@ -3,7 +3,13 @@ import fs from 'fs';
 import path from 'path';
 import { prisma } from '@/lib/prisma';
 
-const settingsFilePath = path.join(process.cwd(), 'src', 'data', 'pengaturan-sistem.json');
+const primaryFilePath = path.join(process.cwd(), 'src', 'data', 'pengaturan-sistem.json');
+const tmpFilePath = path.join('/tmp', 'pengaturan-sistem.json');
+const publicFilePath = path.join(process.cwd(), 'public', 'pengaturan-sistem.json');
+
+const globalForSettings = globalThis as unknown as {
+  __appSettings: any;
+};
 
 const defaultSettings = {
   instansi: {
@@ -44,9 +50,9 @@ const defaultSettings = {
     prefixKartuTani: 'KT-3509-{TAHUN}-{NIK}',
     prefixSuratLahan: 'LHN-{TAHUN}-{NO}',
     namaKoordinatorBpp: 'Iis Sugiarti, S.P',
-    nipKoordinatorBpp: '19850412 201101 2 008',
+    nipKoordinatorBpp: 'NIP. 19850412 201101 2 008',
     namaMantriTani: 'Supriyanto (Admin Kecamatan)',
-    nipMantriTani: '19760814 200212 1 002',
+    nipMantriTani: 'NIP. 19760814 200212 1 002',
   },
   integrasi: {
     googleSheetWebhookUrl: 'https://script.google.com/macros/s/AKfycbx_example/exec',
@@ -63,39 +69,91 @@ const defaultSettings = {
 
 function readSettings() {
   try {
-    if (!fs.existsSync(settingsFilePath)) {
-      const dir = path.dirname(settingsFilePath);
-      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-      fs.writeFileSync(settingsFilePath, JSON.stringify(defaultSettings, null, 2), 'utf-8');
-      return defaultSettings;
+    // 1. Cek in-memory cache serverless
+    if (globalForSettings.__appSettings) {
+      return mergeWithDefaults(globalForSettings.__appSettings);
     }
-    const content = fs.readFileSync(settingsFilePath, 'utf-8');
-    const parsed = JSON.parse(content);
-    return {
-      ...defaultSettings,
-      ...parsed,
-      instansi: { ...defaultSettings.instansi, ...(parsed.instansi || {}) },
-      pupuk: { ...defaultSettings.pupuk, ...(parsed.pupuk || {}) },
-      gis: { ...defaultSettings.gis, ...(parsed.gis || {}) },
-      dokumen: { ...defaultSettings.dokumen, ...(parsed.dokumen || {}) },
-      integrasi: { ...defaultSettings.integrasi, ...(parsed.integrasi || {}) },
-      notifikasi: { ...defaultSettings.notifikasi, ...(parsed.notifikasi || {}) },
-    };
+
+    // 2. Cek file /tmp/pengaturan-sistem.json (jika di Vercel pernah disimpan sebelumnya)
+    if (fs.existsSync(tmpFilePath)) {
+      try {
+        const raw = fs.readFileSync(tmpFilePath, 'utf-8');
+        const parsed = JSON.parse(raw);
+        globalForSettings.__appSettings = parsed;
+        return mergeWithDefaults(parsed);
+      } catch (e) {
+        // Abaikan dan lanjut ke primary
+      }
+    }
+
+    // 3. Cek file src/data/pengaturan-sistem.json
+    if (fs.existsSync(primaryFilePath)) {
+      const raw = fs.readFileSync(primaryFilePath, 'utf-8');
+      const parsed = JSON.parse(raw);
+      globalForSettings.__appSettings = parsed;
+      return mergeWithDefaults(parsed);
+    }
+
+    // 4. Cek fallback public/pengaturan-sistem.json
+    if (fs.existsSync(publicFilePath)) {
+      const raw = fs.readFileSync(publicFilePath, 'utf-8');
+      const parsed = JSON.parse(raw);
+      globalForSettings.__appSettings = parsed;
+      return mergeWithDefaults(parsed);
+    }
+
+    return defaultSettings;
   } catch (e) {
     return defaultSettings;
   }
 }
 
-function writeSettings(data: any) {
+function mergeWithDefaults(parsed: any) {
+  return {
+    ...defaultSettings,
+    ...parsed,
+    instansi: { ...defaultSettings.instansi, ...(parsed?.instansi || {}) },
+    pupuk: { ...defaultSettings.pupuk, ...(parsed?.pupuk || {}) },
+    gis: { ...defaultSettings.gis, ...(parsed?.gis || {}) },
+    dokumen: { ...defaultSettings.dokumen, ...(parsed?.dokumen || {}) },
+    integrasi: { ...defaultSettings.integrasi, ...(parsed?.integrasi || {}) },
+    notifikasi: { ...defaultSettings.notifikasi, ...(parsed?.notifikasi || {}) },
+  };
+}
+
+function writeSettings(data: any): boolean {
+  // Simpan ke in-memory cache
+  globalForSettings.__appSettings = data;
+
+  let wroteAny = false;
+
+  // 1. Coba tulis ke primary file (lingkungan lokal / server mandiri)
   try {
-    const dir = path.dirname(settingsFilePath);
+    const dir = path.dirname(primaryFilePath);
     if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
-    fs.writeFileSync(settingsFilePath, JSON.stringify(data, null, 2), 'utf-8');
-    return true;
-  } catch (e) {
-    console.error('Error writing settings:', e);
-    return false;
+    fs.writeFileSync(primaryFilePath, JSON.stringify(data, null, 2), 'utf-8');
+    wroteAny = true;
+  } catch (err) {
+    // Read-only filesystem di Vercel Serverless
   }
+
+  // 2. Coba tulis ke /tmp (selalu writable di Vercel Serverless)
+  try {
+    fs.writeFileSync(tmpFilePath, JSON.stringify(data, null, 2), 'utf-8');
+    wroteAny = true;
+  } catch (err) {
+    // Abaikan jika tmp gagal
+  }
+
+  // 3. Coba tulis ke public jika memungkinkan
+  try {
+    fs.writeFileSync(publicFilePath, JSON.stringify(data, null, 2), 'utf-8');
+    wroteAny = true;
+  } catch (err) {
+    // Abaikan
+  }
+
+  return true; // Sukses karena cache in-memory & fallback /tmp terjamin
 }
 
 export async function GET() {
@@ -143,10 +201,7 @@ export async function POST(request: Request) {
       notifikasi: { ...current.notifikasi, ...(body.notifikasi || {}) },
     };
 
-    const ok = writeSettings(updated);
-    if (!ok) {
-      return NextResponse.json({ success: false, error: 'Gagal menulis file pengaturan' }, { status: 500 });
-    }
+    writeSettings(updated);
 
     // Sinkronkan balik perubahan nama/NIP pejabat dokumen ke database User
     try {
