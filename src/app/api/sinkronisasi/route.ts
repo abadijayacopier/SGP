@@ -196,35 +196,111 @@ function syncPenyaluranPupuk() {
 
     const scriptTemplateReceiver = `/**
  * PENERIMA WEBHOOK REAL-TIME (doPost Web App)
- * Menerima kiriman otomatis saat terjadi pendaftaran petani baru atau transaksi penebusan pupuk
+ * Cukup 1 file Google Spreadsheet. Script ini otomatis membuat sheet baru di dalamnya:
+ * - Tab Sheet 1: 'e-RDKK_Kementan' (15 Kolom Standar Kementan RI)
+ * - Tab Sheet 2: 'Penyaluran_Pupuk' (15 Kolom Riwayat Transaksi Penebusan Kios)
  */
 function doPost(e) {
   try {
     var contents = JSON.parse(e.postData.contents);
-    var sheetName = contents.type === 'penyaluran' ? 'Penyaluran_Pupuk' : 'e-RDKK_Kementan';
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getSheetByName(sheetName) || SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
+    var isPenyaluran = contents.type === 'penyaluran';
+    var sheetName = isPenyaluran ? 'Penyaluran_Pupuk' : 'e-RDKK_Kementan';
     
-    if (contents.data && Array.isArray(contents.data)) {
-      contents.data.forEach(function(row) {
-        if (contents.type === 'penyaluran') {
-          sheet.appendRow([
-            row.nomorNota, row.tanggal, row.namaPetani, "'" + row.nik, 
-            row.poktan, row.desa, row.ureaKg, row.npkKg, row.organikKg, row.totalBiayaRp, row.status
-          ]);
-        } else {
-          sheet.appendRow([
-            "'" + row.nik, row.namaPetani, row.namaIbuKandung, row.poktan, 
-            row.desa, row.luasLahanHa, row.komoditas, row.ureaKg, row.npkKg, row.organikKg
-          ]);
-        }
-      });
+    var ss = SpreadsheetApp.getActiveSpreadsheet();
+    var sheet = ss.getSheetByName(sheetName);
+    
+    // Jika tab sheet belum ada, otomatis dibuatkan tab sheet baru
+    if (!sheet) {
+      sheet = ss.insertSheet(sheetName);
     }
     
-    return ContentService.createTextOutput(JSON.stringify({ status: "success", count: contents.data ? contents.data.length : 0 }))
-      .setMimeType(ContentService.MimeType.JSON);
+    // Bersihkan sheet untuk memperbarui data terkini
+    sheet.clear();
+    
+    if (isPenyaluran) {
+      var headers = [
+        "No", "No. Nota", "Tanggal Penyaluran", "Nama Petani", "NIK", 
+        "Poktan", "Desa", "Kecamatan", "Urea (Kg)", "NPK (Kg)", "Organik (Kg)", 
+        "Total Biaya (Rp)", "Kios Penyalur", "Pengurus Poktan", "Status"
+      ];
+      sheet.appendRow(headers);
+      
+      var headerRange = sheet.getRange(1, 1, 1, headers.length);
+      headerRange.setBackground("#1e293b");
+      headerRange.setFontColor("#FFFFFF");
+      headerRange.setFontWeight("bold");
+      
+      if (contents.data && Array.isArray(contents.data)) {
+        contents.data.forEach(function(row) {
+          sheet.appendRow([
+            row.no,
+            row.nomorNota,
+            row.tanggal,
+            row.namaPetani,
+            "'" + row.nik,
+            row.poktan,
+            row.desa,
+            row.kecamatan,
+            row.ureaKg,
+            row.npkKg,
+            row.organikKg,
+            row.totalBiayaRp,
+            row.kios,
+            row.pengurusPoktan,
+            row.status
+          ]);
+        });
+      }
+      sheet.autoResizeColumns(1, headers.length);
+    } else {
+      var headers = [
+        "No", "NIK Petani", "Nama Lengkap Petani", "Nama Ibu Kandung", 
+        "Tempat Lahir", "Tanggal Lahir", "Kelompok Tani (Poktan)", "Desa", "Kecamatan", 
+        "Luas Lahan (Ha)", "Komoditas", "Urea (Kg)", "NPK (Kg)", "Organik (Kg)", "Status e-RDKK"
+      ];
+      sheet.appendRow(headers);
+      
+      var headerRange = sheet.getRange(1, 1, 1, headers.length);
+      headerRange.setBackground("#1b4332");
+      headerRange.setFontColor("#FFFFFF");
+      headerRange.setFontWeight("bold");
+      
+      if (contents.data && Array.isArray(contents.data)) {
+        contents.data.forEach(function(row) {
+          sheet.appendRow([
+            row.no,
+            "'" + row.nik,
+            row.namaPetani,
+            row.namaIbuKandung,
+            row.tempatLahir,
+            row.tanggalLahir,
+            row.poktan,
+            row.desa,
+            row.kecamatan,
+            row.luasLahanHa,
+            row.komoditas,
+            row.ureaKg,
+            row.npkKg,
+            row.organikKg,
+            row.statusErdkk
+          ]);
+        });
+      }
+      sheet.autoResizeColumns(1, headers.length);
+    }
+    
+    sheet.setFrozenRows(1);
+    
+    return ContentService.createTextOutput(JSON.stringify({ 
+      status: "success", 
+      sheetName: sheetName,
+      count: contents.data ? contents.data.length : 0 
+    })).setMimeType(ContentService.MimeType.JSON);
   } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ status: "error", message: err.toString() }))
-      .setMimeType(ContentService.MimeType.JSON);
+    return ContentService.createTextOutput(JSON.stringify({ 
+      status: "error", 
+      message: err.toString() 
+    })).setMimeType(ContentService.MimeType.JSON);
   }
 }`;
 
