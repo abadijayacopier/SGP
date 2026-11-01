@@ -1840,10 +1840,10 @@ export default function FieldMapsMobile() {
         </div>
       </div>
 
-      {/* 6. BOTTOM DRAWER: INPUT IDENTITAS LAHAN & PETANI */}
+      {/* 6. BOTTOM DRAWER / MODAL: INPUT IDENTITAS LAHAN & PETANI */}
       {showSaveDrawer && (
-        <div className="fixed inset-0 z-[1200] bg-slate-950/70 backdrop-blur-xs flex flex-col justify-end font-sans">
-          <div className="bg-white rounded-t-3xl p-5 sm:p-6 max-h-[85vh] overflow-y-auto space-y-4 shadow-2xl border-t border-slate-200 font-sans text-slate-800">
+        <div className="fixed inset-0 z-[2500] bg-slate-950/75 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 font-sans overflow-y-auto">
+          <div className="bg-white w-full sm:max-w-xl md:max-w-2xl rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 max-h-[92vh] sm:max-h-[88vh] overflow-y-auto space-y-4 shadow-2xl border border-slate-200 font-sans text-slate-800 pb-8 sm:pb-6 my-auto">
             <div className="flex items-center justify-between border-b pb-3 border-slate-100">
               <div>
                 <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2 font-sans">
@@ -2149,7 +2149,7 @@ export default function FieldMapsMobile() {
                 </div>
               </div>
 
-              <div className="grid grid-cols-2 gap-3">
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                 <div>
                   <label className="block font-bold text-slate-700 mb-1 font-sans">Nomor Pipil / SPPT</label>
                   <input
@@ -2173,19 +2173,19 @@ export default function FieldMapsMobile() {
                     <option value="Bagi Hasil" className="font-sans">Bagi Hasil</option>
                   </select>
                 </div>
-              </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 mb-1 font-sans">Jenis Irigasi</label>
-                <select
-                  value={formData.statusIrigasi}
-                  onChange={(e) => setFormData({ ...formData, statusIrigasi: e.target.value })}
-                  className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-sans font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
-                >
-                  <option value="Irigasi Teknis" className="font-sans">Irigasi Teknis</option>
-                  <option value="Pompa Sumur Dangkal" className="font-sans">Pompa Sumur Dangkal</option>
-                  <option value="Tadah Hujan" className="font-sans">Tadah Hujan</option>
-                </select>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1 font-sans">Jenis Irigasi</label>
+                  <select
+                    value={formData.statusIrigasi}
+                    onChange={(e) => setFormData({ ...formData, statusIrigasi: e.target.value })}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-sans font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer"
+                  >
+                    <option value="Irigasi Teknis" className="font-sans">Irigasi Teknis</option>
+                    <option value="Pompa Sumur Dangkal" className="font-sans">Pompa Sumur Dangkal</option>
+                    <option value="Tadah Hujan" className="font-sans">Tadah Hujan</option>
+                  </select>
+                </div>
               </div>
 
               {/* Geotagged Photo Camera Section */}
@@ -2259,8 +2259,8 @@ export default function FieldMapsMobile() {
 
       {/* 7. OFFLINE QUEUE DRAWER MODAL */}
       {showQueueDrawer && (
-        <div className="fixed inset-0 z-[1200] bg-slate-950/70 backdrop-blur-xs flex flex-col justify-end">
-          <div className="bg-white rounded-t-3xl p-5 sm:p-6 max-h-[85vh] overflow-y-auto space-y-4 shadow-2xl border-t border-slate-200">
+        <div className="fixed inset-0 z-[2500] bg-slate-950/75 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 font-sans overflow-y-auto">
+          <div className="bg-white w-full sm:max-w-xl md:max-w-2xl rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 max-h-[92vh] sm:max-h-[88vh] overflow-y-auto space-y-4 shadow-2xl border border-slate-200 font-sans text-slate-800 pb-8 sm:pb-6 my-auto">
             <div className="flex items-center justify-between border-b pb-3 border-slate-100">
               <div>
                 <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
@@ -2386,10 +2386,10 @@ export default function FieldMapsMobile() {
         </div>
       )}
 
-      {/* 8. DRAWER: HISTORI PETAK SAWAH TERDAFTAR */}
+      {/* 8. DRAWER / MODAL: HISTORI PETAK SAWAH TERDAFTAR */}
       {showHistoriModal && (
-        <div className="fixed inset-0 z-[1200] bg-slate-950/70 backdrop-blur-xs flex flex-col justify-end">
-          <div className="bg-white rounded-t-3xl p-5 sm:p-6 max-h-[85vh] overflow-y-auto space-y-4 shadow-2xl border-t border-slate-200">
+        <div className="fixed inset-0 z-[2500] bg-slate-950/75 backdrop-blur-xs flex items-end sm:items-center justify-center p-0 sm:p-4 font-sans overflow-y-auto">
+          <div className="bg-white w-full sm:max-w-xl md:max-w-2xl rounded-t-3xl sm:rounded-3xl p-5 sm:p-6 max-h-[92vh] sm:max-h-[88vh] overflow-y-auto space-y-4 shadow-2xl border border-slate-200 font-sans text-slate-800 pb-8 sm:pb-6 my-auto">
             <div className="flex items-center justify-between border-b pb-3 border-slate-100">
               <div>
                 <h3 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
