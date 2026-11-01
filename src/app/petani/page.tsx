@@ -894,8 +894,8 @@ export default function PetaniPage() {
 
       {/* Modal Edit Kepala Desa */}
       {editingKades && (
-        <div className="fixed inset-0 z-[2000] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 sm:p-8 shadow-2xl border border-slate-100 space-y-5">
+        <div className="fixed inset-0 z-[2000] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 pb-20 sm:pb-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-8 shadow-2xl border border-slate-100 max-h-[85vh] sm:max-h-[90vh] overflow-y-auto my-auto space-y-5">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-2xl bg-indigo-100 text-indigo-700 flex items-center justify-center font-bold">
@@ -1010,8 +1010,8 @@ export default function PetaniPage() {
 
       {/* Modal Tambah Poktan Baru */}
       {poktanModalOpen && (
-        <div className="fixed inset-0 z-[2000] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-[2000] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 pb-20 sm:pb-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl border border-slate-100 max-h-[85vh] sm:max-h-[90vh] overflow-y-auto my-auto">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="font-black text-slate-800 text-lg flex items-center gap-2">
                 <Building2 className="w-5 h-5 text-emerald-600" />
@@ -1107,8 +1107,8 @@ export default function PetaniPage() {
 
       {/* Modal Tambah Petani Baru */}
       {modalOpen && (
-        <div className="fixed inset-0 z-[2000] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+        <div className="fixed inset-0 z-[2000] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 pb-20 sm:pb-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-100 max-h-[85vh] sm:max-h-[90vh] overflow-y-auto my-auto">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="font-black text-slate-800 text-lg flex items-center gap-2">
                 <Users className="w-5 h-5 text-emerald-600" />
@@ -1283,31 +1283,43 @@ export default function PetaniPage() {
 
       {/* Modal Detail Profil Petani & DAFTAR LENGKAP BLOK-BLOK SAWAH */}
       {detailModalOpen && selectedPetani && (
-        <div className="fixed inset-0 z-[2000] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
-          <div className="bg-white rounded-3xl max-w-3xl w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
-            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
-              <div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200">
+        <div className="fixed inset-0 z-[2000] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 pb-20 sm:pb-4 overflow-y-auto">
+          <div className="bg-white rounded-3xl max-w-3xl w-full p-4 sm:p-6 shadow-2xl border border-slate-100 max-h-[85vh] sm:max-h-[90vh] overflow-y-auto my-auto space-y-4">
+            {/* Header Profil Petani */}
+            <div className="flex items-start justify-between pb-4 border-b border-slate-100 gap-3">
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-700 bg-emerald-50 px-2.5 py-0.5 rounded-full border border-emerald-200 inline-block">
                   Profil Petani & Kepemilikan Lahan
                 </span>
-                <h3 className="font-black text-slate-900 text-xl mt-1">{selectedPetani.nama}</h3>
-                <p className="text-xs text-slate-500 font-mono">
-                  NIK: {selectedPetani.nik} &bull; No KK: {selectedPetani.noKk} &bull; {selectedPetani.poktan?.nama}
-                </p>
-                <p className="text-[11px] text-slate-500 mt-1">
-                  TTL: <strong className="text-slate-700">{selectedPetani.tempatLahir || 'Magetan'}{selectedPetani.tanggalLahir ? `, ${selectedPetani.tanggalLahir}` : ''}</strong> &bull; Ibu Kandung: <strong className="text-slate-700">{selectedPetani.namaIbuKandung || '-'}</strong> &bull; Wilayah: <strong className="text-slate-700">Desa {selectedPetani.desa}, Kec. {selectedPetani.kecamatan}, Kab. {selectedPetani.kabupaten || 'Magetan'}</strong>
-                </p>
+                <h3 className="font-black text-slate-900 text-lg sm:text-xl">{selectedPetani.nama}</h3>
+                <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-slate-600 font-mono">
+                  <span>NIK: <strong className="text-slate-800">{selectedPetani.nik}</strong></span>
+                  <span>&bull;</span>
+                  <span>No KK: <strong className="text-slate-800">{selectedPetani.noKk || '-'}</strong></span>
+                  <span>&bull;</span>
+                  <span className="text-emerald-700 font-bold">{selectedPetani.poktan?.nama}</span>
+                </div>
+                <div className="text-[11px] text-slate-500 space-y-0.5 pt-0.5">
+                  <div>
+                    TTL: <strong className="text-slate-700">{selectedPetani.tempatLahir || 'Magetan'}{selectedPetani.tanggalLahir ? `, ${selectedPetani.tanggalLahir}` : ''}</strong> &bull; Ibu Kandung: <strong className="text-slate-700">{selectedPetani.namaIbuKandung || '-'}</strong>
+                  </div>
+                  <div>
+                    Alamat Domisili: <strong className="text-slate-700">{selectedPetani.alamat ? `${selectedPetani.alamat}, ` : ''}Desa {selectedPetani.desa}, Kec. {selectedPetani.kecamatan}, Kab. {selectedPetani.kabupaten || 'Magetan'}</strong>
+                  </div>
+                </div>
               </div>
               <button
+                type="button"
                 onClick={() => setDetailModalOpen(false)}
-                className="p-1.5 rounded-full text-slate-400 hover:bg-slate-100"
+                className="p-2 rounded-xl text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition shrink-0"
+                title="Tutup Modal"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
             {/* Statistik Akumulasi Luas Petani */}
-            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 my-4 text-xs">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 text-xs">
               <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 text-center">
                 <span className="text-[10px] font-bold text-emerald-800 uppercase">Jumlah Blok Sawah</span>
                 <p className="text-xl font-black text-emerald-950 mt-0.5">
@@ -1380,10 +1392,10 @@ export default function PetaniPage() {
                           )}
                         </div>
 
-                        <div className="flex items-center gap-2 shrink-0">
+                        <div className="flex flex-wrap items-center gap-2 shrink-0 w-full sm:w-auto mt-2 sm:mt-0">
                           <Link
                             href={`/peta`}
-                            className="inline-flex items-center gap-1 text-[11px] font-bold bg-white border border-slate-200 text-slate-700 px-3 py-1.5 rounded-xl hover:bg-slate-100 transition shadow-2xs"
+                            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1 text-[11px] font-bold bg-white border border-slate-200 text-slate-700 px-3 py-2 rounded-xl hover:bg-slate-100 transition shadow-2xs"
                           >
                             <Compass className="w-3.5 h-3.5 text-emerald-600" />
                             Peta
@@ -1391,7 +1403,7 @@ export default function PetaniPage() {
                           <Link
                             href={`/cetak-lahan/${l.id}`}
                             target="_blank"
-                            className="inline-flex items-center gap-1.5 text-[11px] font-bold bg-slate-900 text-white px-3 py-1.5 rounded-xl hover:bg-emerald-700 transition shadow-2xs"
+                            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 text-[11px] font-bold bg-slate-900 text-white px-3 py-2 rounded-xl hover:bg-emerald-700 transition shadow-2xs"
                           >
                             <Printer className="w-3.5 h-3.5 text-emerald-300" />
                             Cetak Kartu Lahan
@@ -1454,34 +1466,36 @@ export default function PetaniPage() {
               </div>
             </div>
 
-            <div className="pt-4 border-t border-slate-100 flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-2">
+            {/* Footer Aksi Responsif & Rapi */}
+            <div className="pt-4 border-t border-slate-200 mt-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+              {/* Sisi Kiri (Desktop) / Sisi Bawah (Mobile): Tombol Hapus */}
+              <div className="order-last sm:order-first">
                 {(permissions.canVerifyPpl || permissions.canApproveDinas || permissions.canManageUsers || currentUser.role === 'ADMIN_DINAS' || currentUser.role === 'PPL') && (
                   <button
                     type="button"
                     onClick={() => handleDeletePetani(selectedPetani)}
-                    className="inline-flex items-center gap-1.5 px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 font-bold rounded-xl text-xs border border-rose-200 transition shadow-2xs cursor-pointer"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-rose-50 hover:bg-rose-100 active:scale-95 text-rose-700 font-bold rounded-xl text-xs border border-rose-200/90 transition shadow-2xs cursor-pointer"
                   >
                     <Trash2 className="w-3.5 h-3.5 text-rose-600" />
-                    Hapus Petani Ini
+                    <span>Hapus Petani Ini</span>
                   </button>
                 )}
-                <span className="text-xs text-slate-400 hidden sm:inline">
-                  Alamat: {selectedPetani.alamat}, {selectedPetani.desa}, {selectedPetani.kecamatan}
-                </span>
               </div>
-              <div className="flex items-center gap-2">
+
+              {/* Sisi Kanan (Desktop) / Sisi Atas (Mobile): Cetak Kartu Tani & Tutup Rincian */}
+              <div className="grid grid-cols-1 min-[420px]:grid-cols-2 sm:flex sm:items-center gap-2">
                 <Link
                   href={`/cetak-kartu-tani/${selectedPetani.id}`}
                   target="_blank"
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black rounded-xl text-xs transition shadow-2xs"
+                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-400 hover:bg-amber-500 active:scale-95 text-slate-950 font-black rounded-xl text-xs transition shadow-2xs text-center"
                 >
-                  <CreditCard className="w-3.5 h-3.5" />
-                  Cetak Kartu Tani Digital
+                  <CreditCard className="w-4 h-4 shrink-0" />
+                  <span>Cetak Kartu Tani Digital</span>
                 </Link>
                 <button
+                  type="button"
                   onClick={() => setDetailModalOpen(false)}
-                  className="px-5 py-2 bg-slate-900 text-white font-bold rounded-xl text-xs hover:bg-slate-800 transition"
+                  className="inline-flex items-center justify-center px-5 py-2.5 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white font-bold rounded-xl text-xs transition shadow-2xs cursor-pointer"
                 >
                   Tutup Rincian
                 </button>
