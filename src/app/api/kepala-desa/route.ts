@@ -6,7 +6,13 @@ import {
   generateOfficialStampSvg,
 } from '@/lib/signature-utils';
 
-const DATA_FILE = path.join(process.cwd(), 'src', 'data', 'kepala-desa.json');
+const primaryFilePath = path.join(process.cwd(), 'src', 'data', 'kepala-desa.json');
+const tmpFilePath = path.join('/tmp', 'kepala-desa.json');
+const publicFilePath = path.join(process.cwd(), 'public', 'kepala-desa.json');
+
+const globalForKades = globalThis as unknown as {
+  __kadesData: any[] | undefined;
+};
 
 const DEFAULT_KADES = [
   {
@@ -101,34 +107,69 @@ const DEFAULT_KADES = [
   },
 ];
 
-function readKadesData() {
-  try {
-    if (!fs.existsSync(DATA_FILE)) {
-      fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
-      fs.writeFileSync(DATA_FILE, JSON.stringify(DEFAULT_KADES, null, 2), 'utf8');
-      return DEFAULT_KADES;
-    }
-    const raw = fs.readFileSync(DATA_FILE, 'utf8');
-    const parsed = JSON.parse(raw);
-    return Array.isArray(parsed) && parsed.length > 0 ? parsed : DEFAULT_KADES;
-  } catch (e) {
-    return DEFAULT_KADES;
+function readKadesData(): any[] {
+  if (globalForKades.__kadesData && Array.isArray(globalForKades.__kadesData) && globalForKades.__kadesData.length > 0) {
+    return globalForKades.__kadesData;
   }
+
+  const candidatePaths = [
+    primaryFilePath,
+    tmpFilePath,
+    publicFilePath,
+  ];
+
+  for (const p of candidatePaths) {
+    try {
+      if (fs.existsSync(p)) {
+        const raw = fs.readFileSync(p, 'utf8');
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          globalForKades.__kadesData = parsed;
+          return parsed;
+        }
+      }
+    } catch {}
+  }
+
+  globalForKades.__kadesData = DEFAULT_KADES;
+  return DEFAULT_KADES;
 }
 
 function writeKadesData(data: any[]) {
-  fs.mkdirSync(path.dirname(DATA_FILE), { recursive: true });
-  fs.writeFileSync(DATA_FILE, JSON.stringify(data, null, 2), 'utf8');
+  globalForKades.__kadesData = data;
+
+  const targets = [primaryFilePath, tmpFilePath, publicFilePath];
+  for (const t of targets) {
+    try {
+      const dir = path.dirname(t);
+      if (!fs.existsSync(dir)) fs.mkdirSync(dir, { recursive: true });
+      fs.writeFileSync(t, JSON.stringify(data, null, 2), 'utf8');
+    } catch {
+      // Abaikan error pada sistem read-only Vercel Serverless
+    }
+  }
 }
 
 export async function GET(request: Request) {
   try {
+    const { searchParams } = new URL(request.url);
+    const filterDesa = searchParams.get('desa');
+
     const list = readKadesData();
-    const withSignatures = list.map((item: any) => ({
+    let withSignatures = list.map((item: any) => ({
       ...item,
       signatureUrl: item.signatureUrl || generateAutoSignatureSvg(item.nama),
       stampUrl: item.stampUrl || generateOfficialStampSvg('KADES', item.desa),
     }));
+
+    if (filterDesa && filterDesa.trim() !== '') {
+      const q = filterDesa.trim().toLowerCase().replace(/^(desa|kelurahan)\s+/i, '');
+      withSignatures = withSignatures.filter((item: any) => {
+        const d = item.desa.toLowerCase().replace(/^(desa|kelurahan)\s+/i, '');
+        return d.includes(q) || q.includes(d);
+      });
+    }
+
     return NextResponse.json({ success: true, data: withSignatures });
   } catch (error: any) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
@@ -138,7 +179,18 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { desa, nama, jabatan, nip, kontak, alamat, signatureUrl, stampUrl } = body;
+    const {
+      desa,
+      nama,
+      jabatan,
+      nip,
+      kontak,
+      alamat,
+      signatureUrl,
+      stampUrl,
+      userRole,
+      userDesa,
+    } = body;
 
     if (!desa || !nama) {
       return NextResponse.json(
@@ -147,10 +199,29 @@ export async function POST(request: Request) {
       );
     }
 
+    // Validasi Hak Akses: Kelompok Tani (POKTAN) hanya boleh mengubah Kepala Desa di desanya sendiri
+    if (userRole === 'POKTAN' && userDesa) {
+      const cleanUserDesa = userDesa.toLowerCase().replace(/^(desa|kelurahan)\s+/i, '').replace(/,\s*kec.*$/i, '').trim();
+      const cleanTargetDesa = desa.toLowerCase().replace(/^(desa|kelurahan)\s+/i, '').trim();
+
+      if (!cleanUserDesa.includes(cleanTargetDesa) && !cleanTargetDesa.includes(cleanUserDesa)) {
+        return NextResponse.json(
+          {
+            success: false,
+            error: `Akses ditolak: Akun Kelompok Tani hanya berwenang memperbarui data Kepala Desa untuk desa Anda (${userDesa}), bukan ${desa}.`,
+          },
+          { status: 403 }
+        );
+      }
+    }
+
     const currentList = readKadesData();
-    const index = currentList.findIndex(
-      (item: any) => item.desa.toLowerCase() === desa.trim().toLowerCase()
-    );
+    const cleanDesaTarget = desa.trim().toLowerCase().replace(/^(desa|kelurahan)\s+/i, '');
+
+    const index = currentList.findIndex((item: any) => {
+      const d = item.desa.toLowerCase().replace(/^(desa|kelurahan)\s+/i, '');
+      return d === cleanDesaTarget;
+    });
 
     if (index >= 0) {
       currentList[index] = {
@@ -166,7 +237,7 @@ export async function POST(request: Request) {
       };
     } else {
       currentList.push({
-        id: `kades-${desa.toLowerCase().replace(/\s+/g, '')}`,
+        id: `kades-${cleanDesaTarget.replace(/\s+/g, '')}`,
         desa: desa.trim(),
         nama: nama.trim(),
         jabatan: jabatan?.trim() || `Kepala Desa ${desa}`,

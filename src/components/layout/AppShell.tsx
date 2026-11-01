@@ -3,6 +3,7 @@
 import React from 'react';
 import { usePathname } from 'next/navigation';
 import RoleAccessGuard from '@/components/layout/RoleAccessGuard';
+import MobileBottomNav from '@/components/layout/MobileBottomNav';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -18,10 +19,10 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <>
-      <main className="flex-1 w-full pb-12">
+      <main className="flex-1 w-full pb-24 md:pb-12">
         <RoleAccessGuard>{children}</RoleAccessGuard>
       </main>
-      <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 no-print">
+      <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 no-print mb-16 md:mb-0">
         <div className="max-w-7xl mx-auto px-4 space-y-1.5">
           <p className="font-bold text-slate-800">
             Sistem Informasi Pertanian Terpadu &mdash; Pemerintah Kecamatan Lembeyan &copy; 2026
@@ -34,6 +35,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
           </p>
         </div>
       </footer>
+      <MobileBottomNav />
     </>
   );
 }

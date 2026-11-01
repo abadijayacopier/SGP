@@ -33,6 +33,7 @@ import {
   Sliders,
   Settings,
   Wallet,
+  Building2,
 } from 'lucide-react';
 
 const ICON_MAP: Record<string, any> = {
@@ -49,6 +50,7 @@ const ICON_MAP: Record<string, any> = {
   distribusi: Truck,
   'alokasi-poktan': Calculator,
   'buku-kas': Wallet,
+  'kepala-desa': Building2,
 };
 
 export default function Navbar() {

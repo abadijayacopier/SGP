@@ -399,7 +399,7 @@ export default function FieldMapsMobile() {
 
   // Fetch Existing Lahan, Petani & Poktan (with offline cache fallback)
   useEffect(() => {
-    fetch('/api/lahan')
+    fetch('/api/lahan?_t=' + Date.now())
       .then((r) => r.json())
       .then((json) => {
         if (json.success && Array.isArray(json.data)) {
@@ -1203,8 +1203,36 @@ export default function FieldMapsMobile() {
             <MapPin className="w-3 h-3 text-emerald-400" />
             <span>Desa</span>
           </button>
+
+          {/* Quick Histori Petak Sawah Button */}
+          <button
+            type="button"
+            onClick={() => setShowHistoriModal(true)}
+            className="bg-emerald-950/90 backdrop-blur-md px-2.5 py-1 rounded-full border border-emerald-500/40 text-[10px] sm:text-xs text-amber-300 hover:text-white shadow-md flex items-center gap-1 shrink-0 font-black active:scale-95 transition cursor-pointer"
+            title="Buka Daftar Histori Petak Sawah yang Sudah Dipoligon"
+          >
+            <CheckCircle2 className="w-3 h-3 text-emerald-400" />
+            <span>{existingLahan.length} Petak</span>
+          </button>
         </div>
       </div>
+
+      {/* Floating Center Radar Pill: Fokus ke Petak Terdaftar */}
+      {existingLahan.length > 0 && !showSaveDrawer && !showHistoriModal && (
+        <div className="absolute top-22 left-1/2 -translate-x-1/2 z-[1000] pointer-events-auto no-print">
+          <button
+            type="button"
+            onClick={handleFitAllExistingLahan}
+            className="bg-slate-950/90 text-white text-[11px] font-bold px-3 py-1.5 rounded-full border border-emerald-400/50 shadow-2xl flex items-center gap-2 hover:bg-slate-900 active:scale-95 transition backdrop-blur-md cursor-pointer"
+          >
+            <Compass className="w-3.5 h-3.5 text-amber-400" />
+            <span>{existingLahan.length} Petak Sawah Terdaftar</span>
+            <span className="text-[10px] text-emerald-300 bg-emerald-900/80 px-2 py-0.5 rounded-full border border-emerald-700/60 font-black">
+              Fokuskan &rarr;
+            </span>
+          </button>
+        </div>
+      )}
 
       {/* 2. LAYER SELECTION MODAL / DROPDOWN */}
       {showLayerMenu && (

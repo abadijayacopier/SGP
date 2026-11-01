@@ -44,7 +44,8 @@ export interface RoleMenuItem {
     | 'kasir-poktan'
     | 'distribusi'
     | 'alokasi-poktan'
-    | 'buku-kas';
+    | 'buku-kas'
+    | 'kepala-desa';
 }
 
 export const ROLE_PERMISSIONS: Record<
@@ -94,6 +95,7 @@ export const ROLE_PERMISSIONS: Record<
       '/buku-kas-poktan',
       '/cetak-f6',
       '/verifikasi',
+      '/kepala-desa',
     ],
     menuItems: [
       { label: 'Dashboard', href: '/dashboard', iconName: 'dashboard' },
@@ -103,6 +105,7 @@ export const ROLE_PERMISSIONS: Record<
       { label: 'Alokasi e-RDKK', href: '/alokasi-poktan', iconName: 'alokasi-poktan' },
       { label: 'Petani & Poktan', href: '/petani', iconName: 'petani' },
       { label: 'Peta GIS', href: '/peta', iconName: 'peta' },
+      { label: 'Kepala Desa', href: '/kepala-desa', iconName: 'kepala-desa' },
       { label: 'Laporan', href: '/laporan', iconName: 'laporan' },
       { label: 'User & RBAC', href: '/users', iconName: 'users' },
     ],
@@ -136,6 +139,7 @@ export const ROLE_PERMISSIONS: Record<
       '/buku-kas-poktan',
       '/cetak-f6',
       '/verifikasi',
+      '/kepala-desa',
     ],
     menuItems: [
       { label: 'Workspace BPP', href: '/dashboard', iconName: 'dashboard' },
@@ -171,6 +175,7 @@ export const ROLE_PERMISSIONS: Record<
       '/cetak-erdkk',
       '/cetak-kalender-tanam',
       '/buku-kas-poktan',
+      '/kepala-desa',
     ],
     menuItems: [
       { label: 'Workspace Poktan', href: '/dashboard', iconName: 'dashboard' },
@@ -180,6 +185,7 @@ export const ROLE_PERMISSIONS: Record<
       { label: 'Alokasi e-RDKK', href: '/alokasi-poktan', iconName: 'alokasi-poktan' },
       { label: 'Anggota & Poktan', href: '/petani', iconName: 'petani' },
       { label: 'Input Usulan e-RDKK', href: '/pengajuan', iconName: 'pengajuan' },
+      { label: 'Kepala Desa', href: '/kepala-desa', iconName: 'kepala-desa' },
     ],
     canApproveDinas: false,
     canVerifyPpl: false,

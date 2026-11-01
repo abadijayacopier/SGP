@@ -58,23 +58,23 @@ export default async function DashboardPage() {
     console.error('[Dashboard Server Error] Database query failed:', dbError);
   }
 
-  const totalLuasHa = allLahan.reduce((sum, l) => sum + l.luasHa, 0);
+  const totalLuasHa = (allLahan || []).reduce((sum, l) => sum + (Number(l?.luasHa) || 0), 0);
 
-  const totalJatahUrea = allAlokasi.reduce((sum, a) => sum + a.jatahUreaKg, 0);
-  const totalSisaUrea = allAlokasi.reduce((sum, a) => sum + a.sisaUreaKg, 0);
-  const totalTersalurUrea = totalJatahUrea - totalSisaUrea;
+  const totalJatahUrea = (allAlokasi || []).reduce((sum, a) => sum + (Number(a?.jatahUreaKg) || 0), 0);
+  const totalSisaUrea = (allAlokasi || []).reduce((sum, a) => sum + (Number(a?.sisaUreaKg) || 0), 0);
+  const totalTersalurUrea = Math.max(0, totalJatahUrea - totalSisaUrea);
 
-  const totalJatahNpk = allAlokasi.reduce((sum, a) => sum + a.jatahNpkKg, 0);
-  const totalSisaNpk = allAlokasi.reduce((sum, a) => sum + a.sisaNpkKg, 0);
-  const totalTersalurNpk = totalJatahNpk - totalSisaNpk;
+  const totalJatahNpk = (allAlokasi || []).reduce((sum, a) => sum + (Number(a?.jatahNpkKg) || 0), 0);
+  const totalSisaNpk = (allAlokasi || []).reduce((sum, a) => sum + (Number(a?.sisaNpkKg) || 0), 0);
+  const totalTersalurNpk = Math.max(0, totalJatahNpk - totalSisaNpk);
 
   const persentaseUrea =
     totalJatahUrea > 0 ? Math.round((totalTersalurUrea / totalJatahUrea) * 100) : 0;
   const persentaseNpk =
     totalJatahNpk > 0 ? Math.round((totalTersalurNpk / totalJatahNpk) * 100) : 0;
 
-  const pendingPplCount = pengajuanList.filter((p) => p.status === 'DIAJUKAN_POKTAN').length;
-  const pendingDinasCount = pengajuanList.filter((p) => p.status === 'DIVERIFIKASI_PPL').length;
+  const pendingPplCount = (pengajuanList || []).filter((p) => p.status === 'DIAJUKAN_POKTAN').length;
+  const pendingDinasCount = (pengajuanList || []).filter((p) => p.status === 'DIVERIFIKASI_PPL').length;
 
   return (
     <RoleDashboardClient

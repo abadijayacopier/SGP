@@ -36,6 +36,7 @@ const PATH_LABELS: Record<string, string> = {
   '/alokasi-poktan': 'Alokasi Pupuk e-RDKK',
   '/field-maps': 'Mode Lapangan (Field Maps Android)',
   '/buku-kas-poktan': 'Buku Kas & Jasa Poktan',
+  '/kepala-desa': 'Data Kepala Desa & Perangkat',
 };
 
 export default function RoleAccessGuard({ children }: { children: React.ReactNode }) {
