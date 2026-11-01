@@ -8,8 +8,6 @@ import {
   Printer,
   RefreshCw,
   CheckCircle2,
-  Copy,
-  Send,
   Filter,
   Upload,
   Download,
@@ -113,14 +111,6 @@ export default function LaporanPage() {
   const [overrideDesa, setOverrideDesa] = useState<string>('AUTO');
   const [printOrientation, setPrintOrientation] = useState<'landscape' | 'portrait'>('landscape');
 
-  // Google Sheets Webhook State
-  const [webhookUrl, setWebhookUrl] = useState('');
-  const [syncStatus, setSyncStatus] = useState<string | null>(null);
-  const [syncing, setSyncing] = useState(false);
-  const [copiedScript, setCopiedScript] = useState(false);
-  const [currentOrigin, setCurrentOrigin] = useState('http://localhost:3000');
-  const [scriptTab, setScriptTab] = useState<'pull' | 'receiver'>('pull');
-
   const fetchData = async () => {
     try {
       setLoading(true);
@@ -220,9 +210,6 @@ export default function LaporanPage() {
 
   useEffect(() => {
     fetchData();
-    if (typeof window !== 'undefined') {
-      setCurrentOrigin(window.location.origin);
-    }
   }, []);
 
   // Set filter default jika login sebagai POKTAN
@@ -234,123 +221,6 @@ export default function LaporanPage() {
       }
     }
   }, [currentUser?.poktanId, poktanList]);
-
-  // Handler Kirim Webhook ke Google Sheets
-  const handleTriggerWebhook = async () => {
-    if (!webhookUrl) {
-      showWarning('URL Kosong', 'Masukkan URL Google Apps Script Webhook terlebih dahulu!');
-      return;
-    }
-
-    try {
-      setSyncing(true);
-      setSyncStatus('Mengirim data ke Google Sheets...');
-      const res = await fetch('/api/sinkronisasi', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ webhookUrl }),
-      });
-      const json = await res.json();
-      if (json.success) {
-        setSyncStatus('✅ Berhasil disinkronkan ke Google Sheets!');
-        showSuccess('Sinkronisasi Sukses', 'Data transaksi berhasil disinkronkan ke Google Sheets!');
-      } else {
-        setSyncStatus(`❌ Gagal: ${json.error}`);
-        showError('Sinkronisasi Gagal', json.error || 'Gagal mengirim data ke Google Sheets');
-      }
-    } catch (err: any) {
-      setSyncStatus(`❌ Terjadi error: ${err.message}`);
-      showError('Kesalahan Jaringan', err.message);
-    } finally {
-      setSyncing(false);
-    }
-  };
-
-  // 1. Script Penarik Otomatis (Pull dari Google Sheets)
-  const appsScriptPullCode = `function syncSistemPertanian() {
-  // URL API Sistem Pertanian BPP Lembeyan
-  var url = "${currentOrigin}/api/sinkronisasi";
-  var res = UrlFetchApp.fetch(url);
-  var json = JSON.parse(res.getContentText());
-  var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-  
-  // Bersihkan sheet & buat header kolom
-  sheet.clear();
-  sheet.appendRow([
-    "No Nota", "Tanggal", "Nama Petani", "NIK", "Poktan", 
-    "Desa", "Kecamatan", "Urea (Kg)", "NPK (Kg)", "Organik (Kg)", 
-    "Total Biaya (Rp)", "Kios Penyalur", "Pengurus Poktan", "Status"
-  ]);
-  
-  // Tulis baris data
-  json.data.forEach(function(row) {
-    sheet.appendRow([
-      row.nomorNota,
-      row.tanggal,
-      row.namaPetani,
-      "'" + row.nik,
-      row.poktan,
-      row.desa,
-      row.kecamatan,
-      row.ureaKg,
-      row.npkKg,
-      row.organikKg,
-      row.totalBiayaRp,
-      row.kios,
-      row.pengurusPoktan,
-      row.status
-    ]);
-  });
-}`;
-
-  // 2. Script Penerima Webhook (Push dari Web Aplikasi ke Google Sheets)
-  const appsScriptReceiverCode = `function doPost(e) {
-  try {
-    var contents = JSON.parse(e.postData.contents);
-    var data = contents.data;
-    var sheet = SpreadsheetApp.getActiveSpreadsheet().getActiveSheet();
-    
-    sheet.clear();
-    sheet.appendRow([
-      "No Nota", "Tanggal", "Nama Petani", "NIK", "Poktan", 
-      "Desa", "Kecamatan", "Urea (Kg)", "NPK (Kg)", "Organik (Kg)", 
-      "Total Biaya (Rp)", "Kios Penyalur", "Pengurus Poktan", "Status"
-    ]);
-    
-    data.forEach(function(row) {
-      sheet.appendRow([
-        row.nomorNota,
-        row.tanggal,
-        row.namaPetani,
-        "'" + row.nik,
-        row.poktan,
-        row.desa,
-        row.kecamatan,
-        row.ureaKg,
-        row.npkKg,
-        row.organikKg,
-        row.totalBiayaRp,
-        row.kios,
-        row.pengurusPoktan,
-        row.status
-      ]);
-    });
-    
-    return ContentService.createTextOutput(JSON.stringify({ result: "success", count: data.length }))
-      .setMimeType(ContentService.MimeType.JSON);
-  } catch (err) {
-    return ContentService.createTextOutput(JSON.stringify({ result: "error", message: err.toString() }))
-      .setMimeType(ContentService.MimeType.JSON);
-  }
-}`;
-
-  const currentDisplayScript = scriptTab === 'pull' ? appsScriptPullCode : appsScriptReceiverCode;
-
-  const handleCopyScript = () => {
-    navigator.clipboard.writeText(currentDisplayScript);
-    setCopiedScript(true);
-    setTimeout(() => setCopiedScript(false), 2000);
-  };
 
   // Handle parsing file Excel/CSV di client side
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -731,115 +601,9 @@ export default function LaporanPage() {
         </div>
       </div>
 
-      {/* SECTION 2: SINKRONISASI GOOGLE SHEETS */}
-      <div className="bg-white rounded-3xl border border-slate-200 p-6 sm:p-8 shadow-sm no-print space-y-4">
-        <div className="flex items-center justify-between border-b border-slate-100 pb-3">
-          <div>
-            <h2 className="text-base font-black text-slate-800 flex items-center gap-2">
-              <RefreshCw className="w-5 h-5 text-emerald-600" />
-              2. Fitur Sinkronisasi Google Sheets
-            </h2>
-            <p className="text-xs text-slate-500 mt-0.5">
-              Hubungkan database Sistem Pertanian langsung ke Google Spreadsheet Anda secara otomatis.
-            </p>
-          </div>
-          <span className="text-[11px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-full flex items-center gap-1">
-            <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> API Endpoint Aktif
-          </span>
-        </div>
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 text-xs">
-          {/* Opsi A: Trigger Webhook */}
-          <div className="space-y-3">
-            <h3 className="font-bold text-slate-800 text-sm">Opsi A: Kirim Real-Time via Webhook</h3>
-            <p className="text-slate-500 leading-relaxed">
-              Jika Anda memiliki Webhook Google Apps Script (URL Web App), masukkan di sini untuk memicu pengiriman data langsung dari server.
-            </p>
-
-            <div className="flex items-center gap-2">
-              <input
-                type="url"
-                placeholder="https://script.google.com/macros/s/.../exec"
-                value={webhookUrl}
-                onChange={(e) => setWebhookUrl(e.target.value)}
-                className="flex-1 px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 font-mono text-xs"
-              />
-              <button
-                onClick={handleTriggerWebhook}
-                disabled={syncing}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition flex items-center gap-1.5 shadow-sm"
-              >
-                <Send className="w-3.5 h-3.5" />
-                {syncing ? 'Mengirim...' : 'Sinkronkan'}
-              </button>
-            </div>
-
-            {syncStatus && (
-              <div className="p-3 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700">
-                {syncStatus}
-              </div>
-            )}
-          </div>
-
-          {/* Opsi B: Google Apps Script Template */}
-          <div className="space-y-3">
-            <div className="flex flex-wrap items-center justify-between gap-2">
-              <div className="flex items-center gap-1.5 bg-slate-100 p-1 rounded-xl">
-                <button
-                  type="button"
-                  onClick={() => setScriptTab('pull')}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${
-                    scriptTab === 'pull'
-                      ? 'bg-emerald-600 text-white shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Tarik Data (Pull)
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setScriptTab('receiver')}
-                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition ${
-                    scriptTab === 'receiver'
-                      ? 'bg-emerald-600 text-white shadow-xs'
-                      : 'text-slate-600 hover:text-slate-900'
-                  }`}
-                >
-                  Penerima Webhook (doPost)
-                </button>
-              </div>
-
-              <button
-                type="button"
-                onClick={handleCopyScript}
-                className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-700 hover:underline cursor-pointer"
-              >
-                <Copy className="w-3.5 h-3.5" />
-                {copiedScript ? 'Tersalin!' : 'Salin Kode Script'}
-              </button>
-            </div>
-
-            <p className="text-slate-500 leading-relaxed text-[11px]">
-              {scriptTab === 'pull' ? (
-                <>
-                  Buka Google Sheets &rarr; <em>Extensions (Ekstensi) &rarr; Apps Script</em>, paste kode di bawah lalu klik <strong>Run / Jalankan</strong> (atau pasang Trigger jam untuk update otomatis):
-                </>
-              ) : (
-                <>
-                  Pasang kode ini di Apps Script, lalu klik <strong>Deploy &rarr; New Deployment &rarr; Web App</strong> (akses: <em>Anyone</em>), lalu salin URL Web App ke kotak Opsi A di sebelah kiri.
-                </>
-              )}
-            </p>
-
-            <pre className="p-3 bg-slate-900 text-emerald-400 rounded-xl text-[10.5px] font-mono overflow-x-auto max-h-40 leading-relaxed border border-slate-800">
-              {currentDisplayScript}
-            </pre>
-          </div>
-        </div>
-      </div>
-
       {/* FILTER KONTROL LAPORAN CETAK RESMI (HANYA TAMPIL DI LAYAR) */}
-      <div className="bg-white rounded-3xl border border-slate-200 p-5 shadow-xs no-print flex flex-wrap items-center justify-between gap-4">
+      <div className="bg-white rounded-3xl border border-slate-200 p-4 sm:p-5 shadow-xs no-print space-y-3.5">
+        {/* Baris 1: Pilihan Jenis Laporan Cetak */}
         <div className="flex flex-wrap items-center gap-2">
           <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5 mr-1">
             <FileText className="w-4 h-4 text-emerald-600" />
@@ -854,7 +618,7 @@ export default function LaporanPage() {
             <button
               key={tab.id}
               onClick={() => setJenisLaporanCetak(tab.id as any)}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
                 jenisLaporanCetak === tab.id
                   ? 'bg-emerald-600 text-white shadow-2xs'
                   : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
@@ -876,22 +640,24 @@ export default function LaporanPage() {
           ))}
         </div>
 
-        <div className="flex flex-wrap items-center gap-3">
-          {/* Tombol Aksi Cepat: Print, Export, Import, Kelola Kades & Pilihan Orientasi Kertas */}
-          <div className="flex items-center gap-1.5 border-r border-slate-200 pr-3">
+        {/* Baris 2: Toolbar Tombol Aksi & Filter (Responsif & Rapih di Semua Ukuran Layar) */}
+        <div className="border-t border-slate-100 pt-3 flex flex-wrap items-center justify-between gap-3">
+          {/* Kelompok Tombol Aksi Cepat: Print, Orientasi Kertas, Export, Import, Kelola Kades */}
+          <div className="flex flex-wrap items-center gap-1.5 sm:gap-2">
             <button
               onClick={() => window.print()}
               title="Cetak Halaman Laporan / Simpan PDF"
-              className="inline-flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 bg-slate-900 hover:bg-slate-800 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer shrink-0"
             >
               <Printer className="w-3.5 h-3.5 text-emerald-300" />
               Print
             </button>
-            <div className="flex items-center gap-0.5 bg-slate-100 p-0.5 rounded-xl border border-slate-200" title="Pilih orientasi halaman cetak">
+
+            <div className="flex items-center gap-0.5 bg-slate-100 p-0.5 rounded-xl border border-slate-200 shrink-0" title="Pilih orientasi halaman cetak">
               <button
                 type="button"
                 onClick={() => setPrintOrientation('landscape')}
-                className={`px-2 py-1 text-[11px] font-bold rounded-lg transition ${
+                className={`px-2 py-1 text-[11px] font-bold rounded-lg transition cursor-pointer ${
                   printOrientation === 'landscape'
                     ? 'bg-emerald-600 text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
@@ -902,7 +668,7 @@ export default function LaporanPage() {
               <button
                 type="button"
                 onClick={() => setPrintOrientation('portrait')}
-                className={`px-2 py-1 text-[11px] font-bold rounded-lg transition ${
+                className={`px-2 py-1 text-[11px] font-bold rounded-lg transition cursor-pointer ${
                   printOrientation === 'portrait'
                     ? 'bg-emerald-600 text-white shadow-xs'
                     : 'text-slate-600 hover:text-slate-900'
@@ -911,6 +677,7 @@ export default function LaporanPage() {
                 Portrait
               </button>
             </div>
+
             <button
               onClick={() => {
                 if (jenisLaporanCetak === 'KEMENTAN_ERDKK') {
@@ -924,19 +691,21 @@ export default function LaporanPage() {
                 }
               }}
               title="Ekspor Data ke Format Excel"
-              className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer shrink-0"
             >
               <Download className="w-3.5 h-3.5" />
               Export
             </button>
+
             <button
               onClick={() => setShowImportModal(true)}
               title="Impor Data Excel / CSV Standar Kementan"
-              className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 bg-blue-600 hover:bg-blue-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer shrink-0"
             >
               <Upload className="w-3.5 h-3.5" />
               Import
             </button>
+
             <button
               onClick={() => {
                 const targetKades =
@@ -948,66 +717,68 @@ export default function LaporanPage() {
                 setShowKadesModal(true);
               }}
               title="Kelola & Isi Data Kepala Desa Wilayah Kecamatan"
-              className="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer"
+              className="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white px-3 py-1.5 rounded-xl text-xs font-bold transition shadow-xs cursor-pointer shrink-0"
             >
               <Building2 className="w-3.5 h-3.5" />
               Data Kades
             </button>
           </div>
 
-          {/* Pilihan Filter Poktan */}
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-semibold text-slate-500 flex items-center gap-1">
-              <Filter className="w-3.5 h-3.5" /> Poktan:
-            </span>
-            <select
-              value={filterPoktan}
-              onChange={(e) => {
-                const val = e.target.value;
-                setFilterPoktan(val);
-                setOverrideDesa('AUTO');
-              }}
-              className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500"
-            >
-              <option value="SEMUA">Semua Kelompok Tani</option>
-              {poktanList.map((pok) => (
-                <option key={pok.id} value={pok.nama}>
-                  {pok.nama} (Desa {toTitleCase(pok.desa)})
-                </option>
-              ))}
-            </select>
-          </div>
-
-          {/* Selector Pengesahan Kepala Desa (Hanya Tampil Jika Memilih Poktan Tertentu) */}
-          {filterPoktan !== 'SEMUA' && (
-            <div className="flex items-center gap-2">
+          {/* Kelompok Filter: Poktan & Kades Pengesah */}
+          <div className="flex flex-wrap items-center gap-2.5">
+            <div className="flex items-center gap-1.5">
               <span className="text-xs font-semibold text-slate-500 flex items-center gap-1">
-                <Building2 className="w-3.5 h-3.5 text-indigo-600" /> Kades Pengesah:
+                <Filter className="w-3.5 h-3.5" /> Poktan:
               </span>
               <select
-                value={overrideDesa === 'AUTO' ? `AUTO_${effectiveDesa}` : overrideDesa}
+                value={filterPoktan}
                 onChange={(e) => {
                   const val = e.target.value;
-                  if (val.startsWith('AUTO_')) {
-                    setOverrideDesa('AUTO');
-                  } else {
-                    setOverrideDesa(val);
-                  }
+                  setFilterPoktan(val);
+                  setOverrideDesa('AUTO');
                 }}
-                className="px-3 py-1.5 bg-indigo-50 border border-indigo-200 rounded-xl text-xs font-bold text-indigo-900 focus:ring-2 focus:ring-indigo-500"
-                title="Pilih Desa untuk pengesahan Kepala Desa di laporan"
+                className="px-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 cursor-pointer max-w-[210px]"
               >
-                <option value={`AUTO_${effectiveDesa}`}>
-                  ⚡ Otomatis ({effectiveDesa})
-                </option>
-                {kadesList.map((k) => (
-                  <option key={k.desa} value={k.desa}>
-                    Desa {k.desa} ({k.nama})
+                <option value="SEMUA">Semua Kelompok Tani</option>
+                {poktanList.map((pok) => (
+                  <option key={pok.id} value={pok.nama}>
+                    {pok.nama} (Desa {toTitleCase(pok.desa)})
                   </option>
                 ))}
               </select>
             </div>
-          )}
+
+            {/* Selector Pengesahan Kepala Desa (Hanya Tampil Jika Memilih Poktan Tertentu) */}
+            {filterPoktan !== 'SEMUA' && (
+              <div className="flex items-center gap-1.5">
+                <span className="text-xs font-semibold text-slate-500 flex items-center gap-1">
+                  <Building2 className="w-3.5 h-3.5 text-indigo-600" /> Kades:
+                </span>
+                <select
+                  value={overrideDesa === 'AUTO' ? `AUTO_${effectiveDesa}` : overrideDesa}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    if (val.startsWith('AUTO_')) {
+                      setOverrideDesa('AUTO');
+                    } else {
+                      setOverrideDesa(val);
+                    }
+                  }}
+                  className="px-3 py-1.5 bg-indigo-50 border border-indigo-200 rounded-xl text-xs font-bold text-indigo-900 focus:ring-2 focus:ring-indigo-500 cursor-pointer max-w-[210px]"
+                  title="Pilih Desa untuk pengesahan Kepala Desa di laporan"
+                >
+                  <option value={`AUTO_${effectiveDesa}`}>
+                    ⚡ Otomatis ({effectiveDesa})
+                  </option>
+                  {kadesList.map((k) => (
+                    <option key={k.desa} value={k.desa}>
+                      Desa {k.desa} ({k.nama})
+                    </option>
+                  ))}
+                </select>
+              </div>
+            )}
+          </div>
         </div>
       </div>
 

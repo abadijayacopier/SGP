@@ -9,6 +9,7 @@ import {
   Wheat,
   MapPin,
   FileText,
+  FileSpreadsheet,
   Cloud,
   Database,
   Save,
@@ -32,6 +33,9 @@ import {
   Activity,
   Search,
   Filter,
+  Copy,
+  Check,
+  ExternalLink,
 } from 'lucide-react';
 import { showSuccess, showError, showConfirm } from '@/lib/sweetalert';
 import { formatRupiah } from '@/lib/calculations';
@@ -151,10 +155,91 @@ export default function PengaturanPage() {
     }
   };
 
+  // State Sinkronisasi Google Sheets Standar Kementan
+  const [syncingSheets, setSyncingSheets] = useState(false);
+  const [syncDataset, setSyncDataset] = useState<'erdkk' | 'penyaluran'>('erdkk');
+  const [syncStatusMsg, setSyncStatusMsg] = useState<{ type: 'success' | 'error' | 'info'; text: string } | null>(null);
+  const [activeScriptTab, setActiveScriptTab] = useState<'erdkk' | 'penyaluran' | 'receiver'>('erdkk');
+  const [copiedScript, setCopiedScript] = useState(false);
+  const [syncScripts, setSyncScripts] = useState<{ erdkk: string; penyaluran: string; receiver: string }>({
+    erdkk: '',
+    penyaluran: '',
+    receiver: '',
+  });
+  const [syncStats, setSyncStats] = useState<{ erdkkCount: number; penyaluranCount: number } | null>(null);
+
+  const fetchSyncTemplates = async () => {
+    try {
+      const res = await fetch('/api/sinkronisasi?type=all');
+      const json = await res.json();
+      if (json.success && json.scripts) {
+        setSyncScripts(json.scripts);
+        setSyncStats({
+          erdkkCount: json.erdkkCount || 0,
+          penyaluranCount: json.penyaluranCount || 0,
+        });
+      }
+    } catch (e) {
+      console.error('Gagal memuat template script sinkronisasi:', e);
+    }
+  };
+
   useEffect(() => {
     fetchSettings();
     fetchAuditLogs();
+    fetchSyncTemplates();
   }, []);
+
+  const handleTriggerWebhook = async () => {
+    const targetUrl = settings.integrasi.googleSheetWebhookUrl;
+    if (!targetUrl || !targetUrl.startsWith('http')) {
+      showError('URL Tidak Valid', 'Masukkan URL Google Apps Script Webhook (https://...) yang valid!');
+      return;
+    }
+
+    try {
+      setSyncingSheets(true);
+      setSyncStatusMsg({ type: 'info', text: 'Mengirim data ke Google Sheets...' });
+      const res = await fetch('/api/sinkronisasi', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          webhookUrl: targetUrl,
+          type: syncDataset,
+        }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setSyncStatusMsg({
+          type: 'success',
+          text: `Berhasil terkirim! ${json.count || 0} baris data disinkronkan ke Google Sheets.`,
+        });
+        showSuccess(
+          'Sinkronisasi Berhasil',
+          `Data ${syncDataset === 'erdkk' ? 'e-RDKK Petani (Standar Kementan)' : 'Penyaluran Pupuk'} (${json.count || 0} baris) berhasil dikirim ke Google Spreadsheet!`
+        );
+      } else {
+        setSyncStatusMsg({
+          type: 'error',
+          text: `Gagal: ${json.error || 'Server menolak koneksi webhook.'}`,
+        });
+        showError('Sinkronisasi Gagal', json.error || 'Gagal mengirim data ke Google Sheets');
+      }
+    } catch (err: any) {
+      setSyncStatusMsg({ type: 'error', text: `Kesalahan jaringan: ${err.message}` });
+      showError('Kesalahan Jaringan', err.message);
+    } finally {
+      setSyncingSheets(false);
+    }
+  };
+
+  const handleCopyScript = (scriptText: string) => {
+    if (!scriptText) return;
+    navigator.clipboard.writeText(scriptText);
+    setCopiedScript(true);
+    showSuccess('Script Disalin', 'Kode Google Apps Script berhasil disalin ke clipboard!');
+    setTimeout(() => setCopiedScript(false), 2500);
+  };
 
   const handleSave = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
@@ -947,47 +1032,306 @@ export default function PengaturanPage() {
             </div>
           )}
 
-          {/* TAB 5: INTEGRASI & CLOUD */}
+          {/* TAB 5: INTEGRASI & CLOUD (GOOGLE SHEETS STANDAR KEMENTAN) */}
           {activeTab === 'INTEGRASI' && (
-            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-5">
-              <div className="border-b border-slate-100 pb-3">
-                <h2 className="text-base font-black text-slate-800 flex items-center gap-2">
-                  <Cloud className="w-5 h-5 text-blue-600" />
-                  Integrasi Google Sheets & Webhook Eksternal
-                </h2>
-                <p className="text-xs text-slate-500">
-                  Kirim riwayat penebusan pupuk dan kuota secara otomatis ke Google Spreadsheet Pemkab / Dinas.
-                </p>
-              </div>
-
-              <div className="space-y-4">
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Google Apps Script Webhook URL
-                  </label>
-                  <input
-                    type="url"
-                    placeholder="https://script.google.com/macros/s/AKfycb.../exec"
-                    value={settings.integrasi.googleSheetWebhookUrl}
-                    onChange={(e) =>
-                      setSettings({
-                        ...settings,
-                        integrasi: { ...settings.integrasi, googleSheetWebhookUrl: e.target.value },
-                      })
-                    }
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-mono"
-                  />
-                  <p className="text-[10px] text-slate-400 mt-1">
-                    Data transaksi penebusan pupuk kasir akan otomatis disinkronkan ke URL endpoint ini.
-                  </p>
+            <div className="space-y-6">
+              {/* Card 1: Pengenalan & Status Integrasi Google Sheets */}
+              <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
+                <div className="flex flex-wrap items-center justify-between gap-4 border-b border-slate-100 pb-4">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 flex items-center justify-center text-emerald-600 shadow-xs">
+                      <FileSpreadsheet className="w-6 h-6" />
+                    </div>
+                    <div>
+                      <h2 className="text-base sm:text-lg font-black text-slate-900 flex items-center gap-2">
+                        Integrasi Google Sheets & Webhook Eksternal
+                      </h2>
+                      <p className="text-xs text-slate-500">
+                        Sinkronisasi otomatis e-RDKK Petani (Standar Kementan 15 Kolom) & Rekapitulasi Penyaluran Pupuk langsung ke Google Spreadsheet.
+                      </p>
+                    </div>
+                  </div>
+                  <span className="text-xs font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 px-3 py-1.5 rounded-full flex items-center gap-1.5 shrink-0">
+                    <CheckCircle2 className="w-4 h-4 text-emerald-600" />
+                    API Endpoint Aktif
+                  </span>
                 </div>
 
-                <div className="p-4 bg-blue-50/60 border border-blue-200 rounded-2xl space-y-3">
-                  <div className="flex items-center justify-between">
+                {/* Ringkasan Dataset Siap Sinkron */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="p-4 bg-emerald-50/50 border border-emerald-200 rounded-2xl">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-emerald-900">Daftar e-RDKK Standar Kementan</span>
+                      <span className="px-2 py-0.5 bg-emerald-200/60 text-emerald-900 rounded-md text-[10px] font-black">
+                        15 Kolom Resmi
+                      </span>
+                    </div>
+                    <div className="mt-2 text-2xl font-black text-emerald-950">
+                      {syncStats ? `${syncStats.erdkkCount} Petani` : 'Memuat...'}
+                    </div>
+                    <p className="text-[11px] text-emerald-700 mt-1">
+                      Termasuk No, NIK teks (&apos;), Nama Petani, Ibu Kandung, TTL, Poktan, Desa, Luas Sawah, Komoditas, & Alokasi Pupuk.
+                    </p>
+                  </div>
+
+                  <div className="p-4 bg-blue-50/50 border border-blue-200 rounded-2xl">
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-bold text-blue-900">Rekapitulasi Penyaluran Pupuk</span>
+                      <span className="px-2 py-0.5 bg-blue-200/60 text-blue-900 rounded-md text-[10px] font-black">
+                        14 Kolom Lengkap
+                      </span>
+                    </div>
+                    <div className="mt-2 text-2xl font-black text-blue-950">
+                      {syncStats ? `${syncStats.penyaluranCount} Transaksi` : 'Memuat...'}
+                    </div>
+                    <p className="text-[11px] text-blue-700 mt-1">
+                      Riwayat penebusan kios resmi dengan nomor nota, tanggal, nominal biaya (HET), dan sak pupuk tertebus.
+                    </p>
+                  </div>
+                </div>
+
+                {/* Grid 2 Kolom: Opsi A (Kirim Webhook) & Opsi B (Script Otomatis) */}
+                <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 pt-2">
+                  {/* Opsi A: Trigger Webhook */}
+                  <div className="p-5 bg-slate-50/70 border border-slate-200 rounded-2xl space-y-4">
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="w-6 h-6 rounded-lg bg-emerald-600 text-white font-black text-xs flex items-center justify-center">
+                          A
+                        </span>
+                        <h3 className="font-bold text-slate-900 text-sm">
+                          Kirim Real-Time via Webhook
+                        </h3>
+                      </div>
+                      <p className="text-slate-500 text-xs mt-1 leading-relaxed">
+                        Kirim data secara instan dari server ke Google Apps Script Web App Anda.
+                      </p>
+                    </div>
+
+                    {/* Dataset Selector */}
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                        Pilih Dataset yang Akan Dikirim:
+                      </label>
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setSyncDataset('erdkk')}
+                          className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${
+                            syncDataset === 'erdkk'
+                              ? 'bg-emerald-600 text-white border-emerald-700 shadow-xs'
+                              : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
+                          }`}
+                        >
+                          <div className="font-bold text-xs flex items-center gap-1.5">
+                            {syncDataset === 'erdkk' && <Check className="w-3.5 h-3.5" />}
+                            e-RDKK Kementan
+                          </div>
+                          <div className={`text-[10px] mt-0.5 ${syncDataset === 'erdkk' ? 'text-emerald-100' : 'text-slate-500'}`}>
+                            Standar 15 Kolom Petani
+                          </div>
+                        </button>
+
+                        <button
+                          type="button"
+                          onClick={() => setSyncDataset('penyaluran')}
+                          className={`p-2.5 rounded-xl border text-left transition cursor-pointer ${
+                            syncDataset === 'penyaluran'
+                              ? 'bg-emerald-600 text-white border-emerald-700 shadow-xs'
+                              : 'bg-white text-slate-700 border-slate-200 hover:border-slate-300'
+                          }`}
+                        >
+                          <div className="font-bold text-xs flex items-center gap-1.5">
+                            {syncDataset === 'penyaluran' && <Check className="w-3.5 h-3.5" />}
+                            Penyaluran Pupuk
+                          </div>
+                          <div className={`text-[10px] mt-0.5 ${syncDataset === 'penyaluran' ? 'text-emerald-100' : 'text-slate-500'}`}>
+                            Transaksi & Penebusan Kios
+                          </div>
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="block text-xs font-bold text-slate-700 mb-1">
+                        Google Apps Script Web App URL
+                      </label>
+                      <input
+                        type="url"
+                        placeholder="https://script.google.com/macros/s/.../exec"
+                        value={settings.integrasi.googleSheetWebhookUrl}
+                        onChange={(e) =>
+                          setSettings({
+                            ...settings,
+                            integrasi: { ...settings.integrasi, googleSheetWebhookUrl: e.target.value },
+                          })
+                        }
+                        className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-hidden bg-white"
+                      />
+                      <p className="text-[10px] text-slate-400 mt-1">
+                        Masukkan URL hasil <em>Deploy as Web App</em> dari Google Spreadsheet Anda.
+                      </p>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={handleTriggerWebhook}
+                      disabled={syncingSheets}
+                      className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-bold py-2.5 px-4 rounded-xl text-xs transition flex items-center justify-center gap-2 shadow-sm cursor-pointer disabled:opacity-60"
+                    >
+                      {syncingSheets ? (
+                        <>
+                          <RefreshCw className="w-4 h-4 animate-spin" />
+                          Sedang Menyinkronkan...
+                        </>
+                      ) : (
+                        <>
+                          <Send className="w-4 h-4" />
+                          Kirim / Sinkronkan Sekarang
+                        </>
+                      )}
+                    </button>
+
+                    {syncStatusMsg && (
+                      <div
+                        className={`p-3 rounded-xl text-xs font-semibold flex items-center gap-2 ${
+                          syncStatusMsg.type === 'success'
+                            ? 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                            : syncStatusMsg.type === 'error'
+                            ? 'bg-red-100 text-red-900 border border-red-300'
+                            : 'bg-slate-200 text-slate-800'
+                        }`}
+                      >
+                        {syncStatusMsg.type === 'success' ? (
+                          <CheckCircle2 className="w-4 h-4 text-emerald-600 shrink-0" />
+                        ) : syncStatusMsg.type === 'error' ? (
+                          <AlertTriangle className="w-4 h-4 text-red-600 shrink-0" />
+                        ) : (
+                          <RefreshCw className="w-4 h-4 animate-spin text-slate-600 shrink-0" />
+                        )}
+                        <span>{syncStatusMsg.text}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Opsi B: Google Apps Script Template */}
+                  <div className="p-5 bg-slate-50/70 border border-slate-200 rounded-2xl space-y-4">
+                    <div>
+                      <div className="flex items-center justify-between">
+                        <div className="flex items-center gap-2">
+                          <span className="w-6 h-6 rounded-lg bg-blue-600 text-white font-black text-xs flex items-center justify-center">
+                            B
+                          </span>
+                          <h3 className="font-bold text-slate-900 text-sm">
+                            Kode Google Apps Script Otomatis
+                          </h3>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => {
+                            const originUrl = typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000';
+                            const codeToCopy = syncScripts[activeScriptTab] || (
+                              activeScriptTab === 'erdkk'
+                                ? `function syncErdkkKementan() {\n  var endpoint = "${originUrl}/api/sinkronisasi?type=erdkk";\n  var response = UrlFetchApp.fetch(endpoint);\n  var json = JSON.parse(response.getContentText());\n  // ...\n}`
+                                : activeScriptTab === 'penyaluran'
+                                ? `function syncPenyaluranPupuk() {\n  var endpoint = "${originUrl}/api/sinkronisasi?type=penyaluran";\n  var response = UrlFetchApp.fetch(endpoint);\n  // ...\n}`
+                                : `function doPost(e) {\n  var contents = JSON.parse(e.postData.contents);\n  // ...\n}`
+                            );
+                            handleCopyScript(codeToCopy);
+                          }}
+                          className="inline-flex items-center gap-1.5 text-xs font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-3 py-1 rounded-xl transition cursor-pointer"
+                        >
+                          <Copy className="w-3.5 h-3.5" />
+                          {copiedScript ? 'Tersalin!' : 'Salin Kode Script'}
+                        </button>
+                      </div>
+                      <p className="text-slate-500 text-xs mt-1 leading-relaxed">
+                        Pilih template script di bawah ini, lalu pasang di Google Sheets Anda:
+                      </p>
+                    </div>
+
+                    {/* Tab Pilihan Script */}
+                    <div className="flex flex-wrap items-center gap-1.5 bg-slate-200/80 p-1 rounded-xl">
+                      <button
+                        type="button"
+                        onClick={() => setActiveScriptTab('erdkk')}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer ${
+                          activeScriptTab === 'erdkk'
+                            ? 'bg-emerald-600 text-white shadow-xs'
+                            : 'text-slate-700 hover:text-slate-900'
+                        }`}
+                      >
+                        1. e-RDKK Kementan (15 Kolom)
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveScriptTab('penyaluran')}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer ${
+                          activeScriptTab === 'penyaluran'
+                            ? 'bg-emerald-600 text-white shadow-xs'
+                            : 'text-slate-700 hover:text-slate-900'
+                        }`}
+                      >
+                        2. Penyaluran Pupuk
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => setActiveScriptTab('receiver')}
+                        className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition cursor-pointer ${
+                          activeScriptTab === 'receiver'
+                            ? 'bg-emerald-600 text-white shadow-xs'
+                            : 'text-slate-700 hover:text-slate-900'
+                        }`}
+                      >
+                        3. Webhook (doPost)
+                      </button>
+                    </div>
+
+                    {/* Instruksi Singkat */}
+                    <p className="text-[11px] text-slate-600 leading-relaxed bg-white p-2.5 rounded-xl border border-slate-200">
+                      {activeScriptTab === 'erdkk' && (
+                        <>
+                          📌 Buka Google Sheets &rarr; <em>Extensions &rarr; Apps Script</em>. Paste kode di bawah, lalu klik <strong>Run</strong> pada fungsi <code className="font-bold text-emerald-800">syncErdkkKementan</code>. Pasang Trigger jam untuk penarikan berkala.
+                        </>
+                      )}
+                      {activeScriptTab === 'penyaluran' && (
+                        <>
+                          📌 Paste kode ini di Apps Script Google Sheets Anda lalu klik <strong>Run</strong> pada <code className="font-bold text-blue-800">syncPenyaluranPupuk</code> untuk menarik seluruh riwayat transaksi penebusan pupuk.
+                        </>
+                      )}
+                      {activeScriptTab === 'receiver' && (
+                        <>
+                          📌 Pasang kode penerima ini di Apps Script, lalu klik <strong>Deploy &rarr; New Deployment &rarr; Web App</strong> (Who has access: <em>Anyone</em>), lalu masukkan URL Web App ke Opsi A di sebelah kiri.
+                        </>
+                      )}
+                    </p>
+
+                    {/* Pre Code Box */}
+                    <div className="relative">
+                      <pre className="p-3.5 bg-slate-900 text-emerald-400 rounded-2xl text-[10.5px] font-mono overflow-x-auto max-h-56 leading-relaxed border border-slate-800 selection:bg-emerald-600 selection:text-white">
+                        {syncScripts[activeScriptTab] ||
+                          (activeScriptTab === 'erdkk'
+                            ? `function syncErdkkKementan() {\n  // Memuat template e-RDKK...\n  var url = "${typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'}/api/sinkronisasi?type=erdkk";\n  var res = UrlFetchApp.fetch(url);\n  var json = JSON.parse(res.getContentText());\n}`
+                            : activeScriptTab === 'penyaluran'
+                            ? `function syncPenyaluranPupuk() {\n  // Memuat template penyaluran...\n  var url = "${typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'}/api/sinkronisasi?type=penyaluran";\n  var res = UrlFetchApp.fetch(url);\n  var json = JSON.parse(res.getContentText());\n}`
+                            : `function doPost(e) {\n  // Penerima Webhook doPost...\n}`)}
+                      </pre>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Opsi C: Otomatisasi Jadwal & SIMLUHTAN */}
+                <div className="pt-2 border-t border-slate-100 space-y-4">
+                  <h3 className="font-bold text-slate-900 text-sm flex items-center gap-2">
+                    <Cloud className="w-4 h-4 text-blue-600" />
+                    Pengaturan Otomatisasi & SIMLUHTAN Kementan
+                  </h3>
+
+                  <div className="p-4 bg-blue-50/60 border border-blue-200 rounded-2xl flex items-center justify-between gap-4">
                     <div>
                       <span className="text-xs font-black text-blue-950 block">Sinkronisasi Otomatis Saat Transaksi</span>
-                      <span className="text-[10px] text-blue-800">
-                        Otomatis kirim data ke Google Sheets setiap kali kasir poktan menyelesaikan penebusan
+                      <span className="text-[11px] text-blue-800">
+                        Otomatis dorong data ke Webhook Google Sheets setiap kali kasir poktan menyelesaikan penebusan pupuk.
                       </span>
                     </div>
                     <input
@@ -999,27 +1343,30 @@ export default function PengaturanPage() {
                           integrasi: { ...settings.integrasi, autoSyncOnTransaction: e.target.checked },
                         })
                       }
-                      className="w-5 h-5 accent-emerald-600 rounded cursor-pointer"
+                      className="w-5 h-5 accent-emerald-600 rounded cursor-pointer shrink-0"
                     />
                   </div>
-                </div>
 
-                <div>
-                  <label className="block text-xs font-bold text-slate-700 mb-1">
-                    Kunci API Integrasi SIMLUHTAN Kementan (Opsional)
-                  </label>
-                  <input
-                    type="password"
-                    placeholder="••••••••••••••••••••••••••••••••"
-                    value={settings.integrasi.kementanApiKey}
-                    onChange={(e) =>
-                      setSettings({
-                        ...settings,
-                        integrasi: { ...settings.integrasi, kementanApiKey: e.target.value },
-                      })
-                    }
-                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-mono"
-                  />
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Kunci API Integrasi SIMLUHTAN Kementan (Opsional)
+                    </label>
+                    <input
+                      type="password"
+                      placeholder="••••••••••••••••••••••••••••••••"
+                      value={settings.integrasi.kementanApiKey}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          integrasi: { ...settings.integrasi, kementanApiKey: e.target.value },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-mono bg-white focus:ring-2 focus:ring-emerald-500 focus:outline-hidden"
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      Digunakan untuk validasi silang data NIK Petani dan Poktan secara langsung ke server SIMLUHTAN Kementerian Pertanian RI.
+                    </p>
+                  </div>
                 </div>
               </div>
             </div>
