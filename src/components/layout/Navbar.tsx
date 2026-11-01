@@ -146,19 +146,6 @@ export default function Navbar() {
   const activePermissions = isMounted ? permissions : ROLE_PERMISSIONS.ADMIN_DINAS;
   const visibleNavItems = activePermissions.menuItems;
 
-  const handleSwitchRole = (targetRole: UserRole) => {
-    setRole(targetRole);
-    setDropdownOpen(false);
-    setMobileMenuOpen(false);
-    const targetAllowed = ROLE_PERMISSIONS[targetRole].allowedPaths;
-    const isStillAllowed = targetAllowed.some(
-      (p) => pathname === p || pathname.startsWith(p + '/')
-    );
-    if (!isStillAllowed) {
-      router.push(ROLE_PERMISSIONS[targetRole].defaultPath);
-    }
-  };
-
   const handleLogout = () => {
     setDropdownOpen(false);
     logoutUser();
@@ -179,7 +166,7 @@ export default function Navbar() {
               <div className="flex flex-col min-w-0">
                 <div className="flex items-center gap-1.5">
                   <span className="text-xs sm:text-sm font-black tracking-tight text-slate-900 whitespace-nowrap">
-                    PERTANIAN KEC. LEMBEYAN
+                    SISTEM INFORMASI PERTANIAN
                   </span>
                   <span className="hidden 2xl:inline-block text-[9px] uppercase font-extrabold tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 whitespace-nowrap border border-emerald-200">
                     {activeUser.role === 'PPL'
@@ -194,7 +181,7 @@ export default function Navbar() {
                   </span>
                 </div>
                 <span className="text-[10px] text-slate-500 font-medium whitespace-nowrap truncate">
-                  BPP Kec. Lembeyan &bull; By Supriyanto Abadi Jaya
+                  Kecamatan Lembeyan Kabupaten Magetan
                 </span>
               </div>
             </Link>

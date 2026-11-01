@@ -255,10 +255,6 @@ export default function RoleDashboardClient({
                   <Compass className="w-3.5 h-3.5 text-amber-300" />
                   WORKSPACE KHUSUS BPP KECAMATAN LEMBEYAN
                 </span>
-                <span className="inline-flex items-center gap-1.5 bg-amber-400/20 border border-amber-300/40 px-3 py-1 rounded-full text-xs font-bold text-amber-200">
-                  <Code2 className="w-3.5 h-3.5" />
-                  Developer: Supriyanto Abadi Jaya
-                </span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
                 Balai Penyuluhan Pertanian (BPP) Kecamatan Lembeyan
@@ -413,9 +409,6 @@ export default function RoleDashboardClient({
                   <Building2 className="w-3.5 h-3.5 text-amber-300" />
                   WORKSPACE KELEMBAGAAN KELOMPOK TANI (POKTAN)
                 </span>
-                <span className="inline-flex items-center gap-1.5 bg-amber-400/20 border border-amber-300/40 px-3 py-1 rounded-full text-xs font-bold text-amber-200">
-                  Developer: Supriyanto Abadi Jaya
-                </span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
                 Portal Pengurus Kelompok Tani &mdash; Kecamatan Lembeyan
@@ -497,9 +490,6 @@ export default function RoleDashboardClient({
                   <ShoppingBag className="w-3.5 h-3.5 text-amber-300" />
                   WORKSPACE KASIR & GUDANG KIOS PUPUK LENGKAP (KPL)
                 </span>
-                <span className="inline-flex items-center gap-1.5 bg-white/10 border border-white/20 px-3 py-1 rounded-full text-xs font-bold text-white">
-                  Developer: Supriyanto Abadi Jaya
-                </span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
                 {activeUser.name} &mdash; KPL Kecamatan Lembeyan
@@ -580,9 +570,6 @@ export default function RoleDashboardClient({
                 <span className="inline-flex items-center gap-1.5 bg-teal-800/80 border border-teal-500/40 px-3 py-1 rounded-full text-xs font-bold text-teal-200">
                   <ShieldCheck className="w-3.5 h-3.5 text-amber-300" />
                   PORTAL MANDIRI PETANI PENERIMA SUBSIDI
-                </span>
-                <span className="inline-flex items-center gap-1.5 bg-amber-400/20 border border-amber-300/40 px-3 py-1 rounded-full text-xs font-bold text-amber-200">
-                  Developer: Supriyanto Abadi Jaya
                 </span>
               </div>
               <h1 className="text-2xl sm:text-3xl font-black tracking-tight">

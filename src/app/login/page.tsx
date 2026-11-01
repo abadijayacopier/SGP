@@ -308,9 +308,9 @@ export default function LoginPage() {
             <span>
               Pengembang: <strong className="text-slate-800">Supriyanto Abadi Jaya</strong> &bull; Magetan
             </span>
-            <Link href="/dashboard" className="text-emerald-700 font-bold hover:underline">
-              Dashboard Tamu &rarr;
-            </Link>
+            <span className="text-emerald-700 font-bold">
+              Kecamatan Lembeyan &bull; 2026
+            </span>
           </div>
         </div>
       </div>
