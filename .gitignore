@@ -22,10 +22,10 @@ yarn-error.log*
 .pnpm-debug.log*
 *.tsbuildinfo
 
-# Database (Agar data transaksi riil di VPS tidak tertimpa saat update git)
+# Database
 prisma/*.db-journal
-# Catatan: dev.db bisa di-ignore agar data server tidak tertimpa data lokal laptop
-prisma/dev.db
+# prisma/dev.db disertakan agar Vercel Serverless memiliki master data saat deploy
+
 
 # OS Files
 .DS_Store
