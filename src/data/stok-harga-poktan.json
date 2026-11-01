@@ -1,0 +1,222 @@
+[
+  {
+    "poktanId": "cmvtt5k360000t00ggcpkjze6",
+    "namaPoktan": "Poktan Sri Mulyo",
+    "desa": "Kediren",
+    "hargaPupuk": {
+      "ureaPerKg": 2100,
+      "ureaPerSak": 105000,
+      "npkPerKg": 2200,
+      "npkPerSak": 110000,
+      "organikPerKg": 875,
+      "organikPerSak": 35000,
+      "catatan": "Sesuai Berita Acara Kesepakatan No. 01/BA-POKTAN/LMB/2026",
+      "updatedAt": "2026-10-31T04:20:47.179Z",
+      "updatedBy": "Samsi"
+    },
+    "penyesuaianAwal": {
+      "ureaKg": 500,
+      "npkKg": 0,
+      "organikKg": 0,
+      "catatan": "Penerimaan pasokan tambahan fisik 10 sak (500 Kg) Urea",
+      "updatedAt": "2026-10-31T03:48:47.955Z"
+    },
+    "mutasi": [
+      {
+        "id": "MUT-BATAL-1793444375298",
+        "tanggal": "2026-10-31T10:59:35.298Z",
+        "tipe": "BATAL_TEBUS",
+        "nomorNota": "NT-POK/2026/002",
+        "keterangan": "Pembatalan Transaksi Kasir NT-POK/2026/002 (Kasdi Mulyono): Stok dikembalikan",
+        "ureaKg": 50,
+        "npkKg": 0,
+        "organikKg": 0,
+        "petugas": "Kasir Poktan (Pembatalan)"
+      },
+      {
+        "id": "MUT-TEBUS-1793444360358",
+        "tanggal": "2026-10-31T10:59:20.358Z",
+        "tipe": "TEBUS_KASIR",
+        "nomorNota": "NT-POK/2026/002",
+        "keterangan": "Penebusan Kasir oleh petani Kasdi Mulyono (NIK: 3509011208720002): Urea 50 Kg, NPK 0 Kg, Organik 0 Kg",
+        "ureaKg": -50,
+        "npkKg": 0,
+        "organikKg": 0,
+        "petugas": "Samsi"
+      },
+      {
+        "id": "MUT-BA-1793420447180-t31n",
+        "tanggal": "2026-10-31T04:20:47.180Z",
+        "tipe": "KESEPAKATAN_HARGA",
+        "keterangan": "Penetapan Berita Acara Kesepakatan Harga Jual Pupuk TA 2026: Urea Rp 105.000/sak, NPK Rp 110.000/sak, Organik Rp 35.000/sak (01/BA-POKTAN/LMB/2026)",
+        "petugas": "Samsi"
+      },
+      {
+        "id": "MUT-STK-1793418527956",
+        "tanggal": "2026-10-31T03:48:47.956Z",
+        "tipe": "TAMBAH_STOK",
+        "keterangan": "Penerimaan pasokan tambahan fisik 10 sak (500 Kg) Urea",
+        "ureaKg": 500,
+        "npkKg": 0,
+        "organikKg": 0,
+        "petugas": "Samsi"
+      },
+      {
+        "id": "MUT-PRC-1793418520146",
+        "tanggal": "2026-10-31T03:48:40.146Z",
+        "tipe": "PERUBAHAN_HARGA",
+        "keterangan": "Penetapan harga tebus: Urea Rp 2.250/Kg, NPK Rp 2.300/Kg, Organik Rp 800/Kg (Sesuai Harga Eceran Tertinggi (HET) Resmi Kementan RI)",
+        "petugas": "Sistem & Pengurus Poktan"
+      },
+      {
+        "id": "MUT-PRC-1793418502273",
+        "tanggal": "2026-10-31T03:48:22.273Z",
+        "tipe": "PERUBAHAN_HARGA",
+        "keterangan": "Penetapan harga tebus: Urea Rp 2.300/Kg, NPK Rp 2.350/Kg, Organik Rp 850/Kg (Uji coba penyesuaian harga kasir terintegrasi)",
+        "petugas": "Ketua Poktan Samsi"
+      },
+      {
+        "id": "MUT-PRC-1793418256855",
+        "tanggal": "2026-10-31T03:44:16.855Z",
+        "tipe": "PERUBAHAN_HARGA",
+        "keterangan": "Penetapan harga tebus: Urea Rp 2.250/Kg, NPK Rp 2.300/Kg, Organik Rp 800/Kg (Konfirmasi HET Resmi Poktan Sri Mulyo MT-1)",
+        "petugas": "Samsi"
+      },
+      {
+        "id": "MUT-INIT-1793418236258",
+        "tanggal": "2026-10-31T03:43:56.258Z",
+        "tipe": "INISIALISASI",
+        "keterangan": "Sistem pencatatan stok dan harga poktan diaktifkan",
+        "petugas": "Sistem"
+      }
+    ],
+    "rincianKesepakatan": {
+      "tahunAnggaran": 2026,
+      "nomorBeritaAcara": "01/BA-POKTAN/LMB/2026",
+      "tanggalMusyawarah": "2026-01-15",
+      "lokasiMusyawarah": "Balai Pertemuan / Gudang Poktan",
+      "catatanKesepakatan": "Berdasarkan hasil musyawarah kesepakatan harga pupuk bersubsidi se-Kecamatan Lembeyan Tahun Anggaran 2026.",
+      "pihakMengetahui": {
+        "ketuaPoktan": "Samsi",
+        "bendaharaPoktan": "Kasdi Mulyono",
+        "penyuluhPpl": "Ir. Hendro Supriyanto",
+        "kepalaDesa": "Drs. H. Dwi Santoso",
+        "perwakilanPetani": "Parno"
+      },
+      "urea": {
+        "hetPerSak": 90000,
+        "transportasi": 5000,
+        "sewaGudang": 2000,
+        "atk": 2000,
+        "kasPoktan": 1000,
+        "penyandangDana": 2000,
+        "pengurusPoktan": 3000,
+        "totalPerSak": 105000,
+        "hargaPerKg": 2100
+      },
+      "npk": {
+        "hetPerSak": 92000,
+        "transportasi": 5000,
+        "sewaGudang": 2000,
+        "atk": 2000,
+        "kasPoktan": 4000,
+        "penyandangDana": 2000,
+        "pengurusPoktan": 3000,
+        "totalPerSak": 110000,
+        "hargaPerKg": 2200
+      },
+      "organik": {
+        "hetPerSak": 25600,
+        "transportasi": 4400,
+        "sewaGudang": 1000,
+        "atk": 1000,
+        "kasPoktan": 1000,
+        "penyandangDana": 0,
+        "pengurusPoktan": 2000,
+        "totalPerSak": 35000,
+        "hargaPerKg": 875
+      },
+      "updatedAt": "2026-10-31T04:20:47.179Z",
+      "updatedBy": "Samsi"
+    }
+  },
+  {
+    "poktanId": "cmvtqr4n10005t0i0mlghb09m",
+    "namaPoktan": "Kelompok Tani",
+    "desa": "Kediren",
+    "hargaPupuk": {
+      "ureaPerKg": 2100,
+      "ureaPerSak": 105000,
+      "npkPerKg": 2200,
+      "npkPerSak": 110000,
+      "organikPerKg": 875,
+      "organikPerSak": 35000,
+      "catatan": "Berdasarkan hasil musyawarah kesepakatan harga pupuk bersubsidi se-Kecamatan Lembeyan Tahun Anggaran 2026.",
+      "updatedAt": "2026-10-31T11:05:41.657Z",
+      "updatedBy": "Sistem"
+    },
+    "rincianKesepakatan": {
+      "tahunAnggaran": 2026,
+      "nomorBeritaAcara": "01/BA-POKTAN/LMB/2026",
+      "tanggalMusyawarah": "2026-01-15",
+      "lokasiMusyawarah": "Balai Pertemuan / Gudang Poktan",
+      "catatanKesepakatan": "Berdasarkan hasil musyawarah kesepakatan harga pupuk bersubsidi se-Kecamatan Lembeyan Tahun Anggaran 2026.",
+      "pihakMengetahui": {
+        "ketuaPoktan": "Samsi",
+        "bendaharaPoktan": "Kasdi Mulyono",
+        "penyuluhPpl": "Ir. Hendro Supriyanto",
+        "kepalaDesa": "Drs. H. Dwi Santoso",
+        "perwakilanPetani": "Parno"
+      },
+      "urea": {
+        "hetPerSak": 90000,
+        "transportasi": 5000,
+        "sewaGudang": 2000,
+        "atk": 2000,
+        "kasPoktan": 1000,
+        "penyandangDana": 2000,
+        "pengurusPoktan": 3000,
+        "totalPerSak": 105000,
+        "hargaPerKg": 2100
+      },
+      "npk": {
+        "hetPerSak": 92000,
+        "transportasi": 5000,
+        "sewaGudang": 2000,
+        "atk": 2000,
+        "kasPoktan": 4000,
+        "penyandangDana": 2000,
+        "pengurusPoktan": 3000,
+        "totalPerSak": 110000,
+        "hargaPerKg": 2200
+      },
+      "organik": {
+        "hetPerSak": 25600,
+        "transportasi": 4400,
+        "sewaGudang": 1000,
+        "atk": 1000,
+        "kasPoktan": 1000,
+        "penyandangDana": 0,
+        "pengurusPoktan": 2000,
+        "totalPerSak": 35000,
+        "hargaPerKg": 875
+      }
+    },
+    "penyesuaianAwal": {
+      "ureaKg": 0,
+      "npkKg": 0,
+      "organikKg": 0,
+      "catatan": "Stok awal sistem",
+      "updatedAt": "2026-10-31T11:05:41.657Z"
+    },
+    "mutasi": [
+      {
+        "id": "MUT-INIT-1793444741657",
+        "tanggal": "2026-10-31T11:05:41.657Z",
+        "tipe": "INISIALISASI",
+        "keterangan": "Sistem pencatatan stok dan harga poktan diaktifkan",
+        "petugas": "Sistem"
+      }
+    ]
+  }
+]

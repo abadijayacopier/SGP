@@ -1,0 +1,196 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id           String   @id @default(cuid())
+  username     String   @unique
+  name         String
+  role         String   // ADMIN_DINAS, PPL, POKTAN, KIOS, PETANI
+  phone        String?
+  email        String?
+  wilayah      String?
+  kiosName     String?
+  poktanId     String?
+  password     String?  @default("123456")
+  avatarUrl    String?
+  nip          String?
+  signatureUrl String?
+  stampUrl     String?
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+}
+
+model Poktan {
+  id            String          @id @default(cuid())
+  nama          String
+  ketua         String
+  kontak        String?
+  desa          String
+  kecamatan     String
+  kabupaten     String          @default("Magetan")
+  jumlahAnggota Int             @default(0)
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
+  anggota       Petani[]
+  pengajuan     PengajuanLahan[]
+}
+
+model Petani {
+  id               String            @id @default(cuid())
+  nik              String            @unique
+  nama             String
+  noKk             String
+  tempatLahir      String?           @default("Magetan")
+  tanggalLahir     String?
+  namaIbuKandung   String?
+  telepon          String?
+  alamat           String
+  desa             String
+  kecamatan        String
+  kabupaten        String            @default("Magetan")
+  poktanId         String
+  poktan           Poktan            @relation(fields: [poktanId], references: [id])
+  statusVerifikasi String            @default("TERVERIFIKASI")
+  totalLuasLahan   Float             @default(0)
+  lahan            Lahan[]
+  alokasiPupuk     AlokasiPupuk[]
+  penyaluranPupuk  PenyaluranPupuk[]
+  pengajuanLahan   PengajuanLahan[]
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+}
+
+model Lahan {
+  id                String   @id @default(cuid())
+  kodeLahan         String   @unique
+  namaLahan         String
+  petaniId          String
+  petani            Petani   @relation(fields: [petaniId], references: [id])
+  komoditas         String
+  luasHa            Float
+  luasM2            Float
+  kabupaten         String   @default("Magetan")
+  statusKepemilikan String   @default("Milik Sendiri")
+  statusIrigasi     String   @default("Irigasi Teknis")
+  nomorPipil        String?
+  batasUtara        String?
+  batasSelatan      String?
+  batasTimur        String?
+  batasBarat        String?
+  coordinates       String   // JSON string array of [lat, lng]
+  centerLat         Float
+  centerLng         Float
+  fotoLahan         String?
+  statusVerifikasi  String   @default("TERVERIFIKASI")
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+}
+
+model PengajuanLahan {
+  id                 String    @id @default(cuid())
+  nomorPengajuan     String    @unique
+  petaniId           String
+  petani             Petani    @relation(fields: [petaniId], references: [id])
+  poktanId           String
+  poktan             Poktan    @relation(fields: [poktanId], references: [id])
+  namaPemilik        String
+  nikPemilik         String
+  noKk               String
+  tempatLahir        String?   @default("Magetan")
+  tanggalLahir       String?
+  namaIbuKandung     String?
+  komoditasRencana   String
+  luasHa             Float
+  desa               String
+  kecamatan          String
+  kabupaten          String    @default("Magetan")
+  nomorPipil         String
+  coordinates        String?
+  fileKtp            String
+  fileKk             String
+  filePipil          String
+  catatan            String?
+  status             String    @default("DIAJUKAN_POKTAN")
+  diverifikasiOleh   String?
+  disetujuiOleh      String?
+  tanggalVerifikasi  DateTime?
+  tanggalPersetujuan DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+}
+
+model AlokasiPupuk {
+  id              String   @id @default(cuid())
+  petaniId        String
+  petani          Petani   @relation(fields: [petaniId], references: [id])
+  tahun           Int      @default(2026)
+  musimTanam      String   @default("MT 1")
+  komoditas       String
+  luasTanamHa     Float
+  jatahUreaKg     Float
+  sisaUreaKg      Float
+  jatahNpkKg      Float
+  sisaNpkKg       Float
+  jatahOrganikKg  Float
+  sisaOrganikKg   Float
+  status          String   @default("AKTIF")
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+}
+
+model PenyaluranPupuk {
+  id                 String   @id @default(cuid())
+  nomorNota          String   @unique
+  petaniId           String
+  petani             Petani   @relation(fields: [petaniId], references: [id])
+  namaKios           String
+  petugasKios        String
+  namaPengurusPoktan String
+  tanggalPenyaluran  DateTime @default(now())
+  jumlahUreaKg       Float    @default(0)
+  jumlahNpkKg        Float    @default(0)
+  jumlahOrganikKg    Float    @default(0)
+  totalBiayaRp       Float    @default(0)
+  fotoKtp            String
+  fotoDiri           String
+  tandaTanganPetani  String?
+  catatan            String?
+  status             String   @default("SELESAI")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+}
+
+model StokKios {
+  id             String   @id @default(cuid())
+  namaKios       String
+  jenisPupuk     String
+  stokAwalKg     Float
+  stokMasukKg    Float
+  stokTersalurKg Float
+  stokSisaKg     Float
+  updatedAt      DateTime @updatedAt
+}
+
+model MutasiStokKios {
+  id              String   @id @default(cuid())
+  namaKios        String
+  jenisPupuk      String
+  tipeMutasi      String   // MASUK_DISTRIBUTOR, PENYALURAN_PETANI, PENYESUAIAN_OPNAME
+  jumlahKg        Float
+  stokSebelumKg   Float
+  stokSesudahKg   Float
+  nomorReferensi  String?  // No. DO Distributor / No. Surat Jalan / No. Nota Penyaluran
+  namaDistributor String?
+  nomorPolisi     String?
+  namaSupir       String?
+  petugas         String?
+  keterangan      String?
+  tanggal         DateTime @default(now())
+  createdAt       DateTime @default(now())
+}

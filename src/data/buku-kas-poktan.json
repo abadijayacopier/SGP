@@ -1,0 +1,41 @@
+[
+  {
+    "id": "KAS-MAN-2026-001",
+    "poktanId": "cmvtqr4qe0009t0i0y729n98w",
+    "namaPoktan": "Poktan Sri Mulyo",
+    "tanggal": "2026-10-15T08:30:00.000Z",
+    "jenis": "PEMASUKAN",
+    "kategori": "IURAN_ANGGOTA",
+    "kategoriLabel": "Iuran Kas Bulanan Anggota Poktan",
+    "nominal": 250000,
+    "keterangan": "Iuran kas rutin bulan Oktober 2026 dari 25 anggota terdaftar.",
+    "penerimaAtauPenyetor": "Bendahara (Kasdi Mulyono)",
+    "buktiUrl": null
+  },
+  {
+    "id": "KAS-MAN-2026-002",
+    "poktanId": "cmvtqr4qe0009t0i0y729n98w",
+    "namaPoktan": "Poktan Sri Mulyo",
+    "tanggal": "2026-10-20T10:00:00.000Z",
+    "jenis": "PENGELUARAN",
+    "kategori": "OPERASIONAL_GUDANG",
+    "kategoriLabel": "Sewa Gudang & Penerangan Pupuk",
+    "nominal": 150000,
+    "keterangan": "Biaya listrik dan kebersihan gudang transit pupuk Poktan.",
+    "penerimaAtauPenyetor": "Penjaga Gudang",
+    "buktiUrl": null
+  },
+  {
+    "id": "KAS-MAN-2026-003",
+    "poktanId": "cmvtqr4qe0009t0i0y729n98w",
+    "namaPoktan": "Poktan Sri Mulyo",
+    "tanggal": "2026-10-25T13:30:00.000Z",
+    "jenis": "PENGELUARAN",
+    "kategori": "KONSUMSI_RAPAT",
+    "kategoriLabel": "Konsumsi Musyawarah Rencana Tanam",
+    "nominal": 75000,
+    "keterangan": "Konsumsi rembug tani persiapan musim tanam MT-1 2026.",
+    "penerimaAtauPenyetor": "Pengurus Konsumsi",
+    "buktiUrl": null
+  }
+]

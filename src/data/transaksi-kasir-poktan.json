@@ -1,0 +1,32 @@
+[
+  {
+    "id": "TRX-POK-2026-001",
+    "nomorNota": "NT-POK/2026/001",
+    "poktanId": "cmvtqr4qe0009t0i0y729n98w",
+    "namaPoktan": "Poktan Sri Mulyo",
+    "desa": "Kediren",
+    "petaniId": "cmvtqr4ql000vt0i07vfg155j",
+    "nik": "3509011208720002",
+    "namaPetani": "Kasdi Mulyono",
+    "tanggal": "2026-10-30T09:15:00.000Z",
+    "jumlahUreaSak": 2,
+    "jumlahUreaKg": 100,
+    "jumlahNpkSak": 2,
+    "jumlahNpkKg": 100,
+    "jumlahOrganikSak": 1,
+    "jumlahOrganikKg": 40,
+    "hargaUreaPerKg": 2250,
+    "hargaNpkPerKg": 2300,
+    "hargaOrganikPerKg": 800,
+    "subtotalUrea": 225000,
+    "subtotalNpk": 230000,
+    "subtotalOrganik": 32000,
+    "totalBayar": 487000,
+    "metodePembayaran": "TUNAI",
+    "jumlahUangDiterima": 500000,
+    "kembalian": 13000,
+    "namaKasir": "Samsi",
+    "catatan": "Penebusan pupuk musim tanam MT-1 lunas.",
+    "status": "SELESAI"
+  }
+]

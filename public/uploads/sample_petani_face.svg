@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="400" height="400" viewBox="0 0 400 400">
+  <rect width="400" height="400" rx="16" fill="#15803d" />
+  <rect x="10" y="10" width="380" height="380" rx="12" fill="#dcfce7" stroke="#16a34a" stroke-width="2"/>
+  <circle cx="200" cy="150" r="60" fill="#166534"/>
+  <!-- Cap / Caping tani -->
+  <polygon points="200,60 120,130 280,130" fill="#ca8a04"/>
+  <!-- Face -->
+  <circle cx="200" cy="165" r="45" fill="#fbcfe8"/>
+  <circle cx="185" cy="160" r="5" fill="#1e293b"/>
+  <circle cx="215" cy="160" r="5" fill="#1e293b"/>
+  <path d="M190 185 Q200 195 210 185" stroke="#1e293b" stroke-width="3" fill="none"/>
+  <!-- Body holding receipt -->
+  <path d="M120 280 Q200 220 280 280 L280 340 L120 340 Z" fill="#15803d"/>
+  <!-- Nota card held by farmer -->
+  <rect x="150" y="270" width="100" height="70" rx="4" fill="#ffffff" stroke="#047857" stroke-width="2"/>
+  <text x="200" y="295" font-family="Arial, sans-serif" font-size="10" font-weight="bold" fill="#047857" text-anchor="middle">NOTA PUPUK</text>
+  <text x="200" y="315" font-family="Arial, sans-serif" font-size="9" fill="#334155" text-anchor="middle">UREA 150 KG</text>
+  <text x="200" y="330" font-family="Arial, sans-serif" font-size="8" fill="#15803d" text-anchor="middle">VERIFIED POKTAN</text>
+  <text x="200" y="375" font-family="Arial, sans-serif" font-size="13" font-weight="bold" fill="#14532d" text-anchor="middle">DOKUMENTASI PENERIMAAN</text>
+</svg>

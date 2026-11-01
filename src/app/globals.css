@@ -1,0 +1,354 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --background: #f8fafc;
+  --foreground: #0f172a;
+}
+
+html,
+body {
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+  -webkit-text-size-adjust: 100%;
+  color: var(--foreground);
+  background: var(--background);
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Cegah auto-zoom paksa iOS Safari saat pengguna menyentuh kolom input pada smartphone */
+@media screen and (max-width: 768px) {
+  input:not([type="checkbox"]):not([type="radio"]):not([type="range"]),
+  select,
+  textarea {
+    font-size: 16px !important;
+  }
+}
+
+/* Dukungan Notch & Dynamic Island iPhone & Punch Hole Android */
+.safe-padding-bottom {
+  padding-bottom: max(1rem, env(safe-area-inset-bottom));
+}
+.safe-padding-top {
+  padding-top: env(safe-area-inset-top);
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 9999px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: #94a3b8;
+}
+
+/* Leaflet Container & Fixes */
+.leaflet-container {
+  width: 100%;
+  height: 100%;
+  border-radius: 1.25rem;
+  z-index: 10;
+}
+
+/* Field Maps Mobile Fullscreen Edge-to-Edge */
+.h-\[100dvh\] .leaflet-container {
+  border-radius: 0 !important;
+}
+
+/* Mode Digitasi Gambar Poligon GIS: Cursor Crosshair Presisi (Ganti Icon Tangan/Grab) */
+.leaflet-container.leaflet-drawing-mode,
+.leaflet-container.leaflet-drawing-mode.leaflet-grab,
+.leaflet-container.leaflet-drawing-mode .leaflet-grab,
+.leaflet-container.leaflet-drawing-mode .leaflet-pane,
+.leaflet-container.leaflet-drawing-mode .leaflet-tile-pane,
+.leaflet-container.leaflet-drawing-mode .leaflet-overlay-pane,
+.leaflet-container.leaflet-drawing-mode .leaflet-interactive,
+.leaflet-container.leaflet-drawing-mode svg,
+.leaflet-container.leaflet-drawing-mode path {
+  cursor: crosshair !important;
+}
+
+/* Pertahankan pointer pada tombol kontrol Leaflet (zoom, layers, GPS, popup button) */
+.leaflet-container.leaflet-drawing-mode .leaflet-control-container,
+.leaflet-container.leaflet-drawing-mode .leaflet-control-container *,
+.leaflet-container.leaflet-drawing-mode .leaflet-top *,
+.leaflet-container.leaflet-drawing-mode .leaflet-bottom *,
+.leaflet-container.leaflet-drawing-mode .leaflet-popup * {
+  cursor: pointer !important;
+}
+
+/* Patok batas tetap bisa digeser (move) saat mode gambar */
+.leaflet-container.leaflet-drawing-mode .custom-patok-marker,
+.leaflet-container.leaflet-drawing-mode .custom-patok-marker * {
+  cursor: move !important;
+}
+
+/* Leaflet Popup Styling */
+.leaflet-popup-content-wrapper {
+  border-radius: 1rem !important;
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1) !important;
+  padding: 0 !important;
+  overflow: hidden;
+}
+
+.leaflet-popup-content {
+  margin: 0 !important;
+  line-height: 1.5;
+}
+
+.leaflet-popup-tip-container {
+  margin-top: -1px;
+}
+
+/* Label Nama Petani & Luas Lahan di Tengah Poligon Peta GIS */
+.leaflet-container .leaflet-tooltip.lahan-polygon-label,
+.leaflet-tooltip.lahan-polygon-label {
+  background: #ffffff !important;
+  background-color: #ffffff !important;
+  border: 2px solid #059669 !important;
+  border-radius: 8px !important;
+  color: #0f172a !important;
+  font-family: inherit !important;
+  padding: 4px 10px !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.45) !important;
+  text-align: center !important;
+  pointer-events: none !important;
+  white-space: nowrap !important;
+  opacity: 1 !important;
+  z-index: 500 !important;
+}
+
+.leaflet-container .leaflet-tooltip.lahan-polygon-label::before,
+.leaflet-tooltip.lahan-polygon-label::before {
+  display: none !important;
+}
+
+.leaflet-container .leaflet-tooltip.lahan-polygon-label * {
+  color: #0f172a !important;
+}
+
+.leaflet-container .leaflet-tooltip.lahan-polygon-label .luas-pill {
+  color: #065f46 !important;
+  background-color: #d1fae5 !important;
+  border: 1px solid #34d399 !important;
+}
+
+/* ========================================================
+   SWEETALERT2 MODERN STYLING (PERTANIAN MODERN THEME)
+   ======================================================== */
+.swal2-container {
+  z-index: 99999 !important;
+}
+
+.swal2-popup.modern-swal-popup,
+.swal2-popup {
+  border-radius: 1.5rem !important;
+  padding: 1.75rem !important;
+  font-family: inherit !important;
+  border: 1px solid #e2e8f0 !important;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25) !important;
+  background-color: #ffffff !important;
+}
+
+.swal2-actions {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 0.75rem !important;
+  margin-top: 1.5rem !important;
+  width: 100% !important;
+}
+
+/* Tombol Confirm Utama (Emerald Green) */
+.swal-confirm-btn,
+.swal2-confirm:not(.swal-danger-btn):not(.bg-rose-600) {
+  background-color: #059669 !important;
+  color: #ffffff !important;
+  padding: 0.65rem 1.4rem !important;
+  border-radius: 0.75rem !important;
+  font-weight: 700 !important;
+  font-size: 0.875rem !important;
+  border: none !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 4px rgba(5, 150, 105, 0.25) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.15s ease-in-out !important;
+}
+.swal-confirm-btn:hover,
+.swal2-confirm:not(.swal-danger-btn):not(.bg-rose-600):hover {
+  background-color: #047857 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 6px rgba(5, 150, 105, 0.35) !important;
+}
+
+/* Tombol Bahaya / Hapus (Rose / Merah) */
+.swal-danger-btn,
+.swal2-confirm.swal-danger-btn,
+.swal2-confirm.bg-rose-600 {
+  background-color: #e11d48 !important; /* Rose-600 */
+  color: #ffffff !important;
+  padding: 0.65rem 1.4rem !important;
+  border-radius: 0.75rem !important;
+  font-weight: 700 !important;
+  font-size: 0.875rem !important;
+  border: none !important;
+  cursor: pointer !important;
+  box-shadow: 0 2px 4px rgba(225, 29, 72, 0.3) !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.15s ease-in-out !important;
+}
+.swal-danger-btn:hover,
+.swal2-confirm.swal-danger-btn:hover,
+.swal2-confirm.bg-rose-600:hover {
+  background-color: #be123c !important; /* Rose-700 */
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 8px rgba(225, 29, 72, 0.4) !important;
+}
+
+/* Tombol Batal / Cancel (Slate Gray) */
+.swal-cancel-btn,
+.swal2-cancel {
+  background-color: #f1f5f9 !important; /* Slate-100 */
+  color: #334155 !important; /* Slate-700 */
+  padding: 0.65rem 1.4rem !important;
+  border-radius: 0.75rem !important;
+  font-weight: 700 !important;
+  font-size: 0.875rem !important;
+  border: 1px solid #cbd5e1 !important;
+  cursor: pointer !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  transition: all 0.15s ease-in-out !important;
+}
+.swal-cancel-btn:hover,
+.swal2-cancel:hover {
+  background-color: #e2e8f0 !important; /* Slate-200 */
+  color: #0f172a !important;
+}
+
+/* Print Specific Rules for Laporan & Cetak Dokumen Resmi BPP */
+@media print {
+  *,
+  *::before,
+  *::after {
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+    color-adjust: exact !important;
+  }
+
+  html,
+  body,
+  main {
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+    color: #0f172a !important;
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .no-print,
+  nav,
+  footer {
+    display: none !important;
+  }
+
+  .print-only {
+    display: block !important;
+  }
+
+  /* Force 2-columns grid in print when requested */
+  .print-grid-2,
+  .print\:grid-cols-2 {
+    display: grid !important;
+    grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  }
+
+  .print-page,
+  .print-page-fit {
+    box-shadow: none !important;
+    border: none !important;
+    border-radius: 0 !important;
+    padding: 0 !important;
+    margin: 0 !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+  }
+
+  /* Hilangkan clipping overflow saat mencetak */
+  .overflow-x-auto,
+  .overflow-y-auto {
+    overflow: visible !important;
+  }
+
+  /* Pengaturan tabel agar fit ke halaman cetak */
+  table {
+    width: 100% !important;
+    max-width: 100% !important;
+    border-collapse: collapse !important;
+    background: #ffffff !important;
+    background-color: #ffffff !important;
+  }
+
+  /* Cegah pemutusan baris yang buruk saat cetak */
+  tr,
+  .print-avoid-break {
+    page-break-inside: avoid !important;
+    break-inside: avoid !important;
+  }
+
+  /* Hilangkan latar belakang abu-abu saat mencetak agar kertas putih bersih murni */
+  .bg-slate-50,
+  .bg-slate-100,
+  .bg-slate-200,
+  .bg-slate-300,
+  .bg-gray-50,
+  .bg-gray-100,
+  .bg-gray-200 {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+  }
+
+  /* Header dan sel tabel putih bersih */
+  thead th,
+  tfoot td,
+  tbody td,
+  tbody tr {
+    background-color: #ffffff !important;
+    background: #ffffff !important;
+  }
+
+  /* Paksa background color dan border tetap tampil utuh di lembar print jika diperlukan */
+  .bg-emerald-800 {
+    background-color: #065f46 !important;
+    color: #ffffff !important;
+  }
+  .bg-emerald-50 {
+    background-color: #ecfdf5 !important;
+  }
+  .border-emerald-600 {
+    border-color: #059669 !important;
+  }
+
+  @page {
+    size: auto;
+    margin: 8mm 8mm 8mm 8mm;
+  }
+}

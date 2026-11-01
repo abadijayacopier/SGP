@@ -1,0 +1,209 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1220.3541249999998 2369.7000000000003" width="1220.3541249999998" height="2369.7000000000003" style="--bg:#18181B;--fg:#F4F4F5;--line:#71717A;--muted:#A1A1AA;--surface:#27272A;--border:#3F3F46;background:var(--bg)">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+  text { font-family: 'Inter', system-ui, sans-serif; }
+  svg {
+    /* Derived from --bg and --fg (overridable via --line, --accent, etc.) */
+    --_text:          var(--fg);
+    --_text-sec:      var(--muted, color-mix(in srgb, var(--fg) 60%, var(--bg)));
+    --_text-muted:    var(--muted, color-mix(in srgb, var(--fg) 40%, var(--bg)));
+    --_text-faint:    color-mix(in srgb, var(--fg) 25%, var(--bg));
+    --_line:          var(--line, color-mix(in srgb, var(--fg) 50%, var(--bg)));
+    --_arrow:         var(--accent, color-mix(in srgb, var(--fg) 85%, var(--bg)));
+    --_node-fill:     var(--surface, color-mix(in srgb, var(--fg) 3%, var(--bg)));
+    --_node-stroke:   var(--border, color-mix(in srgb, var(--fg) 20%, var(--bg)));
+    --_group-fill:    var(--bg);
+    --_group-hdr:     color-mix(in srgb, var(--fg) 5%, var(--bg));
+    --_inner-stroke:  color-mix(in srgb, var(--fg) 12%, var(--bg));
+    --_key-badge:     color-mix(in srgb, var(--fg) 10%, var(--bg));
+  }
+</style>
+<defs>
+  <marker id="arrowhead" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto">
+    <polygon points="0 0, 8 2.5, 0 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+  <marker id="arrowhead-start" markerWidth="8" markerHeight="5" refX="1" refY="2.5" orient="auto-start-reverse">
+    <polygon points="8 0, 0 2.5, 8 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+</defs>
+<g class="subgraph" data-id="TAHAP_1" data-label="1. HULU: GEOSPASIAL &amp; PENDATAAN LAHAN">
+  <rect x="140.73874999999998" y="40" width="309.58799999999997" height="335" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="140.73874999999998" y="40" width="309.58799999999997" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="152.73874999999998" y="54" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">1. HULU: GEOSPASIAL &amp; PENDATAAN LAHAN</text>
+</g>
+<g class="subgraph" data-id="TAHAP_2" data-label="2. PERENCANAAN: PENGAJUAN &amp; PENGESAHAN e-RDKK">
+  <rect x="130.73524999999995" y="435" width="329.5949999999999" height="488.19999999999993" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="130.73524999999995" y="435" width="329.5949999999999" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="142.73524999999995" y="449" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">2. PERENCANAAN: PENGAJUAN &amp; PENGESAHAN e-RDKK</text>
+</g>
+<g class="subgraph" data-id="TAHAP_3" data-label="3. LOGISTIK: DISTRIBUSI GUDANG KIOS KE POKTAN">
+  <rect x="40" y="983.1999999999999" width="541.8169999999999" height="403.29999999999995" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="40" y="983.1999999999999" width="541.8169999999999" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="52" y="997.1999999999999" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">3. LOGISTIK: DISTRIBUSI GUDANG KIOS KE POKTAN</text>
+</g>
+<g class="subgraph" data-id="TAHAP_4" data-label="4. HILIR: KASIR PENEBUSAN PUPUK PETANI">
+  <rect x="111.51187499999992" y="1446.5" width="366.3862499999999" height="641.4" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="111.51187499999992" y="1446.5" width="366.3862499999999" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="123.51187499999992" y="1460.5" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">4. HILIR: KASIR PENEBUSAN PUPUK PETANI</text>
+</g>
+<g class="subgraph" data-id="TAHAP_5" data-label="5. KEUANGAN: BUKU KAS &amp; JASA POKTAN">
+  <rect x="68.27512500000012" y="2147.9" width="512.6219999999998" height="181.8" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="68.27512500000012" y="2147.9" width="512.6219999999998" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="80.27512500000012" y="2161.9" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">5. KEUANGAN: BUKU KAS &amp; JASA POKTAN</text>
+</g>
+<g class="subgraph" data-id="TAHAP_6" data-label="6. PENGAWASAN: VERIFIKASI QR CODE &amp; AUDIT TRAIL">
+  <rect x="608.897125" y="2117.9" width="571.4569999999999" height="181.8" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="608.897125" y="2117.9" width="571.4569999999999" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="620.897125" y="2131.9" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">6. PENGAWASAN: VERIFIKASI QR CODE &amp; AUDIT TRAIL</text>
+</g>
+<polyline class="edge" data-from="TAHAP_1" data-to="TAHAP_2" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="305.53274999999996,375 305.53274999999985,435" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="TAHAP_2" data-to="TAHAP_3" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="305.53274999999985,923.1999999999999 305.53274999999996,983.1999999999999" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="TAHAP_3" data-to="TAHAP_4" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="439.98699999999997,1386.5 439.98699999999997,1428.5 412.61087499999985,1428.5 412.61087499999985,1446.5" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="TAHAP_4" data-to="TAHAP_5" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="334.58612499999987,2087.9 334.58612500000004,2147.9" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="TAHAP_4" data-to="TAHAP_6" data-style="dotted" data-arrow-start="false" data-arrow-end="true" points="344.58612499999987,2087.9 344.58612499999987,2105.9 751.7613749999998,2105.9 751.7613749999998,2117.9" fill="none" stroke="var(--_line)" stroke-width="1" stroke-dasharray="4 4" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="TAHAP_3" data-to="TAHAP_6" data-style="dotted" data-arrow-start="false" data-arrow-end="true" points="449.98699999999997,1386.5 449.98699999999997,1428.5 894.6256249999999,1428.5 894.6256249999999,2117.9" fill="none" stroke="var(--_line)" stroke-width="1" stroke-dasharray="4 4" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="TAHAP_2" data-to="TAHAP_6" data-style="dotted" data-arrow-start="false" data-arrow-end="true" points="315.5327499999999,923.1999999999999 315.5327499999999,965.1999999999999 1009.1471249999997,965.1999999999999 1009.1471249999997,2105.9 1037.4898749999998,2105.9 1037.4898749999998,2117.9" fill="none" stroke="var(--_line)" stroke-width="1" stroke-dasharray="4 4" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="C" data-to="D" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="295.53274999999996,359 295.5327499999999,479" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="G" data-to="H" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="295.5327499999999,907.1999999999999 295.53274999999996,1027.1999999999998" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="K" data-to="L" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="429.9869999999999,1370.5 429.9869999999999,1551.4 324.58612499999987,1551.4 324.58612499999987,1575.4" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="P" data-to="Q" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="324.58612499999987,2071.9 324.58612500000004,2191.9" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="A" data-to="B" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Mode PWA Offline / Desktop" points="295.53274999999996,120.9 295.53274999999996,237.2" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="B" data-to="C" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="295.53274999999996,274.1 295.53274999999996,322.1" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="D" data-to="E" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Verifikasi Lapangan" points="295.5327499999999,515.9 295.5327499999999,632.2" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="E" data-to="F" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Pengesahan SK Resmi" points="295.5327499999999,669.1 295.5327499999999,785.4" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="F" data-to="G" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="295.5327499999999,822.3 295.5327499999999,870.3" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="H" data-to="I" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Terbitkan Surat Jalan DO &amp; Armada" points="295.53274999999996,1064.1 295.53274999999996,1180.3999999999999" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="I" data-to="J" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Otomatis Kurangi Stok Kios" points="260.5065833333333,1217.3 260.5065833333333,1229.3 161.07849999999996,1229.3 161.07849999999996,1333.6" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="I" data-to="K" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Konfirmasi Tiba / Diterima" points="330.5589166666666,1217.3 330.5589166666666,1229.3 429.98699999999997,1229.3 429.98699999999997,1333.6" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="M" data-to="L" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="255.56137499999988,1527.4 255.56137499999988,1551.4 324.58612499999987,1551.4 324.58612499999987,1575.4" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="L" data-to="N" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Cek Kuota NIK Real-time" points="324.58612499999987,1612.3 324.58612499999987,1728.6" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="N" data-to="O" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Tanda Tangan Digital Layar Sentuh" points="324.58612499999987,1765.5 324.58612499999987,1881.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="O" data-to="P" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Otomatis Kurangi Kuota Petani &amp; Stok Poktan" points="324.58612499999987,1918.7 324.58612499999987,2035" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="Q" data-to="R" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="324.58612500000004,2228.8 324.58612500000004,2276.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="S" data-to="T" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="766.655125,2198.8 766.655125,2246.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="U" data-to="V" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1050.383625,2198.8 1050.383625,2246.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<g class="edge-label" data-from="A" data-to="B" data-label="Mode PWA Offline / Desktop">
+  <rect x="222.53274999999996" y="163.9" width="145.36" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="295.21274999999997" y="179.05" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Mode PWA Offline / Desktop</text>
+</g>
+<g class="edge-label" data-from="D" data-to="E" data-label="Verifikasi Lapangan">
+  <rect x="238.5327499999999" y="558.9" width="113.28400000000002" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="295.1747499999999" y="574.05" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Verifikasi Lapangan</text>
+</g>
+<g class="edge-label" data-from="E" data-to="F" data-label="Pengesahan SK Resmi">
+  <rect x="233.03274999999994" y="712.1" width="124.57" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="295.31774999999993" y="727.25" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Pengesahan SK Resmi</text>
+</g>
+<g class="edge-label" data-from="H" data-to="I" data-label="Terbitkan Surat Jalan DO &amp; Armada">
+  <rect x="203.53275" y="1107.1" width="183.37600000000003" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="295.22075" y="1122.25" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Terbitkan Surat Jalan DO &amp; Armada</text>
+</g>
+<g class="edge-label" data-from="I" data-to="J" data-label="Otomatis Kurangi Stok Kios">
+  <rect x="89.57849999999996" y="1260.2999999999997" width="142.98400000000004" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="161.07049999999998" y="1275.4499999999998" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Otomatis Kurangi Stok Kios</text>
+</g>
+<g class="edge-label" data-from="I" data-to="K" data-label="Konfirmasi Tiba / Diterima">
+  <rect x="361.98699999999997" y="1260.2999999999997" width="135.262" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="429.618" y="1275.4499999999998" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Konfirmasi Tiba / Diterima</text>
+</g>
+<g class="edge-label" data-from="L" data-to="N" data-label="Cek Kuota NIK Real-time">
+  <rect x="260.08612499999987" y="1655.3" width="128.13400000000001" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="324.1531249999999" y="1670.45" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Cek Kuota NIK Real-time</text>
+</g>
+<g class="edge-label" data-from="N" data-to="O" data-label="Tanda Tangan Digital Layar Sentuh">
+  <rect x="232.58612499999987" y="1808.5" width="183.97" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="324.5711249999999" y="1823.65" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Tanda Tangan Digital Layar Sentuh</text>
+</g>
+<g class="edge-label" data-from="O" data-to="P" data-label="Otomatis Kurangi Kuota Petani &amp; Stok Poktan">
+  <rect x="212.58612499999987" y="1961.6999999999998" width="223.17399999999998" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="324.17312499999986" y="1976.85" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Otomatis Kurangi Kuota Petani &amp; Stok Poktan</text>
+</g>
+<g class="node" data-id="A" data-label="Surveyor / PPL Lapangan (GPS Sawah)" data-shape="rectangle">
+  <rect x="157.47975" y="84" width="276.10599999999994" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="295.53274999999996" y="102.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Surveyor / PPL Lapangan (GPS Sawah)</text>
+</g>
+<g class="node" data-id="B" data-label="Digitasi Poligon Petak Sawah" data-shape="rectangle">
+  <rect x="190.45425" y="237.2" width="210.15699999999995" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="295.53274999999996" y="255.64999999999998" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Digitasi Poligon Petak Sawah</text>
+</g>
+<g class="node" data-id="C" data-label="Sertifikat / Kartu Lahan GIS Ber-QR Code" data-shape="rectangle">
+  <rect x="156.73874999999998" y="322.1" width="277.58799999999997" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="295.53274999999996" y="340.55" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Sertifikat / Kartu Lahan GIS Ber-QR Code</text>
+</g>
+<g class="node" data-id="D" data-label="Poktan Mengajukan RDKK Anggota" data-shape="rectangle">
+  <rect x="171.55874999999995" y="479" width="247.94799999999992" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="295.5327499999999" y="497.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Poktan Mengajukan RDKK Anggota</text>
+</g>
+<g class="node" data-id="E" data-label="Penyuluh PPL BPP Lembeyan" data-shape="rectangle">
+  <rect x="185.26724999999993" y="632.2" width="220.53099999999995" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="295.5327499999999" y="650.6500000000001" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Penyuluh PPL BPP Lembeyan</text>
+</g>
+<g class="node" data-id="F" data-label="Admin Kecamatan Lembeyan" data-shape="rectangle">
+  <rect x="190.82474999999994" y="785.4" width="209.41599999999994" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="295.5327499999999" y="803.85" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Admin Kecamatan Lembeyan</text>
+</g>
+<g class="node" data-id="G" data-label="SK e-RDKK &amp; Kuota Alokasi Petani Terkunci" data-shape="rectangle">
+  <rect x="146.73524999999995" y="870.3" width="297.5949999999999" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="295.5327499999999" y="888.75" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">SK e-RDKK &amp; Kuota Alokasi Petani Terkunci</text>
+</g>
+<g class="node" data-id="H" data-label="Gudang Kios KPL Resmi" data-shape="rectangle">
+  <rect x="203.79225" y="1027.1999999999998" width="183.48099999999997" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="295.53274999999996" y="1045.6499999999999" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Gudang Kios KPL Resmi</text>
+</g>
+<g class="node" data-id="I" data-label="Pengiriman Pupuk ke Poktan" data-shape="rectangle">
+  <rect x="190.45425" y="1180.3999999999999" width="210.15699999999995" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="295.53274999999996" y="1198.85" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Pengiriman Pupuk ke Poktan</text>
+</g>
+<g class="node" data-id="J" data-label="Stok Gudang KPL Terpotong" data-shape="rectangle">
+  <rect x="56" y="1333.6" width="210.15699999999995" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="161.07849999999996" y="1352.05" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Stok Gudang KPL Terpotong</text>
+</g>
+<g class="node" data-id="K" data-label="Stok Otomatis Masuk ke Gudang Poktan" data-shape="rectangle">
+  <rect x="294.1569999999999" y="1333.6" width="271.65999999999997" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="429.9869999999999" y="1352.05" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Stok Otomatis Masuk ke Gudang Poktan</text>
+</g>
+<g class="node" data-id="L" data-label="Kasir Penyaluran Poktan" data-shape="rectangle">
+  <rect x="229.51112499999988" y="1575.4" width="190.14999999999998" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="324.58612499999987" y="1593.8500000000001" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Kasir Penyaluran Poktan</text>
+</g>
+<g class="node" data-id="M" data-label="Petani Datang Bawa KTP / Kartu Tani" data-shape="rectangle">
+  <rect x="127.51187499999992" y="1490.5" width="256.09899999999993" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="255.56137499999988" y="1508.95" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Petani Datang Bawa KTP / Kartu Tani</text>
+</g>
+<g class="node" data-id="N" data-label="Penebusan Pupuk (Urea, NPK, Organik)" data-shape="rectangle">
+  <rect x="187.2741249999999" y="1728.6" width="274.6239999999999" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="324.58612499999987" y="1747.05" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Penebusan Pupuk (Urea, NPK, Organik)</text>
+</g>
+<g class="node" data-id="O" data-label="Petani TTD di Layar HP/Tablet" data-shape="rectangle">
+  <rect x="214.3206249999999" y="1881.8" width="220.53099999999995" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="324.58612499999987" y="1900.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Petani TTD di Layar HP/Tablet</text>
+</g>
+<g class="node" data-id="P" data-label="Nota Kasir Resmi Ber-QR Code" data-shape="rectangle">
+  <rect x="214.3206249999999" y="2035" width="220.53099999999995" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="324.58612499999987" y="2053.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Nota Kasir Resmi Ber-QR Code</text>
+</g>
+<g class="node" data-id="Q" data-label="Buku Kas Transparan Poktan" data-shape="rectangle">
+  <rect x="215.8026250000001" y="2191.9" width="217.56699999999995" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="324.58612500000004" y="2210.35" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Buku Kas Transparan Poktan</text>
+</g>
+<g class="node" data-id="R" data-label="Otomatis Bagi Jasa: Transport, Sewa Gudang, ATK, Kas Poktan &amp; Pengurus" data-shape="rectangle">
+  <rect x="84.27512500000012" y="2276.8" width="480.6219999999999" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="324.58612500000004" y="2295.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Otomatis Bagi Jasa: Transport, Sewa Gudang, ATK, Kas Poktan &amp; Pengurus</text>
+</g>
+<g class="node" data-id="S" data-label="Scan QR Code Dokumen Fisik" data-shape="rectangle">
+  <rect x="658.983125" y="2161.9" width="215.34399999999997" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="766.655125" y="2180.35" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Scan QR Code Dokumen Fisik</text>
+</g>
+<g class="node" data-id="T" data-label="Halaman Verifikasi Publik BPP Lembeyan" data-shape="rectangle">
+  <rect x="624.897125" y="2246.8" width="283.51599999999996" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="766.655125" y="2265.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Halaman Verifikasi Publik BPP Lembeyan</text>
+</g>
+<g class="node" data-id="U" data-label="Log Audit Real-time Inspektorat" data-shape="rectangle">
+  <rect x="939.7476249999999" y="2161.9" width="221.27199999999996" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1050.383625" y="2180.35" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Log Audit Real-time Inspektorat</text>
+</g>
+<g class="node" data-id="V" data-label="Rekapitulasi Dinas &amp; Kecamatan" data-shape="rectangle">
+  <rect x="936.4131249999999" y="2246.8" width="227.94099999999997" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1050.383625" y="2265.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Rekapitulasi Dinas &amp; Kecamatan</text>
+</g>
+</svg>
