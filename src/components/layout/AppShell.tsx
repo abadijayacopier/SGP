@@ -34,7 +34,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
       <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 no-print mb-16 md:mb-0">
         <div className="max-w-7xl mx-auto px-4 space-y-1.5">
           <p className="font-bold text-slate-800">
-            Sistem Informasi Pertanian Terpadu &mdash; Pemerintah Kecamatan Lembeyan &copy; 2026
+            Sistem Informasi Pertanian Terpadu &mdash; Pemerintah Kecamatan Lembeyan &copy; {new Date().getFullYear()}
           </p>
           <p className="text-slate-500">
             Layanan Pemetaan Lahan (GIS), Pendaftaran e-RDKK, dan Distribusi Pupuk Bersubsidi Terverifikasi Wilayah BPP Kecamatan Lembeyan

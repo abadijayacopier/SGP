@@ -113,8 +113,10 @@ export default function LoginPage() {
     }
   };
 
+  const currentYear = new Date().getFullYear();
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-emerald-950 via-slate-900 to-green-950 flex items-center justify-center p-4 sm:p-6">
+    <div className="min-h-screen bg-gradient-to-br from-emerald-950 via-slate-900 to-green-950 flex flex-col items-center justify-center p-4 sm:p-6">
       <div className="max-w-4xl w-full bg-white rounded-3xl shadow-2xl overflow-hidden grid grid-cols-1 lg:grid-cols-12 border border-white/10">
         {/* Left Column: Branding Resmi Pemerintah Kecamatan (5 Cols) */}
         <div className="lg:col-span-5 bg-gradient-to-br from-emerald-900 via-emerald-800 to-green-900 text-white p-8 flex flex-col justify-center relative overflow-hidden">
@@ -285,16 +287,32 @@ export default function LoginPage() {
               </div>
             </form>
 
-            <div className="mt-8 pt-4 border-t border-slate-100 flex items-center justify-between text-[11px] text-slate-400">
-              <span className="flex items-center gap-1">
-                <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                Sistem Terenkripsi &bull; Standar Keamanan BPP
-              </span>
-              <span className="font-mono">Kec. Lembeyan</span>
+            <div className="mt-8 pt-4 border-t border-slate-100 text-center space-y-1.5 text-slate-500">
+              <p className="font-bold text-slate-700 text-xs">
+                Sistem Informasi Pertanian Terpadu &mdash; Pemerintah Kecamatan Lembeyan &copy; {currentYear}
+              </p>
+              <div className="flex items-center justify-center gap-2 text-[11px] text-slate-400">
+                <span className="flex items-center gap-1">
+                  <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
+                  Sistem Terenkripsi &bull; Standar Keamanan BPP
+                </span>
+                <span>&bull;</span>
+                <span className="font-mono">Kec. Lembeyan</span>
+              </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Footer Bawah Halaman Login Rata Tengah */}
+      <footer className="mt-6 text-center text-xs text-emerald-100/90 max-w-2xl px-4 space-y-1 font-sans">
+        <p className="font-bold text-white tracking-wide">
+          Sistem Informasi Pertanian Terpadu &mdash; Pemerintah Kecamatan Lembeyan &copy; {currentYear}
+        </p>
+        <p className="text-[11px] text-emerald-200/70">
+          Layanan Pemetaan Lahan (GIS), Pendaftaran e-RDKK, dan Distribusi Pupuk Bersubsidi Terverifikasi Wilayah BPP Kecamatan Lembeyan
+        </p>
+      </footer>
     </div>
   );
 }
