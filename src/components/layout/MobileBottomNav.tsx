@@ -179,19 +179,29 @@ export default function MobileBottomNav() {
           </span>
         </Link>
 
-        {/* 3. TENGAH: Tombol Terapung PETA GIS (Elevated Floating Action Button) */}
-        <div className="flex flex-col items-center justify-center -mt-6">
-          <Link
-            href={role === 'SURVEYOR' ? '/field-maps' : '/peta'}
-            className="w-13 h-13 sm:w-14 sm:h-14 rounded-full bg-gradient-to-tr from-emerald-600 via-green-600 to-emerald-500 text-white shadow-lg shadow-emerald-600/40 border-4 border-white flex flex-col items-center justify-center active:scale-90 transition-all ring-2 ring-emerald-500/20 group cursor-pointer"
-            title="Buka Peta Spasial GIS Lembeyan"
+        {/* 3. TENGAH: Tombol Terapung PETA GIS */}
+        <Link
+          href={role === 'SURVEYOR' ? '/field-maps' : '/peta'}
+          className="flex flex-col items-center justify-center -mt-5 group cursor-pointer"
+          title="Buka Peta Spasial GIS Lembeyan"
+        >
+          <div
+            className={`w-11 h-11 sm:w-12 sm:h-12 rounded-full flex items-center justify-center shadow-md active:scale-90 transition-all border-2 border-white ${
+              isCenterActive
+                ? 'bg-emerald-700 text-amber-300 shadow-emerald-800/40 ring-2 ring-emerald-600/30'
+                : 'bg-emerald-600 text-amber-300 shadow-emerald-600/30 hover:bg-emerald-500'
+            }`}
           >
-            <Map className="w-5 h-5 text-amber-300 drop-shadow-xs group-hover:scale-110 transition-transform" />
-            <span className="text-[8px] font-black tracking-tight text-white uppercase mt-0.5 leading-none">
-              PETA GIS
-            </span>
-          </Link>
-        </div>
+            <Map className="w-5 h-5 group-hover:scale-110 transition-transform" />
+          </div>
+          <span
+            className={`text-[10px] tracking-tight mt-0.5 truncate max-w-[60px] ${
+              isCenterActive ? 'text-emerald-700 font-black' : 'text-slate-600 font-semibold'
+            }`}
+          >
+            Peta GIS
+          </span>
+        </Link>
 
         {/* 4. Kanan 1: e-RDKK / Penyaluran / Alokasi */}
         <Link
