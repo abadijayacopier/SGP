@@ -56,6 +56,8 @@ const defaultSettings = {
   },
   integrasi: {
     googleSheetWebhookUrl: 'https://script.google.com/macros/s/AKfycbx_example/exec',
+    googleSheetWebhookUrlErdkk: '',
+    googleSheetWebhookUrlPenyaluran: '',
     autoSyncOnTransaction: true,
     autoSyncTime: '18:00',
     kementanApiKey: '',

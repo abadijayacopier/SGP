@@ -37,7 +37,7 @@ import {
   Check,
   ExternalLink,
 } from 'lucide-react';
-import { showSuccess, showError, showConfirm } from '@/lib/sweetalert';
+import { showSuccess, showError, showConfirm, showToast } from '@/lib/sweetalert';
 import { formatRupiah } from '@/lib/calculations';
 
 type SettingsTab = 'INSTANSI' | 'PUPUK' | 'GIS' | 'DOKUMEN' | 'INTEGRASI' | 'BACKUP' | 'LOG_AKTIVITAS';
@@ -94,6 +94,8 @@ export default function PengaturanPage() {
     },
     integrasi: {
       googleSheetWebhookUrl: 'https://script.google.com/macros/s/AKfycbx_example/exec',
+      googleSheetWebhookUrlErdkk: '',
+      googleSheetWebhookUrlPenyaluran: '',
       autoSyncOnTransaction: true,
       autoSyncTime: '18:00',
       kementanApiKey: '',
@@ -191,9 +193,18 @@ export default function PengaturanPage() {
   }, []);
 
   const handleTriggerWebhook = async () => {
-    const targetUrl = settings.integrasi.googleSheetWebhookUrl;
+    const targetUrl =
+      syncDataset === 'erdkk'
+        ? (settings.integrasi.googleSheetWebhookUrlErdkk || settings.integrasi.googleSheetWebhookUrl)
+        : (settings.integrasi.googleSheetWebhookUrlPenyaluran || '');
+
     if (!targetUrl || !targetUrl.startsWith('http')) {
-      showError('URL Tidak Valid', 'Masukkan URL Google Apps Script Webhook (https://...) yang valid!');
+      showError(
+        'URL Belum Diisi',
+        `Masukkan URL Google Apps Script Webhook (https://...) khusus untuk Spreadsheet ${
+          syncDataset === 'erdkk' ? 'e-RDKK Kementan' : 'Penyaluran Pupuk'
+        }!`
+      );
       return;
     }
 
@@ -210,14 +221,22 @@ export default function PengaturanPage() {
       });
       const json = await res.json();
       if (json.success) {
+        const rowCount = typeof json.count === 'number' ? json.count : 0;
         setSyncStatusMsg({
           type: 'success',
-          text: `Berhasil terkirim! ${json.count || 0} baris data disinkronkan ke Google Sheets.`,
+          text: `Berhasil terkirim! ${rowCount} baris data disinkronkan ke Google Sheets.`,
         });
         showSuccess(
           'Sinkronisasi Berhasil',
-          `Data ${syncDataset === 'erdkk' ? 'e-RDKK Petani (Standar Kementan)' : 'Penyaluran Pupuk'} (${json.count || 0} baris) berhasil dikirim ke Google Spreadsheet!`
+          `Data ${syncDataset === 'erdkk' ? 'e-RDKK Petani (Standar Kementan)' : 'Penyaluran Pupuk'} (${rowCount} baris) berhasil dikirim ke Google Spreadsheet!`
         );
+
+        // Simpan otomatis URL agar tidak hilang saat reload
+        fetch('/api/pengaturan', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(settings),
+        }).catch(() => {});
       } else {
         setSyncStatusMsg({
           type: 'error',
@@ -1153,24 +1172,93 @@ export default function PengaturanPage() {
                     </div>
 
                     <div>
-                      <label className="block text-xs font-bold text-slate-700 mb-1">
-                        Google Apps Script Web App URL
-                      </label>
+                      <div className="flex items-center justify-between mb-1">
+                        <label className="block text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                          {syncDataset === 'erdkk' ? (
+                            <>
+                              <span className="w-2.5 h-2.5 rounded-full bg-emerald-600 inline-block" />
+                              URL Webhook Khusus Spreadsheet e-RDKK Kementan:
+                            </>
+                          ) : (
+                            <>
+                              <span className="w-2.5 h-2.5 rounded-full bg-blue-600 inline-block" />
+                              URL Webhook Khusus Spreadsheet Penyaluran Pupuk:
+                            </>
+                          )}
+                        </label>
+                        {syncDataset === 'penyaluran' && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              const erdkkUrl =
+                                settings.integrasi.googleSheetWebhookUrlErdkk ||
+                                settings.integrasi.googleSheetWebhookUrl ||
+                                '';
+                              setSettings({
+                                ...settings,
+                                integrasi: {
+                                  ...settings.integrasi,
+                                  googleSheetWebhookUrlPenyaluran: erdkkUrl,
+                                },
+                              });
+                              showToast('URL disalin dari e-RDKK');
+                            }}
+                            className="text-[10px] text-blue-600 hover:text-blue-800 font-bold hover:underline cursor-pointer flex items-center gap-1"
+                            title="Salin alamat Webhook dari e-RDKK jika Anda menggunakan 1 spreadsheet yang sama untuk kedua data"
+                          >
+                            <span>Salin dari URL e-RDKK</span>
+                          </button>
+                        )}
+                      </div>
                       <input
                         type="url"
-                        placeholder="https://script.google.com/macros/s/.../exec"
-                        value={settings.integrasi.googleSheetWebhookUrl}
-                        onChange={(e) =>
-                          setSettings({
-                            ...settings,
-                            integrasi: { ...settings.integrasi, googleSheetWebhookUrl: e.target.value },
-                          })
+                        placeholder={
+                          syncDataset === 'erdkk'
+                            ? 'https://script.google.com/macros/s/.../exec (Khusus Spreadsheet e-RDKK)'
+                            : 'https://script.google.com/macros/s/.../exec (Khusus Spreadsheet Penyaluran Pupuk)'
                         }
+                        value={
+                          syncDataset === 'erdkk'
+                            ? (settings.integrasi.googleSheetWebhookUrlErdkk !== undefined && settings.integrasi.googleSheetWebhookUrlErdkk !== ''
+                                ? settings.integrasi.googleSheetWebhookUrlErdkk
+                                : settings.integrasi.googleSheetWebhookUrl || '')
+                            : (settings.integrasi.googleSheetWebhookUrlPenyaluran !== undefined
+                                ? settings.integrasi.googleSheetWebhookUrlPenyaluran
+                                : '')
+                        }
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          if (syncDataset === 'erdkk') {
+                            setSettings({
+                              ...settings,
+                              integrasi: {
+                                ...settings.integrasi,
+                                googleSheetWebhookUrlErdkk: val,
+                                googleSheetWebhookUrl: val,
+                              },
+                            });
+                          } else {
+                            setSettings({
+                              ...settings,
+                              integrasi: {
+                                ...settings.integrasi,
+                                googleSheetWebhookUrlPenyaluran: val,
+                              },
+                            });
+                          }
+                        }}
                         className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs font-mono focus:ring-2 focus:ring-emerald-500 focus:outline-hidden bg-white"
                       />
-                      <p className="text-[10px] text-slate-400 mt-1">
-                        Masukkan URL hasil <em>Deploy as Web App</em> dari Google Spreadsheet Anda.
-                      </p>
+                      <div className="flex flex-wrap items-center justify-between text-[10px] text-slate-500 mt-1 gap-1">
+                        <span>
+                          {syncDataset === 'erdkk'
+                            ? 'Masukkan URL Web App dari Spreadsheet e-RDKK (15 Kolom).'
+                            : 'Masukkan URL Web App dari Spreadsheet Penyaluran Pupuk (14 Kolom).'}
+                        </span>
+                        <span className="font-semibold text-slate-600 bg-slate-100 px-1.5 py-0.5 rounded">
+                          Target Sheet: {syncDataset === 'erdkk' ? 'e-RDKK_Kementan' : 'Penyaluran_Pupuk'}
+                        </span>
+                      </div>
                     </div>
 
                     <button

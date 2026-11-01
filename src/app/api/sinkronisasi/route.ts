@@ -323,6 +323,8 @@ export async function POST(request: Request) {
       });
       return NextResponse.json({
         success: true,
+        count: payload.length,
+        type,
         message: `Sinkronisasi data ${type === 'erdkk' ? 'Daftar e-RDKK Petani (Standar Kementan)' : 'Penyaluran Pupuk'} berhasil dikirim ke Google Sheets! (${payload.length} data)`,
         status: response.status,
       });
