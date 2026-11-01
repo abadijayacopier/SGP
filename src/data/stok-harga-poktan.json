@@ -218,5 +218,84 @@
         "petugas": "Sistem"
       }
     ]
+  },
+  {
+    "poktanId": "cmvxqmu240004t060zwn2h7tq",
+    "namaPoktan": "Kelompok Tani",
+    "desa": "Kediren",
+    "hargaPupuk": {
+      "ureaPerKg": 2100,
+      "ureaPerSak": 105000,
+      "npkPerKg": 2200,
+      "npkPerSak": 110000,
+      "organikPerKg": 875,
+      "organikPerSak": 35000,
+      "catatan": "Berdasarkan hasil musyawarah kesepakatan harga pupuk bersubsidi se-Kecamatan Lembeyan Tahun Anggaran 2026.",
+      "updatedAt": "2026-11-01T15:02:26.170Z",
+      "updatedBy": "Sistem"
+    },
+    "rincianKesepakatan": {
+      "tahunAnggaran": 2026,
+      "nomorBeritaAcara": "01/BA-POKTAN/LMB/2026",
+      "tanggalMusyawarah": "2026-01-15",
+      "lokasiMusyawarah": "Balai Pertemuan / Gudang Poktan",
+      "catatanKesepakatan": "Berdasarkan hasil musyawarah kesepakatan harga pupuk bersubsidi se-Kecamatan Lembeyan Tahun Anggaran 2026.",
+      "pihakMengetahui": {
+        "ketuaPoktan": "Samsi",
+        "bendaharaPoktan": "Kasdi Mulyono",
+        "penyuluhPpl": "Ir. Hendro Supriyanto",
+        "kepalaDesa": "Drs. H. Dwi Santoso",
+        "perwakilanPetani": "Parno"
+      },
+      "urea": {
+        "hetPerSak": 90000,
+        "transportasi": 5000,
+        "sewaGudang": 2000,
+        "atk": 2000,
+        "kasPoktan": 1000,
+        "penyandangDana": 2000,
+        "pengurusPoktan": 3000,
+        "totalPerSak": 105000,
+        "hargaPerKg": 2100
+      },
+      "npk": {
+        "hetPerSak": 92000,
+        "transportasi": 5000,
+        "sewaGudang": 2000,
+        "atk": 2000,
+        "kasPoktan": 4000,
+        "penyandangDana": 2000,
+        "pengurusPoktan": 3000,
+        "totalPerSak": 110000,
+        "hargaPerKg": 2200
+      },
+      "organik": {
+        "hetPerSak": 25600,
+        "transportasi": 4400,
+        "sewaGudang": 1000,
+        "atk": 1000,
+        "kasPoktan": 1000,
+        "penyandangDana": 0,
+        "pengurusPoktan": 2000,
+        "totalPerSak": 35000,
+        "hargaPerKg": 875
+      }
+    },
+    "penyesuaianAwal": {
+      "ureaKg": 0,
+      "npkKg": 0,
+      "organikKg": 0,
+      "catatan": "Stok awal sistem",
+      "updatedAt": "2026-11-01T15:02:26.170Z"
+    },
+    "mutasi": [
+      {
+        "id": "MUT-INIT-1793545346170",
+        "tanggal": "2026-11-01T15:02:26.170Z",
+        "tipe": "INISIALISASI",
+        "keterangan": "Sistem pencatatan stok dan harga poktan diaktifkan",
+        "petugas": "Sistem"
+      }
+    ]
   }
 ]

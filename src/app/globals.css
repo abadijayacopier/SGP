@@ -349,26 +349,63 @@ select optgroup {
   .bg-gray-50,
   .bg-gray-100,
   .bg-gray-200 {
-    background-color: #ffffff !important;
-    background: #ffffff !important;
+    background-color: #ffffff;
+    background: #ffffff;
   }
 
-  /* Header dan sel tabel putih bersih */
-  thead th,
+  /* Sel tabel putih bersih default (kecuali header atau baris ber-background khusus) */
   tfoot td,
   tbody td,
   tbody tr {
-    background-color: #ffffff !important;
-    background: #ffffff !important;
+    background-color: #ffffff;
+    background: #ffffff;
+  }
+
+  /* Header tabel default jika berlatar putih/terang, pastikan teksnya selalu hitam pekat terbaca */
+  thead th {
+    color: #0f172a;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Header tabel bertema gelap resmi (wajib background navy/gelap dan teks putih tajam saat dicetak) */
+  thead.print-dark-header,
+  thead.print-dark-header tr,
+  thead.print-dark-header th,
+  .print-dark-header,
+  .print-dark-header th,
+  thead tr.bg-slate-900 th,
+  thead th.bg-slate-900,
+  thead tr.bg-slate-800 th,
+  thead th.bg-slate-800 {
+    background-color: #0f172a !important;
+    background: #0f172a !important;
+    color: #ffffff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Header tabel bertema hijau dinas resmi */
+  thead tr.bg-emerald-900 th,
+  thead th.bg-emerald-900 {
+    background-color: #064e3b !important;
+    background: #064e3b !important;
+    color: #ffffff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
 
   /* Paksa background color dan border tetap tampil utuh di lembar print jika diperlukan */
   .bg-emerald-800 {
     background-color: #065f46 !important;
     color: #ffffff !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   .bg-emerald-50 {
     background-color: #ecfdf5 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
   }
   .border-emerald-600 {
     border-color: #059669 !important;

@@ -86,6 +86,12 @@ export interface LahanItem {
   statusKepemilikan: string;
   statusIrigasi: string;
   nomorPipil?: string | null;
+  kabupaten?: string;
+  batasUtara?: string | null;
+  batasSelatan?: string | null;
+  batasTimur?: string | null;
+  batasBarat?: string | null;
+  desa?: string;
   coordinates: string; // JSON array of [lat, lng]
   centerLat: number;
   centerLng: number;

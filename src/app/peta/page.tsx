@@ -29,6 +29,7 @@ import {
   Trash2,
   Sparkles,
   Camera,
+  Edit3,
 } from 'lucide-react';
 import {
   showSuccess,
@@ -465,6 +466,107 @@ export default function PetaPage() {
       }
     } catch (err: any) {
       showError('Terjadi Kesalahan', err.message);
+    }
+  };
+
+  // Mode Edit Petak Lahan
+  const [editModalOpen, setEditModalOpen] = useState(false);
+  const [editingLahan, setEditingLahan] = useState<LahanItem | null>(null);
+  const [editFormData, setEditFormData] = useState({
+    namaLahan: '',
+    petaniId: '',
+    komoditas: 'Padi',
+    kabupaten: 'Magetan',
+    statusKepemilikan: 'Milik Sendiri',
+    statusIrigasi: 'Irigasi Teknis',
+    nomorPipil: '',
+    batasUtara: '',
+    batasSelatan: '',
+    batasTimur: '',
+    batasBarat: '',
+  });
+  const [editSubmitting, setEditSubmitting] = useState(false);
+
+  const handleOpenEditLahan = (item: LahanItem) => {
+    setEditingLahan(item);
+    setEditFormData({
+      namaLahan: item.namaLahan || '',
+      petaniId: item.petani?.id || (item as any).petaniId || '',
+      komoditas: item.komoditas || 'Padi',
+      kabupaten: item.kabupaten || 'Magetan',
+      statusKepemilikan: item.statusKepemilikan || 'Milik Sendiri',
+      statusIrigasi: item.statusIrigasi || 'Irigasi Teknis',
+      nomorPipil: item.nomorPipil || '',
+      batasUtara: item.batasUtara || '',
+      batasSelatan: item.batasSelatan || '',
+      batasTimur: item.batasTimur || '',
+      batasBarat: item.batasBarat || '',
+    });
+    setEditModalOpen(true);
+  };
+
+  const toggleEditKomoditas = (item: string) => {
+    const raw = editFormData.komoditas || '';
+    const currentList = raw
+      .split(/[,/]+/)
+      .map((s) => s.trim())
+      .filter(Boolean);
+
+    let nextList: string[];
+    const index = currentList.findIndex((c) => c.toLowerCase() === item.toLowerCase());
+    if (index >= 0) {
+      nextList = currentList.filter((_, i) => i !== index);
+      if (nextList.length === 0) nextList = [item];
+    } else {
+      nextList = [...currentList, item];
+    }
+    setEditFormData((prev) => ({ ...prev, komoditas: nextList.join(', ') }));
+  };
+
+  const handleSaveEditLahan = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editingLahan) return;
+
+    if (!editFormData.namaLahan.trim()) {
+      showWarning('Nama Blok Lahan Kosong', 'Harap masukkan nama petak / blok sawah.');
+      return;
+    }
+    if (!editFormData.petaniId) {
+      showWarning('Petani Belum Dipilih', 'Harap pilih petani pemilik atau penggarap sawah.');
+      return;
+    }
+
+    setEditSubmitting(true);
+    try {
+      const res = await fetch('/api/lahan', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: editingLahan.id,
+          ...editFormData,
+        }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        showSuccess(
+          'Petak Lahan Diperbarui!',
+          `Data petak sawah "${editFormData.namaLahan}" (${editingLahan.kodeLahan}) berhasil diperbarui.`
+        );
+        setEditModalOpen(false);
+        setEditingLahan(null);
+        fetchLahan();
+        fetchPetani();
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('lahan-updated'));
+          window.dispatchEvent(new CustomEvent('petani-updated'));
+        }
+      } else {
+        showError('Gagal Menyimpan Perubahan', json.error || 'Terjadi kesalahan pada server');
+      }
+    } catch (err: any) {
+      showError('Terjadi Kesalahan', err.message);
+    } finally {
+      setEditSubmitting(false);
     }
   };
 
@@ -963,6 +1065,17 @@ export default function PetaPage() {
                     {permissions.canVerifyPpl && (
                       <button
                         type="button"
+                        onClick={() => handleOpenEditLahan(item)}
+                        className="p-2 rounded-xl bg-slate-100 text-slate-700 border border-slate-200 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 active:scale-95 transition"
+                        title="Edit Data Petak Lahan"
+                      >
+                        <Edit3 className="w-4 h-4 text-slate-700" />
+                      </button>
+                    )}
+
+                    {permissions.canVerifyPpl && (
+                      <button
+                        type="button"
                         onClick={() => handleDeleteLahan(item)}
                         className="p-2 rounded-xl bg-rose-50 text-rose-600 border border-rose-200 hover:bg-rose-100 active:scale-95 transition"
                         title="Hapus Petak Lahan"
@@ -1093,9 +1206,22 @@ export default function PetaPage() {
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
+                              handleOpenEditLahan(item);
+                            }}
+                            className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 transition cursor-pointer"
+                            title="Edit Data Petak Lahan"
+                          >
+                            <Edit3 className="w-3.5 h-3.5" />
+                          </button>
+                        )}
+                        {permissions.canVerifyPpl && (
+                          <button
+                            type="button"
+                            onClick={(e) => {
+                              e.stopPropagation();
                               handleDeleteLahan(item);
                             }}
-                            className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition"
+                            className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition cursor-pointer"
                             title="Hapus Petak Lahan"
                           >
                             <Trash2 className="w-3.5 h-3.5" />
@@ -1636,6 +1762,219 @@ export default function PetaPage() {
                 Tutup Pratinjau
               </button>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Edit Data Petak Lahan */}
+      {editModalOpen && editingLahan && (
+        <div className="fixed inset-0 z-[2000] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <div>
+                <h3 className="font-black text-slate-800 text-lg flex items-center gap-2">
+                  <Edit3 className="w-5 h-5 text-emerald-600" />
+                  Perbarui Data Petak Lahan
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Ubah identitas blok, kepemilikan petani, komoditas, atau nomor pipil.
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => setEditModalOpen(false)}
+                className="p-1.5 rounded-full text-slate-400 hover:bg-slate-100 cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Informasi Spasial Kadastral Tetap */}
+            <div className="my-4 bg-emerald-50/70 border border-emerald-200/90 rounded-2xl p-3.5 space-y-2 text-xs">
+              <div className="flex items-center justify-between">
+                <span className="font-mono text-[11px] font-bold bg-white text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded shadow-2xs">
+                  {editingLahan.kodeLahan}
+                </span>
+                <span className="font-black text-emerald-800 text-sm">
+                  {editingLahan.luasHa} Ha ({editingLahan.luasM2.toLocaleString('id-ID')} m²)
+                </span>
+              </div>
+              <p className="text-[11px] text-emerald-900 leading-snug">
+                📍 Wilayah: <strong>Kecamatan Lembeyan, Kabupaten {editingLahan.kabupaten || 'Magetan'}</strong>
+              </p>
+            </div>
+
+            <form onSubmit={handleSaveEditLahan} className="space-y-3.5 text-xs">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Nama Petak Lahan / Blok Hamparan *</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Contoh: Blok Klampisireng / Sawah Mbambung"
+                  value={editFormData.namaLahan}
+                  onChange={(e) => setEditFormData({ ...editFormData, namaLahan: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none font-semibold text-slate-900"
+                />
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  Petani Pemilik / Penggarap *
+                </label>
+                <select
+                  value={editFormData.petaniId}
+                  onChange={(e) => setEditFormData({ ...editFormData, petaniId: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white font-medium text-slate-900 cursor-pointer"
+                >
+                  <option value="">-- Pilih Petani Terdaftar --</option>
+                  {petaniList.map((p) => (
+                    <option key={p.id} value={p.id}>
+                      {p.nama} (NIK: {p.nik}) &bull; Poktan: {p.poktan?.nama || '-'} &bull; Desa {p.desa || 'Kediren'}
+                    </option>
+                  ))}
+                </select>
+                <p className="text-[10px] text-slate-400 mt-1">
+                  *Mengalihkan petani pemilik otomatis memperbarui akumulasi luas baku petani bersangkutan.
+                </p>
+              </div>
+
+              {/* Komoditas */}
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Komoditas Tanam *</label>
+                <div className="flex flex-wrap gap-1.5 mb-2">
+                  {POPULAR_KOMODITAS.map((k) => {
+                    const isSelected = (editFormData.komoditas || '')
+                      .toLowerCase()
+                      .includes(k.toLowerCase());
+                    return (
+                      <button
+                        key={k}
+                        type="button"
+                        onClick={() => toggleEditKomoditas(k)}
+                        className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition cursor-pointer ${
+                          isSelected
+                            ? 'bg-emerald-600 text-white shadow-2xs'
+                            : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
+                        }`}
+                      >
+                        {isSelected ? '✓ ' : '+ '}
+                        {k}
+                      </button>
+                    );
+                  })}
+                </div>
+                <input
+                  type="text"
+                  required
+                  placeholder="Contoh: Padi, Jagung"
+                  value={editFormData.komoditas}
+                  onChange={(e) => setEditFormData({ ...editFormData, komoditas: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none font-semibold text-slate-900"
+                />
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Status Penguasaan</label>
+                  <select
+                    value={editFormData.statusKepemilikan}
+                    onChange={(e) => setEditFormData({ ...editFormData, statusKepemilikan: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white cursor-pointer font-medium"
+                  >
+                    <option value="Milik Sendiri">Milik Sendiri</option>
+                    <option value="Sewa">Sewa / Sakap</option>
+                    <option value="Bagi Hasil">Bagi Hasil</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Status Irigasi</label>
+                  <select
+                    value={editFormData.statusIrigasi}
+                    onChange={(e) => setEditFormData({ ...editFormData, statusIrigasi: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white cursor-pointer font-medium"
+                  >
+                    <option value="Irigasi Teknis">Irigasi Teknis</option>
+                    <option value="Pompa Sumur Dangkal">Pompa Sumur Dangkal</option>
+                    <option value="Tadah Hujan">Tadah Hujan</option>
+                    <option value="Rawa / Lebak">Rawa / Lebak</option>
+                  </select>
+                </div>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1">Nomor Pipil / SPPT</label>
+                  <input
+                    type="text"
+                    placeholder="Contoh: 35.20.040.005"
+                    value={editFormData.nomorPipil}
+                    onChange={(e) => setEditFormData({ ...editFormData, nomorPipil: e.target.value })}
+                    className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none font-medium"
+                  />
+                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Kabupaten / Kota Lokasi Lahan</label>
+                <input
+                  type="text"
+                  required
+                  placeholder="Magetan"
+                  value={editFormData.kabupaten}
+                  onChange={(e) => setEditFormData({ ...editFormData, kabupaten: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none font-medium"
+                />
+              </div>
+
+              {/* Batas Tanah */}
+              <div className="pt-2 border-t border-slate-100">
+                <span className="block font-bold text-slate-700 mb-1.5">Batas Tanah Sekitar:</span>
+                <div className="grid grid-cols-2 gap-2 text-xs">
+                  <input
+                    type="text"
+                    placeholder="Batas Utara (misal: sawah)"
+                    value={editFormData.batasUtara}
+                    onChange={(e) => setEditFormData({ ...editFormData, batasUtara: e.target.value })}
+                    className="px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Batas Selatan (misal: saluran)"
+                    value={editFormData.batasSelatan}
+                    onChange={(e) => setEditFormData({ ...editFormData, batasSelatan: e.target.value })}
+                    className="px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Batas Timur (misal: jalan)"
+                    value={editFormData.batasTimur}
+                    onChange={(e) => setEditFormData({ ...editFormData, batasTimur: e.target.value })}
+                    className="px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs"
+                  />
+                  <input
+                    type="text"
+                    placeholder="Batas Barat (misal: jalan)"
+                    value={editFormData.batasBarat}
+                    onChange={(e) => setEditFormData({ ...editFormData, batasBarat: e.target.value })}
+                    className="px-2.5 py-1.5 border border-slate-200 rounded-lg text-xs"
+                  />
+                </div>
+              </div>
+
+              <div className="pt-4 flex items-center justify-end gap-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => setEditModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-slate-600 font-semibold hover:bg-slate-100 cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={editSubmitting}
+                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-md transition cursor-pointer disabled:opacity-50"
+                >
+                  {editSubmitting ? 'Menyimpan...' : 'Simpan Perubahan'}
+                </button>
+              </div>
+            </form>
           </div>
         </div>
       )}

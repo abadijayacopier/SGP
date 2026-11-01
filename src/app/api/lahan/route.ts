@@ -261,6 +261,115 @@ export async function POST(request: Request) {
   }
 }
 
+export async function PATCH(request: Request) {
+  try {
+    const body = await request.json();
+    const { id } = body;
+
+    if (!id) {
+      return NextResponse.json({ success: false, error: 'ID Petak Lahan wajib disertakan' }, { status: 400 });
+    }
+
+    const existing = await prisma.lahan.findUnique({
+      where: { id },
+      include: { petani: true },
+    });
+
+    if (!existing) {
+      return NextResponse.json({ success: false, error: 'Petak lahan tidak ditemukan' }, { status: 404 });
+    }
+
+    const {
+      namaLahan,
+      petaniId,
+      komoditas,
+      kabupaten,
+      statusKepemilikan,
+      statusIrigasi,
+      nomorPipil,
+      batasUtara,
+      batasSelatan,
+      batasTimur,
+      batasBarat,
+      fotoLahan,
+    } = body;
+
+    const oldPetaniId = existing.petaniId;
+    const targetPetaniId = petaniId && petaniId !== oldPetaniId ? petaniId : oldPetaniId;
+
+    const updateData: any = {};
+    if (namaLahan !== undefined && typeof namaLahan === 'string' && namaLahan.trim()) {
+      updateData.namaLahan = namaLahan.trim();
+    }
+    if (petaniId !== undefined && petaniId) {
+      updateData.petaniId = targetPetaniId;
+    }
+    if (komoditas !== undefined && komoditas) {
+      updateData.komoditas = komoditas;
+    }
+    if (kabupaten !== undefined) {
+      updateData.kabupaten = kabupaten;
+    }
+    if (statusKepemilikan !== undefined) {
+      updateData.statusKepemilikan = statusKepemilikan;
+    }
+    if (statusIrigasi !== undefined) {
+      updateData.statusIrigasi = statusIrigasi;
+    }
+    if (nomorPipil !== undefined) {
+      updateData.nomorPipil = nomorPipil ? String(nomorPipil).trim() : null;
+    }
+    if (batasUtara !== undefined) {
+      updateData.batasUtara = batasUtara ? String(batasUtara).trim() : null;
+    }
+    if (batasSelatan !== undefined) {
+      updateData.batasSelatan = batasSelatan ? String(batasSelatan).trim() : null;
+    }
+    if (batasTimur !== undefined) {
+      updateData.batasTimur = batasTimur ? String(batasTimur).trim() : null;
+    }
+    if (batasBarat !== undefined) {
+      updateData.batasBarat = batasBarat ? String(batasBarat).trim() : null;
+    }
+    if (fotoLahan !== undefined) {
+      updateData.fotoLahan = fotoLahan;
+    }
+
+    const updatedLahan = await prisma.lahan.update({
+      where: { id },
+      data: updateData,
+      include: {
+        petani: {
+          include: { poktan: true },
+        },
+      },
+    });
+
+    // Jika pemilik petani dialihkan, rekalkulasi total luas lahan untuk petani lama dan baru
+    if (targetPetaniId !== oldPetaniId) {
+      // 1. Rekalkulasi petani lama
+      const oldRemaining = await prisma.lahan.findMany({ where: { petaniId: oldPetaniId } });
+      const oldTotalLuas = oldRemaining.reduce((sum, l) => sum + l.luasHa, 0);
+      await prisma.petani.update({
+        where: { id: oldPetaniId },
+        data: { totalLuasLahan: Math.round(oldTotalLuas * 100) / 100 },
+      });
+
+      // 2. Rekalkulasi petani baru
+      const newAllLahan = await prisma.lahan.findMany({ where: { petaniId: targetPetaniId } });
+      const newTotalLuas = newAllLahan.reduce((sum, l) => sum + l.luasHa, 0);
+      await prisma.petani.update({
+        where: { id: targetPetaniId },
+        data: { totalLuasLahan: Math.round(newTotalLuas * 100) / 100 },
+      });
+    }
+
+    return NextResponse.json({ success: true, data: updatedLahan });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}
+
 export async function DELETE(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
