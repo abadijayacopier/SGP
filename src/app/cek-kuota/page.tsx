@@ -32,11 +32,24 @@ import QrScannerModal from '@/components/ui/QrScannerModal';
 import QrCodeView from '@/components/ui/QrCodeView';
 import { hitungRekomendasiPupuk, formatRupiah } from '@/lib/calculations';
 import { useAuth } from '@/lib/auth-context';
+import Swal from 'sweetalert2';
+import 'sweetalert2/dist/sweetalert2.min.css';
 
 export default function CekKuotaPage() {
   const { currentUser, isMounted } = useAuth();
-  // Petani yang login dikunci hanya ke datanya sendiri (tidak bisa mencari petani lain)
-  const isPetaniLocked = isMounted && currentUser.role === 'PETANI' && !!currentUser.petaniId;
+
+  // Privasi Petani: Akun Petani dikunci hanya ke data dan kuotanya sendiri
+  const isPetaniLocked = isMounted && currentUser.role === 'PETANI';
+
+  // NIK / ID milik Petani yang sedang login
+  const myFarmerKey =
+    currentUser.nik ||
+    (currentUser.username && /^\d{16}$/.test(currentUser.username) ? currentUser.username : null) ||
+    (currentUser.nip?.replace(/[^0-9]/g, '')?.length === 16
+      ? currentUser.nip.replace(/[^0-9]/g, '')
+      : null) ||
+    currentUser.petaniId ||
+    '3509012304750001';
   const [activeTab, setActiveTab] = useState<'verifikasi' | 'kalkulator'>('verifikasi');
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
@@ -98,7 +111,7 @@ export default function CekKuotaPage() {
 
     if (isPetaniLocked) {
       setSamplePetani([]);
-      handleSearch(currentUser.petaniId as string);
+      handleSearch(myFarmerKey);
       return;
     }
     const loadSamples = async () => {
@@ -117,12 +130,50 @@ export default function CekKuotaPage() {
     };
     loadSamples();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isMounted, isPetaniLocked, currentUser.petaniId]);
+  }, [isMounted, isPetaniLocked, myFarmerKey]);
 
   const handleSearch = async (overrideQuery?: string) => {
-    const target = (overrideQuery !== undefined ? overrideQuery : query).trim();
+    let target = (overrideQuery !== undefined ? overrideQuery : query).trim();
+
+    // Privasi Petani: Akun Petani hanya boleh melihat kuota miliknya sendiri
+    if (isPetaniLocked) {
+      const isSearchingOwn =
+        !target ||
+        target === myFarmerKey ||
+        target === currentUser.petaniId ||
+        target === currentUser.nik ||
+        (currentUser.name && target.toLowerCase() === currentUser.name.toLowerCase());
+
+      if (!isSearchingOwn) {
+        Swal.fire({
+          icon: 'warning',
+          title: 'Akses Kuota Terbatas',
+          html: `
+            <div style="font-size: 13px; text-align: left; color: #334155; line-height: 1.6;">
+              <div style="background-color: #fef3c7; border: 1px solid #fde68a; border-radius: 12px; padding: 12px; margin-bottom: 12px;">
+                <p style="color: #92400e; font-weight: bold; margin: 0;">Pemberitahuan Hak Akses Mandiri</p>
+                <p style="color: #78350f; font-size: 12px; margin: 4px 0 0 0;">
+                  Anda saat ini login sebagai Petani <strong>${currentUser.name}</strong>.
+                </p>
+              </div>
+              <p>Berdasarkan ketentuan privasi data petani penerima pupuk subsidi e-RDKK, Anda <strong>hanya berhak melihat kuota dan dokumen milik Anda sendiri</strong>.</p>
+            </div>
+          `,
+          confirmButtonColor: '#059669',
+          confirmButtonText: 'Tampilkan Kuota Saya',
+          customClass: {
+            popup: 'rounded-3xl shadow-2xl',
+            confirmButton: 'rounded-xl text-xs font-bold px-4 py-2.5',
+          },
+        });
+        target = myFarmerKey;
+      } else if (!target) {
+        target = myFarmerKey;
+      }
+    }
+
     if (!target) {
-      setErrorMsg('Silakan masukkan NIK, Nama Petani, Kode Lahan, atau Nomor Nota.');
+      setErrorMsg('Silakan masukkan 16 Digit NIK KTP Petani terdaftar.');
       return;
     }
 
@@ -132,13 +183,53 @@ export default function CekKuotaPage() {
       if (overrideQuery !== undefined) {
         setQuery(overrideQuery);
       }
-      const res = await fetch(`/api/cek-kuota?q=${encodeURIComponent(target)}`);
+      const roleParam = isPetaniLocked
+        ? `&callerRole=PETANI&callerNik=${encodeURIComponent(myFarmerKey)}`
+        : '';
+      const res = await fetch(`/api/cek-kuota?q=${encodeURIComponent(target)}${roleParam}`);
       const json = await res.json();
       if (json.success) {
         setResultData(json);
       } else {
         setResultData(null);
         setErrorMsg(json.error || 'Data tidak ditemukan.');
+
+        // Tampilkan modal notifikasi modern jika NIK tidak terdaftar
+        Swal.fire({
+          icon: 'warning',
+          title: 'NIK Tidak Terdaftar di e-RDKK',
+          html: `
+            <div style="text-align: left; font-size: 13px; color: #334155; line-height: 1.6;">
+              <div style="background-color: #fef2f2; border: 1px solid #fecaca; border-radius: 14px; padding: 14px; margin-bottom: 14px;">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 4px;">
+                  <span style="font-size: 11px; font-weight: 800; color: #991b1b; text-transform: uppercase; letter-spacing: 0.5px;">Nomor Identitas</span>
+                  <span style="background-color: #fee2e2; color: #991b1b; font-size: 10px; font-weight: bold; padding: 2px 8px; border-radius: 9999px;">Tidak Ditemukan</span>
+                </div>
+                <p style="font-family: monospace; font-size: 16px; font-weight: bold; color: #7f1d1d; margin: 2px 0 6px 0;">${target}</p>
+                <p style="color: #991b1b; font-size: 12px; margin: 0;">Nomor KTP ini belum tercatat pada daftar alokasi kuota pupuk bersubsidi e-RDKK Kecamatan Lembeyan Tahun Anggaran 2026.</p>
+              </div>
+
+              <div style="background-color: #f8fafc; border: 1px solid #e2e8f0; border-radius: 14px; padding: 14px; font-size: 12px;">
+                <p style="font-weight: 800; color: #1e293b; margin: 0 0 6px 0; display: flex; align-items: center; gap: 6px;">
+                  📌 Langkah Verifikasi & Pendaftaran:
+                </p>
+                <ul style="margin: 0; padding-left: 18px; color: #475569;">
+                  <li style="margin-bottom: 4px;">Periksa kembali 16 digit NIK pada e-KTP Anda, pastikan tidak ada kesalahan angka.</li>
+                  <li style="margin-bottom: 4px;">Pastikan Anda telah terdaftar sebagai anggota resmi Kelompok Tani (Poktan) di desa Anda.</li>
+                  <li>Hubungi <strong>Penyuluh Lapangan (BPP Lembeyan)</strong> atau Pengurus Poktan setempat untuk proses pengusulan ke sistem e-RDKK.</li>
+                </ul>
+              </div>
+            </div>
+          `,
+          confirmButtonText: 'Periksa NIK Lain',
+          confirmButtonColor: '#059669',
+          showCloseButton: true,
+          focusConfirm: false,
+          customClass: {
+            popup: 'rounded-3xl shadow-2xl border border-slate-100',
+            confirmButton: 'rounded-xl text-xs font-bold px-5 py-2.5 shadow-sm',
+          },
+        });
       }
     } catch (err: any) {
       setErrorMsg('Gagal menghubungi server: ' + err.message);
@@ -476,12 +567,37 @@ export default function CekKuotaPage() {
       {/* TAB 1: CEK KUOTA MANDIRI & VERIFIKASI DOKUMEN QR */}
       {activeTab === 'verifikasi' && (
         <div className="space-y-6">
-          {/* Kotak Pencarian & Tombol Scan QR (disembunyikan untuk akun petani) */}
+          {/* Kotak Pencarian / Banner Privasi Petani */}
           {isPetaniLocked ? (
-            <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-4 flex items-center gap-3 text-xs sm:text-sm text-emerald-900 font-semibold">
-              <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0" />
-              Anda login sebagai petani <strong>{currentUser.name}</strong>. Halaman ini hanya
-              menampilkan data kuota, Kartu Tani, dan blok sawah milik Anda sendiri.
+            <div className="bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-100/70 border border-emerald-200/90 rounded-3xl p-5 shadow-xs flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-3.5">
+                <div className="w-11 h-11 rounded-2xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm">
+                  <ShieldCheck className="w-6 h-6" />
+                </div>
+                <div>
+                  <div className="flex items-center gap-2">
+                    <span className="font-extrabold text-sm sm:text-base text-emerald-950">
+                      Portal Mandiri Petani e-RDKK
+                    </span>
+                    <span className="bg-emerald-200/80 text-emerald-900 text-[10px] font-extrabold px-2.5 py-0.5 rounded-full border border-emerald-300">
+                      Privasi Dilindungi
+                    </span>
+                  </div>
+                  <p className="text-xs text-emerald-800/90 mt-0.5 leading-relaxed">
+                    Login Aktif: <strong>{currentUser.name}</strong> ({currentUser.nik ? `NIK: ${currentUser.nik}` : currentUser.nip || 'Terdaftar'}).
+                    Sesuai ketentuan kerahasiaan data e-RDKK, portal ini hanya menampilkan alokasi kuota pupuk, jadwal dosis pemupukan, dan sertifikat lahan milik Anda sendiri.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => handleSearch(myFarmerKey)}
+                disabled={loading}
+                className="bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-xs transition shrink-0 flex items-center gap-2 cursor-pointer"
+              >
+                <CheckCircle2 className="w-4 h-4 text-emerald-200" />
+                {loading ? 'Memuat Data...' : 'Segarkan Kuota Saya'}
+              </button>
             </div>
           ) : (
           <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-5 sm:p-6 space-y-4">
@@ -498,7 +614,7 @@ export default function CekKuotaPage() {
                   type="text"
                   value={query}
                   onChange={(e) => setQuery(e.target.value)}
-                  placeholder="Masukkan 16 Digit NIK KTP, Nama Petani, Kode Lahan (LHN-...), atau Nomor Nota (NOTA-...)..."
+                  placeholder="Masukkan 16 Digit NIK KTP Petani Terdaftar e-RDKK (atau Kode Lahan / No. Nota)..."
                   className="w-full pl-12 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-2xl text-xs sm:text-sm font-semibold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
                 />
               </div>
@@ -506,16 +622,16 @@ export default function CekKuotaPage() {
               <button
                 type="submit"
                 disabled={loading}
-                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm px-6 py-3 rounded-2xl shadow-sm transition flex items-center justify-center gap-2 shrink-0"
+                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm px-6 py-3 rounded-2xl shadow-sm transition flex items-center justify-center gap-2 shrink-0 cursor-pointer"
               >
                 <Search className="w-4 h-4" />
-                {loading ? 'Memeriksa...' : 'Cek Data & Kuota'}
+                {loading ? 'Memeriksa NIK...' : 'Cek Kuota NIK'}
               </button>
 
               <button
                 type="button"
                 onClick={() => setQrModalOpen(true)}
-                className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm px-5 py-3 rounded-2xl shadow-sm transition flex items-center justify-center gap-2 shrink-0"
+                className="bg-slate-900 hover:bg-slate-800 text-white font-bold text-xs sm:text-sm px-5 py-3 rounded-2xl shadow-sm transition flex items-center justify-center gap-2 shrink-0 cursor-pointer"
               >
                 <QrCode className="w-4 h-4 text-amber-400" />
                 Scan QR Kartu / Nota
@@ -532,7 +648,7 @@ export default function CekKuotaPage() {
                   key={sp.id}
                   type="button"
                   onClick={() => handleSearch(sp.nik)}
-                  className={`text-xs px-3 py-1 rounded-xl border font-semibold transition ${
+                  className={`text-xs px-3 py-1 rounded-xl border font-semibold transition cursor-pointer ${
                     petani?.id === sp.id
                       ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
                       : 'bg-slate-50 hover:bg-emerald-50 text-slate-700 border-slate-200'
@@ -544,14 +660,14 @@ export default function CekKuotaPage() {
               <button
                 type="button"
                 onClick={() => handleSearch('LHN-2026-001')}
-                className="text-xs px-3 py-1 rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-800 font-mono font-bold transition"
+                className="text-xs px-3 py-1 rounded-xl border border-blue-200 bg-blue-50 hover:bg-blue-100 text-blue-800 font-mono font-bold transition cursor-pointer"
               >
                 Cek Lahan: LHN-2026-001
               </button>
               <button
                 type="button"
                 onClick={() => handleSearch('REG-ERDKK-2026-002')}
-                className="text-xs px-3 py-1 rounded-xl border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-800 font-mono font-bold transition"
+                className="text-xs px-3 py-1 rounded-xl border border-purple-200 bg-purple-50 hover:bg-purple-100 text-purple-800 font-mono font-bold transition cursor-pointer"
               >
                 Cek Berkas: REG-ERDKK-2026-002
               </button>

@@ -66,10 +66,17 @@ export default function RoleDashboardClient({
   const role = activeUser.role;
 
   // ===== Isolasi data sesuai akun yang login =====
-  // PETANI: hanya data petani miliknya sendiri (berdasarkan petaniId hasil login)
-  const myPetaniData = activeUser.petaniId
-    ? petaniSample.find((p) => p.id === activeUser.petaniId)
-    : undefined;
+  // PETANI: hanya data petani miliknya sendiri (berdasarkan petaniId / NIK / Nama hasil login)
+  const myPetaniData =
+    (activeUser.petaniId ? petaniSample.find((p) => p.id === activeUser.petaniId) : undefined) ||
+    (activeUser.role === 'PETANI'
+      ? petaniSample.find(
+          (p) =>
+            p.nama.toLowerCase() === activeUser.name.toLowerCase() ||
+            (activeUser.nik && p.nik === activeUser.nik) ||
+            p.nik === '3509012304750001'
+        )
+      : undefined);
   const myAlokasi = myPetaniData?.alokasiPupuk?.[0];
 
   // POKTAN: hanya anggota & usulan dari Poktan miliknya

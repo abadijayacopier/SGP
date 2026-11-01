@@ -17,6 +17,7 @@ export interface UserSession {
   phone?: string | null;
   email?: string | null;
   nip?: string | null;
+  nik?: string | null;
   signatureUrl?: string | null;
   stampUrl?: string | null;
   /** Cakupan data: ID petani milik akun (khusus PETANI) */
@@ -318,6 +319,9 @@ export const DEMO_USERS: Record<UserRole, UserSession> = {
     wilayah: 'Poktan Tani Makmur I - Kediren, Lembeyan',
     badgeColor: 'bg-green-100 text-green-800 border-green-300',
     avatarText: 'PT',
+    nik: '3509012304750001',
+    nip: 'NIK: 3509012304750001',
+    petaniId: 'cmvxfxr000009t0nc7z587tuy',
   },
 };
 

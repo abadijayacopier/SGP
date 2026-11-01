@@ -5,9 +5,17 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const rawQuery = (searchParams.get('q') || '').trim();
+    const callerRole = (searchParams.get('callerRole') || '').trim().toUpperCase();
+    const callerNik = (searchParams.get('callerNik') || '').trim();
 
     if (!rawQuery) {
-      // Kembalikan daftar ringkas petani untuk pilihan cepat (quick sample)
+      if (callerRole === 'PETANI') {
+        return NextResponse.json(
+          { success: false, error: 'Parameter NIK petani wajib diisi.' },
+          { status: 400 }
+        );
+      }
+      // Kembalikan daftar ringkas petani untuk pilihan cepat (quick sample) Petugas
       const samplePetani = await prisma.petani.findMany({
         take: 10,
         include: {
@@ -149,6 +157,19 @@ export async function GET(request: Request) {
     });
 
     if (petani) {
+      // Privasi Ketat Akun Petani: Petani hanya boleh melihat jatah kuotanya sendiri
+      if (callerRole === 'PETANI' && callerNik && petani.nik !== callerNik) {
+        return NextResponse.json(
+          {
+            success: false,
+            privacyBlocked: true,
+            error:
+              'Akses Ditolak: Demi privasi dan kerahasiaan data e-RDKK, akun Petani hanya dapat memeriksa data kuota miliknya sendiri.',
+          },
+          { status: 403 }
+        );
+      }
+
       return NextResponse.json({
         success: true,
         type: 'PETANI',
@@ -167,7 +188,9 @@ export async function GET(request: Request) {
     return NextResponse.json(
       {
         success: false,
-        error: `Data dengan kata kunci / nomor "${rawQuery}" tidak ditemukan dalam database Kecamatan Lembeyan.`,
+        notFound: true,
+        query: rawQuery,
+        error: `Data dengan NIK / kata kunci "${rawQuery}" tidak terdaftar dalam database e-RDKK Kecamatan Lembeyan.`,
       },
       { status: 404 }
     );

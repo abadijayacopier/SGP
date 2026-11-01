@@ -4,7 +4,7 @@ import React from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useAuth, ROLE_PERMISSIONS, UserRole } from '@/lib/auth-context';
-import { ShieldAlert, ArrowLeft, KeyRound, CheckCircle2, Lock } from 'lucide-react';
+import { ShieldAlert, ArrowLeft, CheckCircle2, Lock } from 'lucide-react';
 
 const PUBLIC_OR_PRINT_PREFIXES = [
   '/login',
@@ -40,7 +40,7 @@ const PATH_LABELS: Record<string, string> = {
 
 export default function RoleAccessGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { currentUser, permissions, isMounted, setRole } = useAuth();
+  const { currentUser, permissions, isMounted } = useAuth();
 
   // Selama initial hydration belum mount, render children agar identik dengan SSR
   if (!isMounted) {
@@ -102,24 +102,26 @@ export default function RoleAccessGuard({ children }: { children: React.ReactNod
             </div>
           </div>
 
-          {/* Opsi Beralih Jabatan Cepat untuk Membuka Halaman Ini */}
-          <div className="bg-amber-50/70 rounded-2xl p-4 border border-amber-200/80 text-xs space-y-2">
-            <div className="font-bold text-amber-900 flex items-center justify-center gap-1.5">
-              <Lock className="w-3.5 h-3.5 text-amber-700" />
+          {/* Informasi Wewenang yang Memiliki Izin Akses (Static Info - Tidak Dapat Diklik) */}
+          <div className="bg-amber-50/80 rounded-2xl p-4 border border-amber-200/90 text-xs space-y-2.5">
+            <div className="font-bold text-amber-950 flex items-center justify-center gap-1.5">
+              <Lock className="w-4 h-4 text-amber-700" />
               Halaman &ldquo;{PATH_LABELS[pathname] || pathname}&rdquo; hanya dapat diakses oleh:
             </div>
             <div className="flex flex-wrap items-center justify-center gap-2 pt-1">
               {authorizedRoles.map((r) => (
-                <button
+                <span
                   key={r}
-                  onClick={() => setRole(r)}
-                  className="inline-flex items-center gap-1.5 bg-slate-900 hover:bg-emerald-700 text-white font-bold px-3.5 py-2 rounded-xl text-xs transition shadow-sm"
+                  className="inline-flex items-center gap-1.5 bg-white text-slate-800 font-bold px-3.5 py-1.5 rounded-xl text-xs border border-amber-300 shadow-2xs select-none"
                 >
-                  <KeyRound className="w-3.5 h-3.5 text-amber-300" />
-                  Beralih ke {ROLE_PERMISSIONS[r].label}
-                </button>
+                  <Lock className="w-3.5 h-3.5 text-amber-600" />
+                  {ROLE_PERMISSIONS[r].label}
+                </span>
               ))}
             </div>
+            <p className="text-[11px] text-amber-800/80 text-center max-w-md mx-auto">
+              Silakan hubungi Administrator Kecamatan apabila Anda membutuhkan penyesuaian hak akses untuk akun Anda.
+            </p>
           </div>
 
           <div className="pt-2">

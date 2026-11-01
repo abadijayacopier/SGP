@@ -119,11 +119,13 @@ export async function POST(req: Request) {
       let petaniId: string | null = null;
       let poktanId: string | null = userRecord.poktanId || null;
       let wilayah = userRecord.wilayah || 'Kecamatan Lembeyan';
+      let userNik: string | null = null;
 
       if (userRecord.role === 'PETANI') {
         const linkedPetani = await prisma.petani.findFirst({
           where: {
             OR: [
+              { nik: userRecord.username },
               ...(userRecord.phone ? [{ telepon: userRecord.phone }] : []),
               { nama: userRecord.name },
             ],
@@ -133,6 +135,7 @@ export async function POST(req: Request) {
         if (linkedPetani) {
           petaniId = linkedPetani.id;
           poktanId = linkedPetani.poktanId;
+          userNik = linkedPetani.nik;
           wilayah = `${linkedPetani.poktan?.nama || 'Poktan'} - Desa ${linkedPetani.desa}`;
         }
       }
@@ -162,6 +165,12 @@ export async function POST(req: Request) {
           phone: userRecord.phone || null,
           email: userRecord.email || null,
           nip: userRecord.nip || getDefaultNipForRole(userRecord.role, userRecord.username),
+          nik:
+            userNik ||
+            (cleanInput.length === 16 ? cleanInput : null) ||
+            (userRecord.nip?.replace(/[^0-9]/g, '')?.length === 16
+              ? userRecord.nip.replace(/[^0-9]/g, '')
+              : null),
           signatureUrl:
             userRecord.signatureUrl || generateAutoSignatureSvg(userRecord.name),
           stampUrl:
@@ -194,6 +203,7 @@ export async function POST(req: Request) {
           badgeColor: meta.badgeColor,
           avatarText: 'PT',
           nip: `NIK: ${petaniRecord.nik}`,
+          nik: petaniRecord.nik,
           signatureUrl: generateAutoSignatureSvg(petaniRecord.nama),
           stampUrl: generateOfficialStampSvg('PETANI', petaniRecord.poktan?.nama),
           petaniId: petaniRecord.id,
