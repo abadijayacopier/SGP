@@ -710,25 +710,6 @@ export default function Navbar() {
                     </div>
                   )}
 
-                  {/* Daftar Menu Khusus Jabatan Ini */}
-                  <div className="px-4 py-2.5 border-b border-slate-100 bg-slate-50/60">
-                    <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-                      Hak Akses Modul Anda ({allLeafNavLinks.length} Halaman):
-                    </p>
-                    <div className="flex flex-wrap gap-1">
-                      {allLeafNavLinks.map((m) => (
-                        <Link
-                          key={m.href}
-                          href={m.href}
-                          onClick={() => setDropdownOpen(false)}
-                          className="text-[10px] font-bold bg-white hover:bg-emerald-600 text-emerald-800 hover:text-white px-2 py-0.5 rounded border border-slate-200 transition"
-                        >
-                          {m.label}
-                        </Link>
-                      ))}
-                    </div>
-                  </div>
-
                   <div className="pt-1.5 px-2 flex flex-col gap-1">
                     {permissions.canManageUsers && (
                       <Link
