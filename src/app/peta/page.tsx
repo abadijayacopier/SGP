@@ -730,28 +730,18 @@ export default function PetaPage() {
 
           <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 w-full lg:w-auto min-w-0">
             <span className="text-xs font-semibold text-slate-500 shrink-0">
-              Pusatkan Wilayah Desa (Kec. Lembeyan):
+              Filter Desa:
             </span>
             <div className="relative w-full sm:w-auto min-w-0 flex-1">
               <select
                 value={desaFilter}
                 onChange={(e) => {
-                  const val = e.target.value;
-                  setDesaFilter(val);
+                  setDesaFilter(e.target.value);
                   setSelectedLahanId(null);
-                  const coord = DESA_COORDINATES_LEMBEYAN[val] || DESA_COORDINATES_LEMBEYAN.SEMUA;
-                  setFlyToTarget({
-                    lat: coord.lat,
-                    lng: coord.lng,
-                    zoom: coord.zoom,
-                    label: coord.label,
-                    keterangan: coord.keterangan,
-                    timestamp: Date.now(),
-                  });
                 }}
                 className="w-full sm:w-auto max-w-full min-w-0 px-3 py-2 sm:py-1.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 bg-slate-50 focus:ring-2 focus:ring-emerald-500 cursor-pointer truncate"
               >
-                <option value="SEMUA">Seluruh Desa Se-Kecamatan Lembeyan</option>
+                <option value="SEMUA">Semua Desa (Kecamatan Lembeyan)</option>
                 {DESA_LEMBEYAN_LIST.map((d) => (
                   <option key={d} value={d}>
                     Desa / Kel. {d}
@@ -760,68 +750,6 @@ export default function PetaPage() {
               </select>
             </div>
           </div>
-        </div>
-
-        {/* Bar Navigasi Cepat Pusatkan Lokasi 10 Desa Kecamatan Lembeyan */}
-        <div className="flex items-center gap-1.5 pt-2 border-t border-slate-100 overflow-x-auto pb-1 scrollbar-none max-w-full">
-          <span className="text-[11px] font-bold text-emerald-800 flex items-center gap-1 shrink-0 mr-1">
-            <Compass className="w-3.5 h-3.5 text-emerald-600" />
-            Pusatkan Desa:
-          </span>
-          <button
-            type="button"
-            onClick={() => {
-              setDesaFilter('SEMUA');
-              setSelectedLahanId(null);
-              const c = DESA_COORDINATES_LEMBEYAN.SEMUA;
-              setFlyToTarget({
-                lat: c.lat,
-                lng: c.lng,
-                zoom: c.zoom,
-                label: c.label,
-                keterangan: c.keterangan,
-                timestamp: Date.now(),
-              });
-            }}
-            className={`px-2.5 py-1 rounded-lg text-[11px] font-bold transition shrink-0 cursor-pointer border ${
-              desaFilter === 'SEMUA'
-                ? 'bg-slate-900 text-white border-slate-900'
-                : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-emerald-50 hover:text-emerald-800'
-            }`}
-          >
-            Pusat Kec. Lembeyan
-          </button>
-          {DESA_LEMBEYAN_LIST.map((d) => {
-            const active = desaFilter === d;
-            return (
-              <button
-                key={d}
-                type="button"
-                onClick={() => {
-                  setDesaFilter(d);
-                  setSelectedLahanId(null);
-                  const c = DESA_COORDINATES_LEMBEYAN[d];
-                  if (c) {
-                    setFlyToTarget({
-                      lat: c.lat,
-                      lng: c.lng,
-                      zoom: c.zoom,
-                      label: c.label,
-                      keterangan: c.keterangan,
-                      timestamp: Date.now(),
-                    });
-                  }
-                }}
-                className={`px-2.5 py-1 rounded-lg text-[11px] font-semibold transition shrink-0 cursor-pointer border ${
-                  active
-                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
-                    : 'bg-white text-slate-600 border-slate-200 hover:bg-emerald-50 hover:text-emerald-800'
-                }`}
-              >
-                {d}
-              </button>
-            );
-          })}
         </div>
       </div>
 
