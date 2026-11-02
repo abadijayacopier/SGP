@@ -49,7 +49,7 @@ export default function CetakModelF6Page() {
 
   // Filters
   const [selectedKios, setSelectedKios] = useState<string>(currentUser?.kiosName || '');
-  const [selectedBulan, setSelectedBulan] = useState<number>(10); // Oktober
+  const [selectedBulan, setSelectedBulan] = useState<number>(1); // Januari (Default Awal Tahun Anggaran MT-1)
   const [selectedTahun, setSelectedTahun] = useState<number>(2026);
 
   const fetchF6Data = async () => {
@@ -82,7 +82,7 @@ export default function CetakModelF6Page() {
           const names = json.data.map((k: any) => k.namaKios || k.name).filter(Boolean);
           const uniqueNames = Array.from(new Set(names)) as string[];
           setKiosList(uniqueNames);
-          if (!selectedKios && uniqueNames.length > 0) {
+          if (uniqueNames.length > 0 && (!selectedKios || !uniqueNames.includes(selectedKios))) {
             setSelectedKios(uniqueNames[0]);
           }
         }
@@ -235,7 +235,7 @@ export default function CetakModelF6Page() {
                 </option>
               ))}
               {kiosList.length === 0 && (
-                <option value="UD. Tani Subur Barokah">UD. Tani Subur Barokah</option>
+                <option value="UD. BUMI SUBUR">UD. BUMI SUBUR</option>
               )}
             </select>
           </div>
