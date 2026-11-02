@@ -202,57 +202,8 @@ export default function RoleDashboardClient({
           </div>
         </div>
       </div>
-      {/* Banner Informasi Pemisahan Hak Akses Aktif */}
-      <div className="bg-white rounded-2xl border border-slate-200/90 p-4 sm:p-5 shadow-2xs space-y-3">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-start sm:items-center gap-3 min-w-0 flex-1">
-            <div className="w-10 h-10 rounded-xl bg-emerald-950 text-amber-300 flex items-center justify-center shrink-0 font-black text-xs">
-              <Lock className="w-5 h-5" />
-            </div>
-            <div className="min-w-0 flex-1">
-              <div className="flex flex-wrap items-center gap-2">
-                <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-900 px-2.5 py-0.5 rounded-full border border-emerald-300">
-                  KELOMPOK HAK AKSES: {activePermissions.groupName}
-                </span>
-                <span className="text-xs font-bold text-slate-800">
-                  Login Aktif: {activeUser.name} ({activeUser.roleLabel})
-                </span>
-              </div>
-              <p className="text-xs text-slate-500 mt-1 leading-relaxed">
-                {activePermissions.description}
-              </p>
-            </div>
-          </div>
 
-          <div className="flex items-center gap-2 shrink-0">
-            <Link
-              href="/profil"
-              className="inline-flex items-center gap-1.5 text-xs font-black bg-emerald-700 hover:bg-emerald-800 text-white px-3.5 py-2 rounded-xl border border-emerald-600 transition shadow-2xs whitespace-nowrap"
-            >
-              <UserCircle className="w-4 h-4 text-amber-300" />
-              Profil & Ganti Sandi
-            </Link>
-          </div>
-        </div>
-
-        {/* Baris Pintasan Modul Sesuai Hak Akses */}
-        <div className="pt-2.5 border-t border-slate-100 flex flex-wrap items-center gap-1.5">
-          <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400 mr-1">
-            Modul Diizinkan ({activePermissions.menuItems.length}):
-          </span>
-          {activePermissions.menuItems.map((m) => (
-            <Link
-              key={m.href}
-              href={m.href}
-              className="text-[11px] font-bold bg-slate-100 hover:bg-emerald-600 hover:text-white text-slate-700 px-3 py-1 rounded-lg border border-slate-200 transition whitespace-nowrap"
-            >
-              {m.label}
-            </Link>
-          ))}
-        </div>
-      </div>
-
-      {/* Widget Cuaca & Rekomendasi Pemupukan Presisi BMKG Lembeyan */}
+      {/* Widget Cuaca Standar Google Berdasarkan Deteksi GPS Perangkat */}
       <WeatherFertilizerCard />
 
       {/* =====================================================================
