@@ -14,6 +14,7 @@ import {
   Printer,
   ChevronLeft,
   ChevronRight,
+  ChevronDown,
   X,
   Compass,
   Layers,
@@ -765,198 +766,135 @@ export default function PetaniPage() {
               </div>
             </div>
 
-            {/* Tingkat 1: Wilayah Desa */}
-            <div className="space-y-1.5">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[11px] font-extrabold text-slate-600 flex items-center gap-1.5 uppercase tracking-wider">
-                  <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                  Tingkat 1 &bull; Wilayah Desa ({availableDesaList.length} Desa):
-                </span>
-                {filterDesa !== 'SEMUA' && (
+            {/* Filter Bertingkat: Cascading Dropdown Desa & Kelompok Tani */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-3 pt-1">
+              {/* Dropdown Tingkat 1: Wilayah Desa */}
+              <div className="lg:col-span-5 space-y-1.5">
+                <label className="text-[11px] font-extrabold text-slate-700 flex items-center justify-between uppercase tracking-wider">
+                  <span className="flex items-center gap-1.5">
+                    <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                    Tingkat 1 &bull; Wilayah Desa:
+                  </span>
+                  <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200/60 normal-case">
+                    {availableDesaList.length} Desa
+                  </span>
+                </label>
+                <div className="relative">
+                  <select
+                    value={filterDesa}
+                    onChange={(e) => {
+                      setFilterDesa(e.target.value);
+                      setFilterPoktan('SEMUA');
+                      setCurrentPage(1);
+                    }}
+                    className="w-full bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200 text-slate-800 rounded-xl pl-3.5 pr-9 py-2.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500 transition shadow-2xs appearance-none cursor-pointer"
+                  >
+                    <option value="SEMUA">Semua Wilayah Desa (Kec. Lembeyan &bull; {poktanList.length} Poktan)</option>
+                    {availableDesaList.map((desaName) => {
+                      const countPok = poktanCountByDesa[desaName.toLowerCase()] || 0;
+                      return (
+                        <option key={desaName} value={desaName}>
+                          Desa {desaName} ({countPok} Kelompok Tani)
+                        </option>
+                      );
+                    })}
+                  </select>
+                  <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Dropdown Tingkat 2: Kelompok Tani (Cascading berdasarkan Desa) */}
+              <div className="lg:col-span-5 space-y-1.5">
+                <label className="text-[11px] font-extrabold text-slate-700 flex items-center justify-between uppercase tracking-wider">
+                  <span className="flex items-center gap-1.5">
+                    <Users className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                    Tingkat 2 &bull; Kelompok Tani:
+                  </span>
+                  <span className="text-[10px] text-blue-700 font-bold bg-blue-50 px-2 py-0.5 rounded-md border border-blue-200/60 normal-case">
+                    {filteredPoktanOptions.length} Poktan
+                  </span>
+                </label>
+                <div className="relative">
+                  <select
+                    value={filterPoktan}
+                    onChange={(e) => {
+                      setFilterPoktan(e.target.value);
+                      setCurrentPage(1);
+                    }}
+                    className={`w-full border rounded-xl pl-3.5 pr-9 py-2.5 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-blue-500 transition shadow-2xs appearance-none cursor-pointer ${
+                      filterPoktan !== 'SEMUA'
+                        ? 'bg-blue-50/80 border-blue-300 text-blue-900 ring-1 ring-blue-500/20'
+                        : 'bg-slate-50 hover:bg-slate-100/80 focus:bg-white border-slate-200 text-slate-800'
+                    }`}
+                  >
+                    <option value="SEMUA">
+                      {filterDesa !== 'SEMUA'
+                        ? `Semua Kelompok Tani di Desa ${filterDesa} (${filteredPoktanOptions.length} Poktan)`
+                        : `Semua Kelompok Tani (${poktanList.length} Poktan Se-Kecamatan)`}
+                    </option>
+                    {filteredPoktanOptions.map((pok) => {
+                      const countAnggota = pok.anggota?.length || 0;
+                      return (
+                        <option key={pok.id} value={pok.id}>
+                          {pok.nama} {filterDesa === 'SEMUA' ? `(Desa ${pok.desa})` : ''} {countAnggota > 0 ? `• ${countAnggota} Petani` : ''}
+                        </option>
+                      );
+                    })}
+                  </select>
+                  <ChevronDown className="w-4 h-4 text-slate-400 absolute right-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+                </div>
+              </div>
+
+              {/* Tombol Aksi Reset / Status Filter */}
+              <div className="lg:col-span-2 flex items-end">
+                {filterDesa !== 'SEMUA' || filterPoktan !== 'SEMUA' ? (
                   <button
                     type="button"
                     onClick={() => {
                       setFilterDesa('SEMUA');
                       setFilterPoktan('SEMUA');
+                      setCurrentPage(1);
                     }}
-                    className="text-[11px] font-bold text-rose-600 hover:text-rose-700 hover:underline cursor-pointer flex items-center gap-1"
+                    className="w-full bg-rose-50 hover:bg-rose-100 border border-rose-200 text-rose-700 font-bold py-2.5 px-3 rounded-xl text-xs transition flex items-center justify-center gap-1.5 cursor-pointer shadow-2xs active:scale-95"
+                    title="Reset semua pilihan desa dan kelompok tani"
                   >
-                    <X className="w-3 h-3" /> Reset ke Semua Desa
+                    <X className="w-3.5 h-3.5 shrink-0" />
+                    <span>Reset Filter</span>
                   </button>
-                )}
-              </div>
-
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-                {/* Tombol Semua Desa */}
-                <button
-                  type="button"
-                  onClick={() => {
-                    setFilterDesa('SEMUA');
-                    setFilterPoktan('SEMUA');
-                  }}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer ${
-                    filterDesa === 'SEMUA'
-                      ? 'bg-emerald-600 text-white shadow-xs ring-2 ring-emerald-600/30'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200/80 border border-slate-200/60'
-                  }`}
-                >
-                  <span>Semua Desa (Kec. Lembeyan)</span>
-                  <span
-                    className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                      filterDesa === 'SEMUA'
-                        ? 'bg-emerald-700 text-emerald-100'
-                        : 'bg-slate-200 text-slate-600'
-                    }`}
-                  >
-                    {poktanList.length} Poktan
-                  </span>
-                </button>
-
-                {/* Pill Tombol Tiap Desa */}
-                {availableDesaList.map((desaName) => {
-                  const countPoktan = poktanCountByDesa[desaName.toLowerCase()] || 0;
-                  const isSelected = filterDesa.toLowerCase() === desaName.toLowerCase();
-                  return (
-                    <button
-                      key={desaName}
-                      type="button"
-                      onClick={() => {
-                        setFilterDesa(desaName);
-                        setFilterPoktan('SEMUA');
-                      }}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer ${
-                        isSelected
-                          ? 'bg-emerald-600 text-white shadow-xs ring-2 ring-emerald-600/30'
-                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200/80 border border-slate-200/60'
-                      }`}
-                    >
-                      <span>Desa {desaName}</span>
-                      {countPoktan > 0 ? (
-                        <span
-                          className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                            isSelected
-                              ? 'bg-emerald-700 text-emerald-100'
-                              : 'bg-emerald-100 text-emerald-800'
-                          }`}
-                        >
-                          {countPoktan}
-                        </span>
-                      ) : (
-                        <span
-                          className={`text-[9px] px-1.5 py-0.2 rounded-full font-medium ${
-                            isSelected ? 'bg-emerald-800/50 text-white' : 'bg-slate-200/70 text-slate-400'
-                          }`}
-                        >
-                          0
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {/* Tingkat 2: Kelompok Tani (Sesuai Desa yang Dipilih) */}
-            <div className="space-y-1.5 pt-2.5 border-t border-slate-100">
-              <div className="flex items-center justify-between gap-2">
-                <span className="text-[11px] font-extrabold text-slate-600 flex items-center gap-1.5 uppercase tracking-wider">
-                  <Users className="w-3.5 h-3.5 text-blue-600 shrink-0" />
-                  Tingkat 2 &bull; Kelompok Tani {filterDesa !== 'SEMUA' ? `(Desa ${filterDesa})` : '(Seluruh Desa)'}:
-                </span>
-                {filterPoktan !== 'SEMUA' && (
-                  <button
-                    type="button"
-                    onClick={() => setFilterPoktan('SEMUA')}
-                    className="text-[11px] font-bold text-rose-600 hover:text-rose-700 hover:underline cursor-pointer flex items-center gap-1"
-                  >
-                    <X className="w-3 h-3" /> Tampilkan Semua Poktan
-                  </button>
-                )}
-              </div>
-
-              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 no-scrollbar">
-                {/* Tombol Semua Poktan di bawah desa ini */}
-                <button
-                  type="button"
-                  onClick={() => setFilterPoktan('SEMUA')}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer ${
-                    filterPoktan === 'SEMUA'
-                      ? 'bg-blue-600 text-white shadow-xs ring-2 ring-blue-500/30'
-                      : 'bg-slate-100 text-slate-700 hover:bg-slate-200/80 border border-slate-200/60'
-                  }`}
-                >
-                  <span>
-                    {filterDesa !== 'SEMUA' ? `Semua Poktan di ${filterDesa}` : 'Semua Poktan (Kecamatan)'}
-                  </span>
-                  <span
-                    className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                      filterPoktan === 'SEMUA'
-                        ? 'bg-blue-700 text-blue-100'
-                        : 'bg-slate-200 text-slate-600'
-                    }`}
-                  >
-                    {filteredPoktanOptions.length}
-                  </span>
-                </button>
-
-                {/* Pill Tombol Tiap Poktan */}
-                {filteredPoktanOptions.map((pok) => {
-                  const isSelected = filterPoktan === pok.id;
-                  const countAnggota = pok.anggota?.length || 0;
-                  return (
-                    <button
-                      key={pok.id}
-                      type="button"
-                      onClick={() => setFilterPoktan(pok.id)}
-                      className={`px-3 py-1.5 rounded-xl text-xs font-bold transition whitespace-nowrap shrink-0 flex items-center gap-1.5 cursor-pointer ${
-                        isSelected
-                          ? 'bg-blue-600 text-white shadow-xs ring-2 ring-blue-500/30'
-                          : 'bg-slate-100 text-slate-700 hover:bg-slate-200/80 border border-slate-200/60'
-                      }`}
-                    >
-                      <span>{pok.nama}</span>
-                      {countAnggota > 0 && (
-                        <span
-                          className={`text-[10px] px-1.5 py-0.2 rounded-full font-bold ${
-                            isSelected
-                              ? 'bg-blue-700 text-blue-100'
-                              : 'bg-blue-100 text-blue-800'
-                          }`}
-                        >
-                          {countAnggota} org
-                        </span>
-                      )}
-                    </button>
-                  );
-                })}
-
-                {filteredPoktanOptions.length === 0 && (
-                  <div className="flex items-center gap-2 text-xs text-slate-500 italic py-1 px-2.5 bg-amber-50 border border-amber-200/70 rounded-xl">
-                    <span>Belum ada Kelompok Tani terdaftar di Desa {filterDesa}.</span>
-                    {(permissions.canDigitasiGis || currentUser.role === 'ADMIN_DINAS') && (
-                      <button
-                        type="button"
-                        onClick={() => {
-                          setEditingPoktanId(null);
-                          setPoktanFormData({
-                            nama: '',
-                            ketua: '',
-                            kontak: '',
-                            desa: filterDesa,
-                            kecamatan: 'Lembeyan',
-                            kabupaten: 'Magetan',
-                          });
-                          setPoktanModalOpen(true);
-                        }}
-                        className="not-italic text-emerald-700 font-bold hover:underline cursor-pointer"
-                      >
-                        + Tambah Poktan di Desa {filterDesa}
-                      </button>
-                    )}
+                ) : (
+                  <div className="w-full py-2.5 px-3 bg-slate-50 border border-slate-200/60 rounded-xl flex items-center justify-center text-[11px] font-bold text-slate-400">
+                    Semua Wilayah
                   </div>
                 )}
               </div>
             </div>
+
+            {/* Pesan Khusus jika Desa belum punya Poktan */}
+            {filterDesa !== 'SEMUA' && filteredPoktanOptions.length === 0 && (
+              <div className="flex flex-wrap items-center justify-between gap-2 text-xs text-amber-800 py-2 px-3 bg-amber-50 border border-amber-200/70 rounded-xl">
+                <span>Belum ada Kelompok Tani terdaftar di <strong>Desa {filterDesa}</strong>.</span>
+                {(permissions.canDigitasiGis || currentUser.role === 'ADMIN_DINAS') && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingPoktanId(null);
+                      setPoktanFormData({
+                        nama: '',
+                        ketua: '',
+                        kontak: '',
+                        desa: filterDesa,
+                        kecamatan: 'Lembeyan',
+                        kabupaten: 'Magetan',
+                      });
+                      setPoktanModalOpen(true);
+                    }}
+                    className="text-emerald-700 font-bold hover:underline cursor-pointer"
+                  >
+                    + Daftarkan Poktan di Desa {filterDesa}
+                  </button>
+                )}
+              </div>
+            )}
 
             {/* Breadcrumb Ringkasan Filter Aktif */}
             {(filterDesa !== 'SEMUA' || filterPoktan !== 'SEMUA') && (

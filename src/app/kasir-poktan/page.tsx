@@ -601,35 +601,35 @@ export default function KasirPoktanPage() {
             </div>
 
             {/* TAB NAVIGATION BUTTONS */}
-            <div className="flex bg-emerald-950/70 p-1.5 rounded-2xl border border-emerald-700/50 shadow-inner">
+            <div className="w-full sm:w-auto overflow-x-auto no-scrollbar flex bg-emerald-950/70 p-1.5 rounded-2xl border border-emerald-700/50 shadow-inner">
               <button
                 type="button"
                 onClick={() => setActiveTab('KASIR')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
                   activeTab === 'KASIR' ? 'bg-emerald-500 text-white shadow-md' : 'text-emerald-200 hover:text-white'
                 }`}
               >
-                <ShoppingCart className="w-3.5 h-3.5" />
+                <ShoppingCart className="w-3.5 h-3.5 shrink-0" />
                 Kasir Penebusan
               </button>
               <button
                 type="button"
                 onClick={() => setActiveTab('STOK_HARGA')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
                   activeTab === 'STOK_HARGA' ? 'bg-emerald-500 text-white shadow-md' : 'text-emerald-200 hover:text-white'
                 }`}
               >
-                <Scale className="w-3.5 h-3.5" />
+                <Scale className="w-3.5 h-3.5 shrink-0" />
                 Kesepakatan Harga & Stok
               </button>
               <button
                 type="button"
                 onClick={() => setActiveTab('RIWAYAT')}
-                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer whitespace-nowrap shrink-0 ${
                   activeTab === 'RIWAYAT' ? 'bg-emerald-500 text-white shadow-md' : 'text-emerald-200 hover:text-white'
                 }`}
               >
-                <History className="w-3.5 h-3.5" />
+                <History className="w-3.5 h-3.5 shrink-0" />
                 Riwayat ({riwayatTrx.length})
               </button>
             </div>
@@ -639,103 +639,124 @@ export default function KasirPoktanPage() {
         {/* INDIKATOR STOK GUDANG POKTAN TERINTEGRASI */}
         <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mt-6 pt-6 border-t border-emerald-700/50 relative z-10">
           {/* UREA CARD */}
-          <div className="bg-emerald-950/40 border border-emerald-700/40 p-4 rounded-2xl flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] text-emerald-300 font-bold uppercase tracking-wider">Stok Gudang Urea</span>
-                <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">
-                  Rp {hargaPupuk.ureaPerSak?.toLocaleString('id-ID')}/Sak
+          <div className="bg-emerald-950/50 border border-emerald-700/50 p-4 rounded-2xl flex flex-col justify-between gap-3 shadow-inner hover:border-emerald-500/60 transition">
+            {/* Header: Badge Pupuk + Harga Sak */}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-emerald-500/25 text-emerald-300 border border-emerald-400/30">
+                  UREA
                 </span>
+                <span className="text-xs font-bold text-slate-100 truncate">Stok Gudang</span>
               </div>
-              <strong className="text-xl font-black text-white mt-1 block">
-                {stokPoktan.urea?.sisaKg?.toLocaleString('id-ID') || 0} <span className="text-xs font-normal text-emerald-300">Kg</span>
-              </strong>
-              <div className="flex items-center gap-2 text-[10px] text-emerald-300/80 mt-1">
-                <span>≈ {stokPoktan.urea?.sisaSak || 0} Sak (@ 50 Kg)</span>
-                <span>&bull;</span>
-                <span>@ Rp {hargaPupuk.ureaPerKg?.toLocaleString('id-ID')}/Kg</span>
-              </div>
+              <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-emerald-400/15 text-emerald-300 border border-emerald-400/30 whitespace-nowrap shrink-0 shadow-2xs">
+                Rp {hargaPupuk.ureaPerSak?.toLocaleString('id-ID')}/Sak
+              </span>
             </div>
-            <div className="w-11 h-11 rounded-2xl bg-emerald-500/20 border border-emerald-400/30 text-emerald-300 flex items-center justify-center font-black text-xs">
-              UREA
+
+            {/* Konten Stok */}
+            <div>
+              <div className="flex items-baseline gap-1.5">
+                <strong className="text-2xl font-black text-white tracking-tight">
+                  {stokPoktan.urea?.sisaKg?.toLocaleString('id-ID') || 0}
+                </strong>
+                <span className="text-xs font-bold text-emerald-300">Kg</span>
+              </div>
+              <div className="flex items-center justify-between text-[11px] text-emerald-200/80 mt-1.5 pt-2 border-t border-emerald-800/50">
+                <span>≈ {stokPoktan.urea?.sisaSak || 0} Sak (@ 50 Kg)</span>
+                <span className="font-semibold text-emerald-300">@ Rp {hargaPupuk.ureaPerKg?.toLocaleString('id-ID')}/Kg</span>
+              </div>
             </div>
           </div>
 
           {/* NPK CARD */}
-          <div className="bg-emerald-950/40 border border-emerald-700/40 p-4 rounded-2xl flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] text-blue-300 font-bold uppercase tracking-wider">Stok Gudang NPK Phonska</span>
-                <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-blue-500/20 text-blue-300 border border-blue-400/30">
-                  Rp {hargaPupuk.npkPerSak?.toLocaleString('id-ID')}/Sak
+          <div className="bg-emerald-950/50 border border-emerald-700/50 p-4 rounded-2xl flex flex-col justify-between gap-3 shadow-inner hover:border-blue-500/60 transition">
+            {/* Header: Badge Pupuk + Harga Sak */}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-blue-500/25 text-blue-300 border border-blue-400/30">
+                  NPK
                 </span>
+                <span className="text-xs font-bold text-slate-100 truncate">Stok Gudang</span>
               </div>
-              <strong className="text-xl font-black text-white mt-1 block">
-                {stokPoktan.npk?.sisaKg?.toLocaleString('id-ID') || 0} <span className="text-xs font-normal text-blue-300">Kg</span>
-              </strong>
-              <div className="flex items-center gap-2 text-[10px] text-blue-300/80 mt-1">
-                <span>≈ {stokPoktan.npk?.sisaSak || 0} Sak (@ 50 Kg)</span>
-                <span>&bull;</span>
-                <span>@ Rp {hargaPupuk.npkPerKg?.toLocaleString('id-ID')}/Kg</span>
-              </div>
+              <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-blue-400/15 text-blue-300 border border-blue-400/30 whitespace-nowrap shrink-0 shadow-2xs">
+                Rp {hargaPupuk.npkPerSak?.toLocaleString('id-ID')}/Sak
+              </span>
             </div>
-            <div className="w-11 h-11 rounded-2xl bg-blue-500/20 border border-blue-400/30 text-blue-300 flex items-center justify-center font-black text-xs">
-              NPK
+
+            {/* Konten Stok */}
+            <div>
+              <div className="flex items-baseline gap-1.5">
+                <strong className="text-2xl font-black text-white tracking-tight">
+                  {stokPoktan.npk?.sisaKg?.toLocaleString('id-ID') || 0}
+                </strong>
+                <span className="text-xs font-bold text-blue-300">Kg</span>
+              </div>
+              <div className="flex items-center justify-between text-[11px] text-blue-200/80 mt-1.5 pt-2 border-t border-emerald-800/50">
+                <span>≈ {stokPoktan.npk?.sisaSak || 0} Sak (@ 50 Kg)</span>
+                <span className="font-semibold text-blue-300">@ Rp {hargaPupuk.npkPerKg?.toLocaleString('id-ID')}/Kg</span>
+              </div>
             </div>
           </div>
 
           {/* ORGANIK CARD */}
-          <div className="bg-emerald-950/40 border border-emerald-700/40 p-4 rounded-2xl flex items-center justify-between">
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-[11px] text-amber-300 font-bold uppercase tracking-wider">Stok Gudang Organik</span>
-                <span className="px-1.5 py-0.5 rounded-full text-[9px] font-bold bg-amber-500/20 text-amber-300 border border-amber-400/30">
-                  Rp {hargaPupuk.organikPerSak?.toLocaleString('id-ID')}/Sak (40kg)
+          <div className="bg-emerald-950/50 border border-emerald-700/50 p-4 rounded-2xl flex flex-col justify-between gap-3 shadow-inner hover:border-amber-500/60 transition">
+            {/* Header: Badge Pupuk + Harga Sak */}
+            <div className="flex items-center justify-between gap-2">
+              <div className="flex items-center gap-1.5 min-w-0">
+                <span className="px-2 py-0.5 rounded-lg text-[10px] font-black uppercase tracking-wider bg-amber-500/25 text-amber-300 border border-amber-400/30">
+                  ORG
                 </span>
+                <span className="text-xs font-bold text-slate-100 truncate">Stok Gudang</span>
               </div>
-              <strong className="text-xl font-black text-white mt-1 block">
-                {stokPoktan.organik?.sisaKg?.toLocaleString('id-ID') || 0} <span className="text-xs font-normal text-amber-300">Kg</span>
-              </strong>
-              <div className="flex items-center gap-2 text-[10px] text-amber-300/80 mt-1">
-                <span>≈ {stokPoktan.organik?.sisaSak || 0} Sak (@ 40 Kg)</span>
-                <span>&bull;</span>
-                <span>@ Rp {hargaPupuk.organikPerKg?.toLocaleString('id-ID')}/Kg</span>
-              </div>
+              <span className="px-2 py-0.5 rounded-lg text-[10px] font-black bg-amber-400/15 text-amber-300 border border-amber-400/30 whitespace-nowrap shrink-0 shadow-2xs">
+                Rp {hargaPupuk.organikPerSak?.toLocaleString('id-ID')}/Sak
+              </span>
             </div>
-            <div className="w-11 h-11 rounded-2xl bg-amber-500/20 border border-amber-400/30 text-amber-300 flex items-center justify-center font-black text-xs">
-              ORG
+
+            {/* Konten Stok */}
+            <div>
+              <div className="flex items-baseline gap-1.5">
+                <strong className="text-2xl font-black text-white tracking-tight">
+                  {stokPoktan.organik?.sisaKg?.toLocaleString('id-ID') || 0}
+                </strong>
+                <span className="text-xs font-bold text-amber-300">Kg</span>
+              </div>
+              <div className="flex items-center justify-between text-[11px] text-amber-200/80 mt-1.5 pt-2 border-t border-emerald-800/50">
+                <span>≈ {stokPoktan.organik?.sisaSak || 0} Sak (@ 40 Kg)</span>
+                <span className="font-semibold text-amber-300">@ Rp {hargaPupuk.organikPerKg?.toLocaleString('id-ID')}/Kg</span>
+              </div>
             </div>
           </div>
         </div>
 
         {/* BANNER HARGA KESEPAKATAN & TOMBOL BERITA ACARA */}
-        <div className="mt-4 pt-3 border-t border-emerald-700/40 flex flex-wrap items-center justify-between text-xs text-emerald-200">
-          <div className="flex items-center gap-2">
-            <span className="font-semibold text-white">Kelompok Tani:</span>
-            <span className="bg-emerald-700/50 px-2.5 py-0.5 rounded-lg text-emerald-100 font-bold">
+        <div className="mt-4 pt-3.5 border-t border-emerald-700/40 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs text-emerald-200">
+          <div className="flex flex-wrap items-center gap-2">
+            <span className="font-semibold text-slate-300">Kelompok Tani:</span>
+            <span className="bg-emerald-700/60 px-2.5 py-1 rounded-xl text-emerald-100 font-bold border border-emerald-600/40">
               {activePoktanName}
             </span>
             <span className="text-emerald-300/80 text-[11px]">
-              &bull; Berita Acara: <strong className="text-white">{rincian.nomorBeritaAcara || '01/BA-POKTAN/LMB/2026'}</strong>
+              &bull; BA: <strong className="text-white">{rincian.nomorBeritaAcara || '01/BA-POKTAN/LMB/2026'}</strong>
             </span>
           </div>
 
-          <div className="flex items-center gap-3 mt-2 sm:mt-0">
+          <div className="grid grid-cols-1 sm:flex items-center gap-2.5 w-full sm:w-auto">
             <button
               type="button"
               onClick={() => setModalBeritaAcaraOpen(true)}
-              className="bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-3 py-1.5 rounded-xl text-xs transition shadow-sm flex items-center gap-1.5 cursor-pointer"
+              className="w-full sm:w-auto bg-amber-400 hover:bg-amber-300 text-slate-950 font-black px-4 py-2.5 rounded-xl text-xs transition shadow-sm flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
             >
-              <FileCheck className="w-4 h-4 text-slate-900" />
-              Cetak Berita Acara (Siap Tempel Gudang)
+              <FileCheck className="w-4 h-4 text-slate-900 shrink-0" />
+              <span>Cetak Berita Acara (Siap Tempel)</span>
             </button>
             <button
               type="button"
               onClick={() => setActiveTab('STOK_HARGA')}
-              className="text-white bg-white/20 hover:bg-white/30 px-3 py-1.5 rounded-xl font-bold text-xs transition flex items-center gap-1.5 cursor-pointer"
+              className="w-full sm:w-auto text-white bg-white/15 hover:bg-white/25 border border-white/20 px-4 py-2.5 rounded-xl font-bold text-xs transition flex items-center justify-center gap-1.5 cursor-pointer active:scale-95"
             >
-              <Sliders className="w-3.5 h-3.5 text-emerald-300" />
-              Kelola Komponen Biaya
+              <Sliders className="w-3.5 h-3.5 text-emerald-300 shrink-0" />
+              <span>Kelola Komponen Biaya</span>
             </button>
           </div>
         </div>
