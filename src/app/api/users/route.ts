@@ -37,7 +37,7 @@ export async function GET(req: Request) {
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { username, name, role, phone, email, wilayah, kiosName, poktanId, nip } = body;
+    const { username, name, role, phone, email, wilayah, kiosName, poktanId, nip, password } = body;
 
     if (!username || !name || !role) {
       return NextResponse.json(
@@ -70,6 +70,7 @@ export async function POST(req: Request) {
         wilayah: wilayah || 'Kecamatan Lembeyan',
         kiosName: kiosName || null,
         poktanId: poktanId || null,
+        password: password && password.trim() ? password.trim() : '123456',
       },
     });
 
@@ -120,7 +121,7 @@ export async function POST(req: Request) {
 export async function PATCH(req: Request) {
   try {
     const body = await req.json();
-    const { id, username, name, role, phone, email, wilayah, kiosName, poktanId, nip } = body;
+    const { id, username, name, role, phone, email, wilayah, kiosName, poktanId, nip, password } = body;
 
     if (!id) {
       return NextResponse.json({ success: false, error: 'ID User wajib disertakan' }, { status: 400 });
@@ -152,6 +153,7 @@ export async function PATCH(req: Request) {
         wilayah: wilayah || null,
         kiosName: kiosName || null,
         poktanId: poktanId || null,
+        ...(password && password.trim() ? { password: password.trim() } : {}),
       },
     });
 

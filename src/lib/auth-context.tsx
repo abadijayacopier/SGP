@@ -28,24 +28,38 @@ export interface UserSession {
   kiosName?: string | null;
 }
 
-export interface RoleMenuItem {
+export type RoleMenuIcon =
+  | 'dashboard'
+  | 'peta'
+  | 'pengajuan'
+  | 'petani'
+  | 'penyaluran'
+  | 'kios'
+  | 'laporan'
+  | 'cek-kuota'
+  | 'users'
+  | 'kasir-poktan'
+  | 'distribusi'
+  | 'alokasi-poktan'
+  | 'buku-kas'
+  | 'kepala-desa'
+  | 'f6';
+
+export interface RoleSubMenuItem {
   label: string;
   href: string;
-  iconName:
-    | 'dashboard'
-    | 'peta'
-    | 'pengajuan'
-    | 'petani'
-    | 'penyaluran'
-    | 'kios'
-    | 'laporan'
-    | 'cek-kuota'
-    | 'users'
-    | 'kasir-poktan'
-    | 'distribusi'
-    | 'alokasi-poktan'
-    | 'buku-kas'
-    | 'kepala-desa';
+  iconName: RoleMenuIcon;
+  description?: string;
+  badge?: string;
+}
+
+export interface RoleMenuItem {
+  label: string;
+  href?: string;
+  iconName: RoleMenuIcon;
+  description?: string;
+  badge?: string;
+  children?: RoleSubMenuItem[];
 }
 
 export const ROLE_PERMISSIONS: Record<
@@ -98,15 +112,106 @@ export const ROLE_PERMISSIONS: Record<
       '/kepala-desa',
     ],
     menuItems: [
-      { label: 'Dashboard', href: '/dashboard', iconName: 'dashboard' },
-      { label: 'Kuota e-RDKK', href: '/pengajuan', iconName: 'pengajuan' },
-      { label: 'Kasir Poktan', href: '/kasir-poktan', iconName: 'kasir-poktan' },
-      { label: 'Distribusi Kios', href: '/distribusi', iconName: 'distribusi' },
-      { label: 'Alokasi e-RDKK', href: '/alokasi-poktan', iconName: 'alokasi-poktan' },
-      { label: 'Petani & Poktan', href: '/petani', iconName: 'petani' },
-      { label: 'Peta GIS', href: '/peta', iconName: 'peta' },
-      { label: 'Laporan', href: '/laporan', iconName: 'laporan' },
-      { label: 'User & RBAC', href: '/users', iconName: 'users' },
+      {
+        label: 'Dashboard',
+        href: '/dashboard',
+        iconName: 'dashboard',
+        description: 'Ringkasan statistik & indikator kinerja kecamatan',
+      },
+      {
+        label: 'e-RDKK & Peta',
+        iconName: 'peta',
+        description: 'Validasi usulan kuota & pemetaan GIS',
+        children: [
+          {
+            label: 'Otorisasi Usulan e-RDKK',
+            href: '/pengajuan',
+            iconName: 'pengajuan',
+            description: 'Pengesahan usulan baru, KTP, KK & SPPT Pipil',
+          },
+          {
+            label: 'Peta GIS & Poligon Lahan',
+            href: '/peta',
+            iconName: 'peta',
+            description: 'Digitasi satelit sawah & verifikasi tumpang tindih',
+          },
+          {
+            label: 'Alokasi & Dosis Pupuk MT',
+            href: '/alokasi-poktan',
+            iconName: 'alokasi-poktan',
+            description: 'Penetapan kuota MT-1/2/3 & kalkulator dosis',
+          },
+        ],
+      },
+      {
+        label: 'Distribusi & Kios',
+        iconName: 'distribusi',
+        description: 'Pengawasan gudang KPL & distribusi pupuk',
+        children: [
+          {
+            label: 'Gudang Stok KPL & Kios',
+            href: '/kios',
+            iconName: 'kios',
+            description: 'Monitoring fisik stok gudang & registrasi KPL resmi',
+          },
+          {
+            label: 'Surat Jalan Distribusi DO',
+            href: '/distribusi',
+            iconName: 'distribusi',
+            description: 'Log kirim pupuk DO distributor ke Poktan',
+          },
+          {
+            label: 'Kasir Penebusan Poktan',
+            href: '/kasir-poktan',
+            iconName: 'kasir-poktan',
+            description: 'Kasir penebusan kelompok tani & verifikasi KTP',
+          },
+        ],
+      },
+      {
+        label: 'Kelembagaan',
+        iconName: 'petani',
+        description: 'Data kelompok tani & keuangan poktan',
+        children: [
+          {
+            label: 'Database Petani & Poktan',
+            href: '/petani',
+            iconName: 'petani',
+            description: 'Direktori anggota Poktan & filter per Desa',
+          },
+          {
+            label: 'Buku Kas Keuangan Poktan',
+            href: '/buku-kas-poktan',
+            iconName: 'buku-kas',
+            description: 'Buku kas penerimaan & pengeluaran Poktan',
+          },
+        ],
+      },
+      {
+        label: 'Laporan & Akun',
+        iconName: 'laporan',
+        description: 'Rekapitulasi, cetak SPJ & manajemen user',
+        children: [
+          {
+            label: 'Pusat Rekap Laporan',
+            href: '/laporan',
+            iconName: 'laporan',
+            description: 'Rekapitulasi serapan, ekspor Excel & PDF',
+          },
+          {
+            label: 'Cetak SPJ Resmi Model F-6',
+            href: '/cetak-f6',
+            iconName: 'f6',
+            description: 'Laporan bulanan resmi pengecer Pupuk Indonesia',
+          },
+          {
+            label: 'Manajemen Akun & RBAC',
+            href: '/users',
+            iconName: 'users',
+            description: 'Kelola akun petugas BPP/Kios/Poktan & hak akses',
+          },
+        ],
+      },
     ],
     canApproveDinas: true,
     canVerifyPpl: true,
@@ -142,11 +247,30 @@ export const ROLE_PERMISSIONS: Record<
     ],
     menuItems: [
       { label: 'Workspace BPP', href: '/dashboard', iconName: 'dashboard' },
-      { label: 'Digitasi Peta GIS', href: '/peta', iconName: 'peta' },
-      { label: 'Verifikasi Lapangan PPL', href: '/pengajuan', iconName: 'pengajuan' },
-      { label: 'Alokasi e-RDKK', href: '/alokasi-poktan', iconName: 'alokasi-poktan' },
-      { label: 'Distribusi Kios', href: '/distribusi', iconName: 'distribusi' },
-      { label: 'Laporan Teknis BPP', href: '/laporan', iconName: 'laporan' },
+      {
+        label: 'Spasial & Verifikasi',
+        iconName: 'peta',
+        children: [
+          { label: 'Digitasi Peta GIS', href: '/peta', iconName: 'peta', description: 'Pemetaan petak sawah & poligon' },
+          { label: 'Verifikasi Usulan e-RDKK', href: '/pengajuan', iconName: 'pengajuan', description: 'Verifikasi berkas fisik petani' },
+        ],
+      },
+      {
+        label: 'Distribusi & Alokasi',
+        iconName: 'distribusi',
+        children: [
+          { label: 'Alokasi e-RDKK', href: '/alokasi-poktan', iconName: 'alokasi-poktan', description: 'Kalkulator dosis & alokasi' },
+          { label: 'Distribusi Kios', href: '/distribusi', iconName: 'distribusi', description: 'Monitoring pasokan ke Poktan' },
+        ],
+      },
+      {
+        label: 'Laporan & SPJ',
+        iconName: 'laporan',
+        children: [
+          { label: 'Laporan Teknis BPP', href: '/laporan', iconName: 'laporan', description: 'Rekapitulasi teknis pertanian' },
+          { label: 'Cetak SPJ Model F-6', href: '/cetak-f6', iconName: 'f6', description: 'Dokumen SPJ F-6 bulanan' },
+        ],
+      },
     ],
     canApproveDinas: false,
     canVerifyPpl: true,
@@ -178,12 +302,24 @@ export const ROLE_PERMISSIONS: Record<
     ],
     menuItems: [
       { label: 'Workspace Poktan', href: '/dashboard', iconName: 'dashboard' },
-      { label: 'Kasir Poktan', href: '/kasir-poktan', iconName: 'kasir-poktan' },
-      { label: 'Buku Kas Poktan', href: '/buku-kas-poktan', iconName: 'buku-kas' },
-      { label: 'Distribusi Kios', href: '/distribusi', iconName: 'distribusi' },
-      { label: 'Alokasi e-RDKK', href: '/alokasi-poktan', iconName: 'alokasi-poktan' },
-      { label: 'Anggota & Poktan', href: '/petani', iconName: 'petani' },
-      { label: 'Input Usulan e-RDKK', href: '/pengajuan', iconName: 'pengajuan' },
+      {
+        label: 'Transaksi & Kasir',
+        iconName: 'kasir-poktan',
+        children: [
+          { label: 'Kasir Penebusan Poktan', href: '/kasir-poktan', iconName: 'kasir-poktan', description: 'Penebusan pupuk anggota' },
+          { label: 'Buku Kas Poktan', href: '/buku-kas-poktan', iconName: 'buku-kas', description: 'Catatan kas masuk & keluar' },
+        ],
+      },
+      {
+        label: 'Pasokan & Usulan',
+        iconName: 'distribusi',
+        children: [
+          { label: 'Penerimaan Distribusi Kios', href: '/distribusi', iconName: 'distribusi', description: 'Penerimaan DO dari KPL' },
+          { label: 'Alokasi e-RDKK Poktan', href: '/alokasi-poktan', iconName: 'alokasi-poktan', description: 'Jatah pupuk MT-1, 2, 3' },
+          { label: 'Input Usulan Lahan Baru', href: '/pengajuan', iconName: 'pengajuan', description: 'Pendaftaran anggota/lahan baru' },
+        ],
+      },
+      { label: 'Anggota & Petani', href: '/petani', iconName: 'petani' },
     ],
     canApproveDinas: false,
     canVerifyPpl: false,
@@ -212,10 +348,17 @@ export const ROLE_PERMISSIONS: Record<
       '/verifikasi',
     ],
     menuItems: [
-      { label: 'Workspace Kios KPL', href: '/dashboard', iconName: 'dashboard' },
-      { label: 'Kasir Penebusan Pupuk', href: '/penyaluran', iconName: 'penyaluran' },
-      { label: 'Distribusi ke Poktan', href: '/distribusi', iconName: 'distribusi' },
-      { label: 'Gudang Stok DO KPL', href: '/kios', iconName: 'kios' },
+      { label: 'Workspace Kios', href: '/dashboard', iconName: 'dashboard' },
+      { label: 'Kasir Penebusan', href: '/penyaluran', iconName: 'penyaluran' },
+      {
+        label: 'Gudang & Distribusi',
+        iconName: 'kios',
+        children: [
+          { label: 'Gudang Stok DO KPL', href: '/kios', iconName: 'kios', description: 'Stok fisik gudang & DO masuk' },
+          { label: 'Distribusi ke Poktan', href: '/distribusi', iconName: 'distribusi', description: 'Surat jalan kirim ke Poktan' },
+          { label: 'Cetak SPJ Model F-6', href: '/cetak-f6', iconName: 'f6', description: 'Laporan resmi format F-6' },
+        ],
+      },
     ],
     canApproveDinas: false,
     canVerifyPpl: false,

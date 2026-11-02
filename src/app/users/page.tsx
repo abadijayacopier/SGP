@@ -21,6 +21,8 @@ import {
   Trash2,
   Edit3,
   KeyRound,
+  Eye,
+  EyeOff,
   Building2,
   Phone,
   Mail,
@@ -96,8 +98,17 @@ export default function UsersManagementPage() {
     email: '',
     wilayah: 'BPP Kec. Lembeyan',
     kiosName: '',
+    password: '123456',
   });
+  const [showPassword, setShowPassword] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+
+  // Modal Reset Password Khusus
+  const [resetModalOpen, setResetModalOpen] = useState(false);
+  const [resetTargetUser, setResetTargetUser] = useState<DbUser | null>(null);
+  const [newPasswordInput, setNewPasswordInput] = useState('123456');
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [resetSubmitting, setResetSubmitting] = useState(false);
 
   // Matriks Wewenang RBAC State (Hanya Admin yang dapat mengubah)
   const [matrixPermissions, setMatrixPermissions] = useState<Record<UserRole, any>>(() => {
@@ -185,7 +196,9 @@ export default function UsersManagementPage() {
       email: '',
       wilayah: 'BPP Kec. Lembeyan',
       kiosName: '',
+      password: '123456',
     });
+    setShowPassword(false);
     setModalOpen(true);
   };
 
@@ -200,8 +213,53 @@ export default function UsersManagementPage() {
       email: u.email || '',
       wilayah: u.wilayah || '',
       kiosName: u.kiosName || '',
+      password: '',
     });
+    setShowPassword(false);
     setModalOpen(true);
+  };
+
+  const handleOpenResetPassword = (u: DbUser) => {
+    setResetTargetUser(u);
+    setNewPasswordInput('123456');
+    setShowNewPassword(false);
+    setResetModalOpen(true);
+  };
+
+  const handleConfirmResetPassword = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!resetTargetUser) return;
+    if (!newPasswordInput || newPasswordInput.trim().length < 4) {
+      showWarning('Kata Sandi Lemah', 'Kata sandi minimal terdiri dari 4 karakter!');
+      return;
+    }
+
+    try {
+      setResetSubmitting(true);
+      const res = await fetch('/api/users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          id: resetTargetUser.id,
+          password: newPasswordInput.trim(),
+        }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        showSuccess(
+          'Kata Sandi Direset',
+          `Kata sandi untuk akun "${resetTargetUser.name}" (@${resetTargetUser.username}) berhasil diperbarui menjadi "${newPasswordInput.trim()}"!`
+        );
+        setResetModalOpen(false);
+        setResetTargetUser(null);
+      } else {
+        showError('Gagal Reset', json.error);
+      }
+    } catch (err: any) {
+      showError('Terjadi Kesalahan', err.message);
+    } finally {
+      setResetSubmitting(false);
+    }
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -777,6 +835,14 @@ export default function UsersManagementPage() {
                         >
                           <Edit3 className="w-3.5 h-3.5" />
                         </button>
+                        <button
+                          type="button"
+                          onClick={() => handleOpenResetPassword(u)}
+                          className="p-1.5 rounded-lg border border-amber-200 text-amber-700 hover:bg-amber-50 transition"
+                          title="Reset Kata Sandi Akun"
+                        >
+                          <KeyRound className="w-3.5 h-3.5" />
+                        </button>
                         {u.username !== 'admin' && (
                           <button
                             type="button"
@@ -921,6 +987,37 @@ export default function UsersManagementPage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 <div>
+                  <label className="block font-bold text-slate-700 mb-1">
+                    Kata Sandi (Password) {!editingUser && '*'}
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      placeholder={
+                        editingUser
+                          ? 'Kosongkan jika sandi tetap'
+                          : 'Kata sandi login (default: 123456)'
+                      }
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      className="w-full px-3 py-2 pr-9 border border-slate-200 rounded-xl font-mono focus:ring-2 focus:ring-emerald-500 bg-white"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  {!editingUser && (
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      Default: <span className="font-mono font-bold text-slate-600">123456</span>
+                    </p>
+                  )}
+                </div>
+
+                <div>
                   <label className="block font-bold text-slate-700 mb-1">Nomor Telepon / WhatsApp</label>
                   <input
                     type="text"
@@ -930,16 +1027,17 @@ export default function UsersManagementPage() {
                     className="w-full px-3 py-2 border border-slate-200 rounded-xl font-mono focus:ring-2 focus:ring-emerald-500"
                   />
                 </div>
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1">Alamat Email Dinas</label>
-                  <input
-                    type="email"
-                    placeholder="nama@pertanian.go.id"
-                    value={formData.email}
-                    onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                    className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500"
-                  />
-                </div>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">Alamat Email Dinas</label>
+                <input
+                  type="email"
+                  placeholder="nama@pertanian.go.id"
+                  value={formData.email}
+                  onChange={(e) => setFormData({ ...formData, email: e.target.value })}
+                  className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500"
+                />
               </div>
 
               <div className="pt-4 border-t border-slate-100 flex items-center justify-end gap-2">
@@ -956,6 +1054,84 @@ export default function UsersManagementPage() {
                   className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-md transition"
                 >
                   {submitting ? 'Menyimpan...' : editingUser ? 'Simpan Perubahan' : 'Buat Akun Petugas'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Modal Khusus Reset Kata Sandi Petugas */}
+      {resetModalOpen && resetTargetUser && (
+        <div className="fixed inset-0 z-[2000] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-4">
+          <div className="bg-white rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-100 animate-in fade-in zoom-in-95 duration-150">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100">
+              <h3 className="font-black text-slate-800 text-base flex items-center gap-2">
+                <KeyRound className="w-5 h-5 text-amber-600" />
+                Reset Kata Sandi Petugas
+              </h3>
+              <button
+                onClick={() => setResetModalOpen(false)}
+                className="p-1.5 rounded-full text-slate-400 hover:bg-slate-100"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            <form onSubmit={handleConfirmResetPassword} className="space-y-4 my-4 text-xs">
+              <div className="p-3 bg-amber-50 rounded-2xl border border-amber-200/80">
+                <p className="font-bold text-amber-950 text-sm">{resetTargetUser.name}</p>
+                <p className="text-amber-800 font-mono text-[11px] mt-0.5">
+                  @{resetTargetUser.username} • {resetTargetUser.role}
+                </p>
+              </div>
+
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  Masukkan Kata Sandi Baru *
+                </label>
+                <div className="relative">
+                  <input
+                    type={showNewPassword ? 'text' : 'password'}
+                    required
+                    value={newPasswordInput}
+                    onChange={(e) => setNewPasswordInput(e.target.value)}
+                    className="w-full px-3 py-2 pr-10 border border-slate-200 rounded-xl font-mono focus:ring-2 focus:ring-amber-500 bg-white"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowNewPassword(!showNewPassword)}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 cursor-pointer"
+                  >
+                    {showNewPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
+                </div>
+                <div className="flex items-center gap-2 mt-2">
+                  <span className="text-[10px] text-slate-400">Pilihan Cepat:</span>
+                  <button
+                    type="button"
+                    onClick={() => setNewPasswordInput('123456')}
+                    className="text-[10px] font-mono font-bold px-2 py-0.5 rounded bg-slate-100 hover:bg-slate-200 text-slate-700 transition"
+                  >
+                    Default: 123456
+                  </button>
+                </div>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 flex items-center justify-end gap-2">
+                <button
+                  type="button"
+                  onClick={() => setResetModalOpen(false)}
+                  className="px-4 py-2 rounded-xl text-slate-600 font-semibold hover:bg-slate-100"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={resetSubmitting}
+                  className="px-5 py-2.5 rounded-xl bg-amber-600 hover:bg-amber-700 text-white font-bold shadow-md transition"
+                >
+                  {resetSubmitting ? 'Memproses...' : 'Simpan Sandi Baru'}
                 </button>
               </div>
             </form>

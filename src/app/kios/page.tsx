@@ -481,29 +481,31 @@ export default function KiosPage() {
             <span>+ Kirim ke Poktan (Surat Jalan)</span>
           </Link>
 
-          <button
-            onClick={() => {
-              const nextNum = (kiosList.length + 8).toString().padStart(3, '0');
-              setFormTambahKios({
-                namaKios: '',
-                kodeKios: `KPL-LMB-${nextNum}`,
-                pengelola: '',
-                wilayah: 'Desa Lembeyan Kulon, Kec. Lembeyan',
-                phone: '',
-                email: '',
-                username: '',
-                password: '123456',
-                stokAwalUreaKg: '15000',
-                stokAwalNpkKg: '10000',
-                stokAwalOrganikKg: '5000',
-              });
-              setShowTambahKiosModal(true);
-            }}
-            className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm transition"
-          >
-            <Plus className="w-4 h-4 text-amber-200" />
-            <span>+ Tambah Kios / KPL Baru</span>
-          </button>
+          {currentUser?.role === 'ADMIN_DINAS' && (
+            <button
+              onClick={() => {
+                const nextNum = (kiosList.length + 8).toString().padStart(3, '0');
+                setFormTambahKios({
+                  namaKios: '',
+                  kodeKios: `KPL-LMB-${nextNum}`,
+                  pengelola: '',
+                  wilayah: 'Desa Lembeyan Kulon, Kec. Lembeyan',
+                  phone: '',
+                  email: '',
+                  username: '',
+                  password: '123456',
+                  stokAwalUreaKg: '15000',
+                  stokAwalNpkKg: '10000',
+                  stokAwalOrganikKg: '5000',
+                });
+                setShowTambahKiosModal(true);
+              }}
+              className="inline-flex items-center gap-2 bg-gradient-to-r from-amber-600 to-amber-700 hover:from-amber-700 hover:to-amber-800 text-white text-xs font-bold px-4 py-2.5 rounded-xl shadow-sm transition"
+            >
+              <Plus className="w-4 h-4 text-amber-200" />
+              <span>+ Tambah Kios / KPL Baru</span>
+            </button>
+          )}
         </div>
       </div>
 

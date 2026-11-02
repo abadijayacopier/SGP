@@ -1173,7 +1173,7 @@ export default function ProfilePage() {
                 <span className="text-xs font-semibold text-slate-700">({currentRolePerm.label})</span>
               </div>
               <span className="text-xs font-bold text-emerald-700 bg-emerald-50 px-2.5 py-1 rounded-lg border border-emerald-200">
-                {currentRolePerm.menuItems.length} Halaman Diizinkan
+                {currentRolePerm.menuItems.reduce((acc, m) => acc + (m.children ? m.children.length : 1), 0)} Halaman Diizinkan
               </span>
             </div>
 

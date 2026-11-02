@@ -53,6 +53,7 @@ const ICON_MAP: Record<string, any> = {
   'alokasi-poktan': Calculator,
   'buku-kas': Wallet,
   'kepala-desa': Building2,
+  f6: FileText,
 };
 
 export default function Navbar() {
@@ -77,90 +78,46 @@ export default function Navbar() {
   });
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Ref untuk mendeteksi klik di luar dropdown profil & notifikasi
+  // Ref untuk mendeteksi klik di luar dropdown profil, notifikasi, dan sub-menu nav
   const dropdownRef = useRef<HTMLDivElement>(null);
   const dropdownBtnRef = useRef<HTMLButtonElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
   const notifBtnRef = useRef<HTMLButtonElement>(null);
+  const navBarRef = useRef<HTMLDivElement>(null);
 
-  // Nav Scroll Horizontal Engine
-  const navScrollRef = useRef<HTMLDivElement>(null);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
-  const [startX, setStartX] = useState(0);
-  const [scrollLeftPos, setScrollLeftPos] = useState(0);
+  // Sub-menu dropdown state (Desktop & Mobile)
+  const [activeNavDropdown, setActiveNavDropdown] = useState<string | null>(null);
+  const [mobileExpandedGroup, setMobileExpandedGroup] = useState<string | null>(null);
+  const navDropdownTimeoutRef = useRef<NodeJS.Timeout | null>(null);
 
-  const checkScroll = () => {
-    if (navScrollRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = navScrollRef.current;
-      setCanScrollLeft(scrollLeft > 6);
-      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 6);
+  const handleNavMouseEnter = (label: string) => {
+    if (navDropdownTimeoutRef.current) {
+      clearTimeout(navDropdownTimeoutRef.current);
     }
+    setActiveNavDropdown(label);
   };
 
-  useEffect(() => {
-    const el = navScrollRef.current;
-    if (!el) return;
-    checkScroll();
-    const timer = setTimeout(checkScroll, 200);
-    el.addEventListener('scroll', checkScroll);
-    window.addEventListener('resize', checkScroll);
-    return () => {
-      clearTimeout(timer);
-      el.removeEventListener('scroll', checkScroll);
-      window.removeEventListener('resize', checkScroll);
-    };
+  const handleNavMouseLeave = () => {
+    if (navDropdownTimeoutRef.current) {
+      clearTimeout(navDropdownTimeoutRef.current);
+    }
+    navDropdownTimeoutRef.current = setTimeout(() => {
+      setActiveNavDropdown(null);
+    }, 180);
+  };
+
+  // Kumpulan seluruh link individual halaman yang dapat diakses (untuk profil popup & counter)
+  const allLeafNavLinks = React.useMemo(() => {
+    const list: { label: string; href: string }[] = [];
+    visibleNavItems.forEach((item) => {
+      if (item.children && item.children.length > 0) {
+        item.children.forEach((c) => list.push({ label: c.label, href: c.href }));
+      } else if (item.href) {
+        list.push({ label: item.label, href: item.href });
+      }
+    });
+    return list;
   }, [visibleNavItems]);
-
-  // Otomatis pusatkan menu yang sedang aktif
-  useEffect(() => {
-    if (navScrollRef.current) {
-      const activeEl = navScrollRef.current.querySelector<HTMLElement>('[data-active="true"]');
-      if (activeEl) {
-        activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
-      }
-      setTimeout(checkScroll, 350);
-    }
-  }, [pathname]);
-
-  const scrollNav = (direction: 'left' | 'right') => {
-    if (navScrollRef.current) {
-      const amount = direction === 'left' ? -220 : 220;
-      navScrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
-    }
-  };
-
-  // Geser menu dengan scroll mouse vertikal (Wheel)
-  const handleNavWheel = (e: React.WheelEvent<HTMLDivElement>) => {
-    if (navScrollRef.current) {
-      if (e.deltaY !== 0) {
-        navScrollRef.current.scrollLeft += e.deltaY;
-        checkScroll();
-      }
-    }
-  };
-
-  // Drag-to-scroll dengan mouse (Klik & Geser)
-  const handleMouseDown = (e: React.MouseEvent) => {
-    if (!navScrollRef.current) return;
-    setIsDragging(true);
-    setStartX(e.pageX - navScrollRef.current.offsetLeft);
-    setScrollLeftPos(navScrollRef.current.scrollLeft);
-  };
-
-  const handleMouseMove = (e: React.MouseEvent) => {
-    if (!isDragging || !navScrollRef.current) return;
-    e.preventDefault();
-    const x = e.pageX - navScrollRef.current.offsetLeft;
-    const walk = (x - startX) * 1.5;
-    navScrollRef.current.scrollLeft = scrollLeftPos - walk;
-    checkScroll();
-  };
-
-  const handleMouseUpOrLeave = () => {
-    setIsDragging(false);
-  };
 
   // Otomatis sembunyikan dropdown saat klik di sembarang tempat atau tekan tombol ESC
   useEffect(() => {
@@ -179,30 +136,39 @@ export default function Navbar() {
       ) {
         setNotifOpen(false);
       }
+      if (
+        navBarRef.current &&
+        !navBarRef.current.contains(event.target as Node)
+      ) {
+        setActiveNavDropdown(null);
+      }
     }
 
     function handleKeyDown(event: KeyboardEvent) {
       if (event.key === 'Escape') {
         setDropdownOpen(false);
         setNotifOpen(false);
+        setActiveNavDropdown(null);
       }
     }
 
-    if (dropdownOpen || notifOpen) {
-      document.addEventListener('mousedown', handleClickOutside);
-      document.addEventListener('keydown', handleKeyDown);
-    }
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
     return () => {
       document.removeEventListener('mousedown', handleClickOutside);
       document.removeEventListener('keydown', handleKeyDown);
+      if (navDropdownTimeoutRef.current) {
+        clearTimeout(navDropdownTimeoutRef.current);
+      }
     };
-  }, [dropdownOpen, notifOpen]);
+  }, []);
 
-  // Otomatis tutup dropdown saat berpindah halaman
+  // Otomatis tutup semua dropdown saat berpindah halaman
   useEffect(() => {
     setDropdownOpen(false);
     setNotifOpen(false);
     setMobileMenuOpen(false);
+    setActiveNavDropdown(null);
   }, [pathname]);
 
   useEffect(() => {
@@ -235,7 +201,7 @@ export default function Navbar() {
   return (
     <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs no-print">
       {/* Main Navbar */}
-      <div className="max-w-7xl mx-auto px-3 sm:px-6">
+      <div className="w-full max-w-[1600px] mx-auto px-2 sm:px-4 lg:px-6">
         <div className="flex items-center justify-between h-16 gap-2 sm:gap-3">
           {/* Logo Brand */}
           <div className="flex items-center shrink-0 min-w-0">
@@ -263,76 +229,159 @@ export default function Navbar() {
                       : 'ADMIN KECAMATAN'}
                   </span>
                 </div>
-                <span className="text-[10px] text-slate-500 font-medium whitespace-nowrap truncate">
+                <span className="text-[10px] text-slate-500 font-medium whitespace-nowrap truncate hidden 2xl:inline">
                   Kecamatan Lembeyan Kabupaten Magetan
                 </span>
               </div>
             </Link>
           </div>
 
-          {/* Desktop Navigation Links with Horizontal Scroll Controls */}
-          <div className="hidden lg:flex items-center relative min-w-0 max-w-xl xl:max-w-2xl 2xl:max-w-3xl flex-1 px-1">
-            {/* Tombol Geser Kiri */}
-            {canScrollLeft && (
-              <button
-                type="button"
-                onClick={() => scrollNav('left')}
-                title="Geser menu ke kiri"
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-white hover:bg-emerald-600 text-slate-700 hover:text-white border border-slate-300 shadow-md flex items-center justify-center transition cursor-pointer"
-              >
-                <ChevronLeft className="w-4 h-4" />
-              </button>
-            )}
-
-            {/* Scrollable Track */}
+          {/* Desktop Navigation Links with Sub-Menu Dropdown Popovers */}
+          <div ref={navBarRef} className="hidden lg:flex items-center shrink-0 mx-auto px-1.5 justify-center">
             <nav
-              ref={navScrollRef}
-              onWheel={handleNavWheel}
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUpOrLeave}
-              onMouseLeave={handleMouseUpOrLeave}
               suppressHydrationWarning
-              className={`flex items-center gap-1 min-w-0 overflow-x-auto no-scrollbar bg-slate-100/80 p-1 rounded-2xl border border-slate-200/70 scroll-smooth w-full ${
-                isDragging ? 'cursor-grabbing' : 'cursor-grab'
-              }`}
+              className="flex items-center gap-1 xl:gap-1.5 bg-slate-100/90 p-1 rounded-2xl border border-slate-200/80 shadow-2xs"
             >
               {visibleNavItems.map((item) => {
                 const Icon = ICON_MAP[item.iconName] || FileText;
+
+                // Group with children (Sub-menu dropdown)
+                if (item.children && item.children.length > 0) {
+                  const isChildActive = item.children.some((c) => pathname === c.href);
+                  const isDropdownOpen = activeNavDropdown === item.label;
+
+                  return (
+                    <div
+                      key={item.label}
+                      className="relative"
+                      onMouseEnter={() => handleNavMouseEnter(item.label)}
+                      onMouseLeave={handleNavMouseLeave}
+                    >
+                      <button
+                        type="button"
+                        onClick={() =>
+                          setActiveNavDropdown((prev) => (prev === item.label ? null : item.label))
+                        }
+                        className={`flex items-center gap-1 xl:gap-1.5 px-2.5 xl:px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 cursor-pointer ${
+                          isChildActive
+                            ? 'bg-emerald-600 text-white shadow-xs'
+                            : isDropdownOpen
+                            ? 'bg-emerald-100/90 text-emerald-950 font-extrabold'
+                            : 'text-slate-700 hover:text-emerald-700 hover:bg-white'
+                        }`}
+                      >
+                        <Icon
+                          className={`w-3.5 h-3.5 shrink-0 ${
+                            isChildActive ? 'text-amber-300' : 'text-emerald-600'
+                          }`}
+                        />
+                        <span>{item.label}</span>
+                        <ChevronDown
+                          className={`w-3 h-3 transition-transform duration-200 shrink-0 ${
+                            isDropdownOpen
+                              ? 'rotate-180 text-amber-300'
+                              : isChildActive
+                              ? 'text-white/80'
+                              : 'text-slate-400'
+                          }`}
+                        />
+                      </button>
+
+                      {/* Dropdown Floating Popover */}
+                      {isDropdownOpen && (
+                        <div
+                          onMouseEnter={() => handleNavMouseEnter(item.label)}
+                          onMouseLeave={handleNavMouseLeave}
+                          className="absolute left-0 top-full pt-1.5 z-50 min-w-[280px] w-max max-w-xs animate-in fade-in zoom-in-95 duration-150"
+                        >
+                          <div className="bg-white rounded-2xl shadow-xl border border-slate-200/90 p-2 space-y-1 backdrop-blur-md">
+                            <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400 border-b border-slate-100 flex items-center justify-between">
+                              <span>{item.label}</span>
+                              <span className="text-[9px] font-bold text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200">
+                                {item.children.length} Menu
+                              </span>
+                            </div>
+
+                            {item.children.map((child) => {
+                              const ChildIcon = ICON_MAP[child.iconName] || FileText;
+                              const isCurrentChildActive = pathname === child.href;
+
+                              return (
+                                <Link
+                                  key={child.href}
+                                  href={child.href}
+                                  onClick={() => setActiveNavDropdown(null)}
+                                  className={`flex items-start gap-2.5 p-2 rounded-xl transition group ${
+                                    isCurrentChildActive
+                                      ? 'bg-emerald-50 text-emerald-950 border border-emerald-200/90 shadow-2xs font-bold'
+                                      : 'hover:bg-slate-50 text-slate-700 hover:text-emerald-900'
+                                  }`}
+                                >
+                                  <div
+                                    className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 mt-0.5 transition ${
+                                      isCurrentChildActive
+                                        ? 'bg-emerald-600 text-white shadow-xs'
+                                        : 'bg-slate-100 text-emerald-700 group-hover:bg-emerald-100 group-hover:text-emerald-800'
+                                    }`}
+                                  >
+                                    <ChildIcon className="w-3.5 h-3.5" />
+                                  </div>
+                                  <div className="min-w-0 flex-1">
+                                    <div
+                                      className={`text-xs font-bold leading-snug flex items-center gap-1.5 ${
+                                        isCurrentChildActive
+                                          ? 'text-emerald-900'
+                                          : 'text-slate-800 group-hover:text-emerald-700'
+                                      }`}
+                                    >
+                                      <span className="truncate">{child.label}</span>
+                                      {isCurrentChildActive && (
+                                        <span className="w-1.5 h-1.5 rounded-full bg-emerald-600 shrink-0" />
+                                      )}
+                                    </div>
+                                    {child.description && (
+                                      <p className="text-[10px] text-slate-400 line-clamp-1 mt-0.5 group-hover:text-slate-500 font-normal">
+                                        {child.description}
+                                      </p>
+                                    )}
+                                  </div>
+                                </Link>
+                              );
+                            })}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  );
+                }
+
+                // Standalone Direct Link (e.g. Dashboard)
                 const isActive = pathname === item.href;
                 return (
                   <Link
-                    key={item.href}
-                    href={item.href}
-                    data-active={isActive ? 'true' : 'false'}
+                    key={item.href || item.label}
+                    href={item.href || '/dashboard'}
+                    onMouseEnter={() => setActiveNavDropdown(null)}
                     className={`flex items-center gap-1.5 px-2.5 xl:px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
                       isActive
                         ? 'bg-emerald-600 text-white shadow-xs'
                         : 'text-slate-700 hover:text-emerald-700 hover:bg-white'
                     }`}
                   >
-                    <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-amber-300' : 'text-emerald-600'}`} />
+                    <Icon
+                      className={`w-3.5 h-3.5 shrink-0 ${
+                        isActive ? 'text-amber-300' : 'text-emerald-600'
+                      }`}
+                    />
                     <span>{item.label}</span>
                   </Link>
                 );
               })}
             </nav>
-
-            {/* Tombol Geser Kanan */}
-            {canScrollRight && (
-              <button
-                type="button"
-                onClick={() => scrollNav('right')}
-                title="Geser menu ke kanan (lihat menu lainnya)"
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-white hover:bg-emerald-600 text-slate-700 hover:text-white border border-slate-300 shadow-md flex items-center justify-center transition cursor-pointer animate-pulse"
-              >
-                <ChevronRight className="w-4 h-4" />
-              </button>
-            )}
           </div>
 
           {/* Right Side: Notification Bell + User Profile Badge & Mobile Menu Button */}
-          <div className="flex items-center gap-1.5 shrink-0">
+          <div className="flex items-center gap-1.5 shrink-0 ml-auto lg:ml-0">
             {/* Lonceng Notifikasi Real-time & Audit Trail Inspektorat */}
             <div className="relative">
               <button
@@ -664,10 +713,10 @@ export default function Navbar() {
                   {/* Daftar Menu Khusus Jabatan Ini */}
                   <div className="px-4 py-2.5 border-b border-slate-100 bg-slate-50/60">
                     <p className="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1.5">
-                      Hak Akses Modul Anda ({visibleNavItems.length} Halaman):
+                      Hak Akses Modul Anda ({allLeafNavLinks.length} Halaman):
                     </p>
                     <div className="flex flex-wrap gap-1">
-                      {visibleNavItems.map((m) => (
+                      {allLeafNavLinks.map((m) => (
                         <Link
                           key={m.href}
                           href={m.href}
@@ -718,29 +767,110 @@ export default function Navbar() {
         </div>
       </div>
 
-      {/* Mobile Menu Drawer */}
+      {/* Mobile Menu Drawer (Accordion Sub-menu) */}
       {mobileMenuOpen && (
-        <div className="lg:hidden bg-white border-t border-slate-100 px-4 pt-3 pb-5 space-y-2 shadow-lg">
-          <div className="pb-2 mb-2 border-b border-slate-100">
+        <div className="lg:hidden bg-white border-t border-slate-100 px-4 pt-3 pb-5 space-y-2 shadow-lg max-h-[80vh] overflow-y-auto">
+          <div className="pb-2 mb-2 border-b border-slate-100 flex items-center justify-between">
             <span className="text-[10px] font-bold uppercase text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-              {permissions.groupName} ({visibleNavItems.length} Menu)
+              {permissions.groupName}
+            </span>
+            <span className="text-[10px] font-medium text-slate-400">
+              {allLeafNavLinks.length} Halaman Tersedia
             </span>
           </div>
+
           {visibleNavItems.map((item) => {
             const Icon = ICON_MAP[item.iconName] || FileText;
+
+            // Accordion jika memiliki sub-menu
+            if (item.children && item.children.length > 0) {
+              const isChildActive = item.children.some((c) => pathname === c.href);
+              const isExpanded = mobileExpandedGroup === item.label || isChildActive;
+
+              return (
+                <div
+                  key={item.label}
+                  className="border border-slate-200/80 rounded-2xl overflow-hidden bg-slate-50/60"
+                >
+                  <button
+                    type="button"
+                    onClick={() =>
+                      setMobileExpandedGroup((prev) => (prev === item.label ? null : item.label))
+                    }
+                    className={`w-full flex items-center justify-between px-3.5 py-2.5 text-xs font-bold transition ${
+                      isChildActive
+                        ? 'text-emerald-900 bg-emerald-100/70 font-extrabold'
+                        : 'text-slate-700 hover:bg-slate-100'
+                    }`}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <Icon className="w-4 h-4 text-emerald-600" />
+                      <span>{item.label}</span>
+                    </div>
+                    <ChevronDown
+                      className={`w-4 h-4 text-slate-400 transition-transform duration-200 ${
+                        isExpanded ? 'rotate-180 text-emerald-700' : ''
+                      }`}
+                    />
+                  </button>
+
+                  {isExpanded && (
+                    <div className="bg-white px-2 py-1.5 space-y-1 border-t border-slate-100">
+                      {item.children.map((child) => {
+                        const ChildIcon = ICON_MAP[child.iconName] || FileText;
+                        const isCurrentActive = pathname === child.href;
+
+                        return (
+                          <Link
+                            key={child.href}
+                            href={child.href}
+                            onClick={() => setMobileMenuOpen(false)}
+                            className={`flex items-start gap-2.5 px-3 py-2 rounded-xl text-xs font-bold transition ${
+                              isCurrentActive
+                                ? 'bg-emerald-600 text-white shadow-xs'
+                                : 'text-slate-600 hover:bg-slate-50 hover:text-slate-900'
+                            }`}
+                          >
+                            <ChildIcon
+                              className={`w-4 h-4 shrink-0 mt-0.5 ${
+                                isCurrentActive ? 'text-amber-300' : 'text-emerald-600'
+                              }`}
+                            />
+                            <div>
+                              <div>{child.label}</div>
+                              {child.description && (
+                                <div
+                                  className={`text-[10px] font-normal ${
+                                    isCurrentActive ? 'text-emerald-100' : 'text-slate-400'
+                                  }`}
+                                >
+                                  {child.description}
+                                </div>
+                              )}
+                            </div>
+                          </Link>
+                        );
+                      })}
+                    </div>
+                  )}
+                </div>
+              );
+            }
+
+            // Standalone Direct Link
             const isActive = pathname === item.href;
             return (
               <Link
-                key={item.href}
-                href={item.href}
+                key={item.href || item.label}
+                href={item.href || '/dashboard'}
                 onClick={() => setMobileMenuOpen(false)}
-                className={`flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold ${
+                className={`flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-bold transition ${
                   isActive
-                    ? 'bg-emerald-600 text-white'
-                    : 'text-slate-600 hover:bg-slate-50'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'text-slate-700 hover:bg-slate-50'
                 }`}
               >
-                <Icon className="w-4 h-4" />
+                <Icon className={`w-4 h-4 ${isActive ? 'text-amber-300' : 'text-emerald-600'}`} />
                 <span>{item.label}</span>
               </Link>
             );
@@ -750,7 +880,7 @@ export default function Navbar() {
             <Link
               href="/profil"
               onClick={() => setMobileMenuOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100"
+              className="flex items-center gap-3 px-3.5 py-2.5 rounded-2xl text-xs font-bold text-emerald-800 bg-emerald-50 hover:bg-emerald-100"
             >
               <UserCircle className="w-4 h-4 text-emerald-600" />
               <span>Profil Saya & Ganti Password</span>
