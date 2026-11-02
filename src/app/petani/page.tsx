@@ -142,9 +142,26 @@ export default function PetaniPage() {
     }
   };
 
+  const handleOpenCreateKades = () => {
+    setEditingKades({
+      isNew: true,
+      id: '',
+      desa: '',
+      nama: '',
+      jabatan: '',
+      nip: '',
+      kontak: '',
+      alamat: '',
+    });
+  };
+
   const handleSaveKades = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!editingKades) return;
+    if (!editingKades.desa?.trim() || !editingKades.nama?.trim()) {
+      showError('Validasi Gagal', 'Desa dan Nama Kepala Desa wajib diisi!');
+      return;
+    }
     try {
       setSavingKades(true);
       setKadesFeedback(null);
@@ -156,7 +173,10 @@ export default function PetaniPage() {
       const json = await res.json();
       if (json.success) {
         setKadesList(json.data);
-        showSuccess('Data Diperbarui', `Data ${editingKades.jabatan} berhasil diperbarui!`);
+        showSuccess(
+          editingKades.isNew ? 'Berhasil Ditambahkan' : 'Data Diperbarui',
+          `Data Kepala Desa ${editingKades.desa} berhasil ${editingKades.isNew ? 'ditambahkan' : 'diperbarui'}!`
+        );
         setEditingKades(null);
         setKadesFeedback(null);
       } else {
@@ -166,6 +186,30 @@ export default function PetaniPage() {
       showError('Terjadi Kesalahan', err.message);
     } finally {
       setSavingKades(false);
+    }
+  };
+
+  const handleDeleteKades = async (kades: any) => {
+    const confirmed = await showDeleteConfirm(
+      `Hapus Kepala Desa ${kades.desa}?`,
+      `Data ${kades.jabatan || 'Kepala Desa'} (${kades.nama}) akan dihapus permanen.`
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch(
+        `/api/kepala-desa?id=${encodeURIComponent(kades.id || '')}&desa=${encodeURIComponent(kades.desa || '')}`,
+        { method: 'DELETE' }
+      );
+      const json = await res.json();
+      if (json.success) {
+        setKadesList(json.data);
+        showSuccess('Berhasil Dihapus', `Data Kepala Desa ${kades.desa} telah dihapus.`);
+      } else {
+        showError('Gagal Menghapus', json.error || 'Gagal menghapus data Kepala Desa.');
+      }
+    } catch (err: any) {
+      showError('Terjadi Kesalahan', err.message);
     }
   };
 
@@ -531,6 +575,16 @@ export default function PetaniPage() {
             >
               <Plus className="w-4 h-4" />
               Tambah Petani Baru
+            </button>
+          )}
+
+          {activeTab === 'kades' && (permissions.canDigitasiGis || currentUser.role === 'ADMIN_DINAS' || currentUser.role === 'PPL') && (
+            <button
+              onClick={handleOpenCreateKades}
+              className="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm transition cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              Tambah Kepala Desa
             </button>
           )}
         </div>
@@ -1031,16 +1085,27 @@ export default function PetaniPage() {
                   </div>
                 </div>
 
-                <div className="pt-2">
+                <div className="pt-2 flex items-center gap-2">
                   <button
                     onClick={() => {
-                      setEditingKades({ ...kades });
+                      setEditingKades({ ...kades, isNew: false });
                     }}
-                    className="w-full inline-flex items-center justify-center gap-1.5 bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-700 font-bold text-xs py-2.5 rounded-xl transition shadow-2xs"
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 bg-indigo-50 hover:bg-indigo-600 hover:text-white text-indigo-700 font-bold text-xs py-2.5 rounded-xl transition shadow-2xs cursor-pointer"
                   >
                     <Edit3 className="w-3.5 h-3.5" />
                     Edit Data Kepala Desa
                   </button>
+
+                  {(permissions.canDigitasiGis || currentUser.role === 'ADMIN_DINAS') && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteKades(kades)}
+                      title="Hapus Data Kepala Desa"
+                      className="p-2.5 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 hover:border-rose-300 transition cursor-pointer"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
                 </div>
               </div>
             ))}
@@ -1048,7 +1113,7 @@ export default function PetaniPage() {
         </div>
       )}
 
-      {/* Modal Edit Kepala Desa */}
+      {/* Modal Edit / Tambah Kepala Desa */}
       {editingKades && (
         <div className="fixed inset-0 z-[2000] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 pb-20 sm:pb-4 overflow-y-auto">
           <div className="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-8 shadow-2xl border border-slate-100 max-h-[85vh] sm:max-h-[90vh] overflow-y-auto my-auto space-y-5">
@@ -1059,7 +1124,9 @@ export default function PetaniPage() {
                 </div>
                 <div>
                   <h3 className="font-black text-slate-900 text-base">
-                    Edit Kepala Desa {editingKades.desa}
+                    {editingKades.isNew
+                      ? 'Tambah Kepala Desa / Kelurahan Baru'
+                      : `Edit Kepala Desa ${editingKades.desa}`}
                   </h3>
                   <p className="text-xs text-slate-500">
                     Kecamatan Lembeyan, Kabupaten Magetan
@@ -1075,6 +1142,37 @@ export default function PetaniPage() {
             </div>
 
             <form onSubmit={handleSaveKades} className="space-y-4 text-xs">
+              <div>
+                <label className="block font-bold text-slate-700 mb-1">
+                  Wilayah Desa / Kelurahan *
+                </label>
+                {editingKades.isNew ? (
+                  <input
+                    type="text"
+                    required
+                    value={editingKades.desa || ''}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setEditingKades({
+                        ...editingKades,
+                        desa: val,
+                        jabatan: editingKades.jabatan || (val ? `Kepala Desa ${val}` : ''),
+                        alamat: editingKades.alamat || (val ? `Kantor Desa ${val}, Kec. Lembeyan` : ''),
+                      });
+                    }}
+                    placeholder="Contoh: Kediren / Desa Baru"
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500"
+                  />
+                ) : (
+                  <input
+                    type="text"
+                    disabled
+                    value={editingKades.desa || ''}
+                    className="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl font-bold text-slate-600 cursor-not-allowed"
+                  />
+                )}
+              </div>
+
               <div>
                 <label className="block font-bold text-slate-700 mb-1">
                   Nama Lengkap & Gelar Kepala Desa / Lurah *
@@ -1147,16 +1245,20 @@ export default function PetaniPage() {
                 <button
                   type="button"
                   onClick={() => setEditingKades(null)}
-                  className="px-4 py-2 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50"
+                  className="px-4 py-2 rounded-xl border border-slate-200 font-bold text-slate-600 hover:bg-slate-50 cursor-pointer"
                 >
                   Batal
                 </button>
                 <button
                   type="submit"
                   disabled={savingKades}
-                  className="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-5 py-2 rounded-xl shadow-sm transition"
+                  className="inline-flex items-center gap-1.5 bg-indigo-600 hover:bg-indigo-700 text-white font-bold px-5 py-2 rounded-xl shadow-sm transition cursor-pointer"
                 >
-                  {savingKades ? 'Menyimpan...' : 'Simpan Data Kades'}
+                  {savingKades
+                    ? 'Menyimpan...'
+                    : editingKades.isNew
+                    ? 'Tambah Kepala Desa'
+                    : 'Simpan Data Kades'}
                 </button>
               </div>
             </form>

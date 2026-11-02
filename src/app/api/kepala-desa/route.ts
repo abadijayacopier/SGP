@@ -261,3 +261,49 @@ export async function POST(request: Request) {
     return NextResponse.json({ success: false, error: error.message }, { status: 500 });
   }
 }
+
+export async function DELETE(request: Request) {
+  try {
+    const { searchParams } = new URL(request.url);
+    const id = searchParams.get('id');
+    const desa = searchParams.get('desa');
+
+    if (!id && !desa) {
+      return NextResponse.json(
+        { success: false, error: 'ID atau nama desa wajib disertakan.' },
+        { status: 400 }
+      );
+    }
+
+    let currentList = readKadesData();
+    const countBefore = currentList.length;
+
+    const cleanDesaTarget = desa?.trim().toLowerCase().replace(/^(desa|kelurahan)\s+/i, '');
+
+    currentList = currentList.filter((k: any) => {
+      if (id && k.id === id) return false;
+      if (cleanDesaTarget) {
+        const d = k.desa.toLowerCase().replace(/^(desa|kelurahan)\s+/i, '');
+        if (d === cleanDesaTarget) return false;
+      }
+      return true;
+    });
+
+    if (currentList.length === countBefore) {
+      return NextResponse.json(
+        { success: false, error: 'Data Kepala Desa tidak ditemukan.' },
+        { status: 404 }
+      );
+    }
+
+    writeKadesData(currentList);
+
+    return NextResponse.json({
+      success: true,
+      message: 'Data Kepala Desa berhasil dihapus.',
+      data: currentList,
+    });
+  } catch (error: any) {
+    return NextResponse.json({ success: false, error: error.message }, { status: 500 });
+  }
+}

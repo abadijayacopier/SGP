@@ -20,8 +20,10 @@ import {
   Lock,
   ArrowRight,
   Sparkles,
+  Plus,
+  Trash2,
 } from 'lucide-react';
-import { showSuccess, showError, showToast } from '@/lib/sweetalert';
+import { showSuccess, showError, showToast, showDeleteConfirm } from '@/lib/sweetalert';
 import { generateAutoSignatureSvg, generateOfficialStampSvg } from '@/lib/signature-utils';
 
 interface KadesItem {
@@ -44,8 +46,9 @@ export default function KepalaDesaPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedDesaFilter, setSelectedDesaFilter] = useState('SEMUA');
 
-  // Modal Edit State
+  // Modal Edit / Tambah State
   const [editModalOpen, setEditModalOpen] = useState(false);
+  const [isCreatingNew, setIsCreatingNew] = useState(false);
   const [selectedKades, setSelectedKades] = useState<KadesItem | null>(null);
   const [formData, setFormData] = useState({
     desa: '',
@@ -130,7 +133,32 @@ export default function KepalaDesaPage() {
     });
   }, [kadesList, isPoktan, poktanDesaName, selectedDesaFilter, searchQuery]);
 
+  const handleOpenCreate = () => {
+    setIsCreatingNew(true);
+    setSelectedKades({
+      id: '',
+      desa: '',
+      nama: '',
+      jabatan: '',
+      nip: '',
+      kontak: '',
+      alamat: '',
+    });
+    setFormData({
+      desa: '',
+      nama: '',
+      jabatan: '',
+      nip: '',
+      kontak: '',
+      alamat: '',
+      signatureUrl: '',
+      stampUrl: '',
+    });
+    setEditModalOpen(true);
+  };
+
   const handleOpenEdit = (item: KadesItem) => {
+    setIsCreatingNew(false);
     setSelectedKades(item);
     setFormData({
       desa: item.desa,
@@ -143,6 +171,30 @@ export default function KepalaDesaPage() {
       stampUrl: item.stampUrl || generateOfficialStampSvg('KADES', item.desa),
     });
     setEditModalOpen(true);
+  };
+
+  const handleDeleteKades = async (item: KadesItem) => {
+    const confirmed = await showDeleteConfirm(
+      `Hapus Kepala Desa ${item.desa}?`,
+      `Data ${item.jabatan || 'Kepala Desa'} (${item.nama}) akan dihapus permanen dari sistem.`
+    );
+    if (!confirmed) return;
+
+    try {
+      const res = await fetch(
+        `/api/kepala-desa?id=${encodeURIComponent(item.id || '')}&desa=${encodeURIComponent(item.desa || '')}`,
+        { method: 'DELETE' }
+      );
+      const json = await res.json();
+      if (json.success) {
+        showSuccess('Berhasil Dihapus', `Data Kepala Desa ${item.desa} telah dihapus.`);
+        loadKadesData();
+      } else {
+        showError('Gagal Menghapus', json.error || 'Gagal menghapus data Kepala Desa.');
+      }
+    } catch (err: any) {
+      showError('Terjadi Kesalahan', err.message);
+    }
   };
 
   const handleRegenerateSignature = () => {
@@ -163,6 +215,10 @@ export default function KepalaDesaPage() {
 
   const handleSaveKades = async (e: React.FormEvent) => {
     e.preventDefault();
+    if (!formData.desa.trim()) {
+      showError('Validasi Gagal', 'Nama wilayah desa wajib diisi.');
+      return;
+    }
     if (!formData.nama.trim()) {
       showError('Validasi Gagal', 'Nama Kepala Desa wajib diisi.');
       return;
@@ -182,7 +238,10 @@ export default function KepalaDesaPage() {
 
       const json = await res.json();
       if (json.success) {
-        showSuccess('Berhasil Menyimpan', `Data Kepala Desa ${formData.desa} telah diperbarui di sistem.`);
+        showSuccess(
+          isCreatingNew ? 'Berhasil Ditambahkan' : 'Berhasil Menyimpan',
+          `Data Kepala Desa ${formData.desa} telah ${isCreatingNew ? 'ditambahkan' : 'diperbarui'} di sistem.`
+        );
         setEditModalOpen(false);
         loadKadesData();
       } else {
@@ -241,6 +300,17 @@ export default function KepalaDesaPage() {
             <RefreshCw className={`w-4 h-4 text-emerald-600 ${loading ? 'animate-spin' : ''}`} />
             <span>Muat Ulang</span>
           </button>
+
+          {(isAdminOrPpl || currentUser.role === 'ADMIN_DINAS') && (
+            <button
+              type="button"
+              onClick={handleOpenCreate}
+              className="flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm transition active:scale-95 cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Tambah Kepala Desa</span>
+            </button>
+          )}
         </div>
       </div>
 
@@ -407,21 +477,34 @@ export default function KepalaDesaPage() {
                   <span className="text-[11px] text-slate-400 italic">No kontak belum ada</span>
                 )}
 
-                <button
-                  type="button"
-                  onClick={() => handleOpenEdit(item)}
-                  className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition active:scale-95 cursor-pointer ml-auto"
-                >
-                  <Edit className="w-3.5 h-3.5" />
-                  <span>Edit Data Kades</span>
-                </button>
+                <div className="flex items-center gap-2 ml-auto">
+                  <button
+                    type="button"
+                    onClick={() => handleOpenEdit(item)}
+                    className="flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white shadow-xs transition active:scale-95 cursor-pointer"
+                  >
+                    <Edit className="w-3.5 h-3.5" />
+                    <span>Edit Data Kades</span>
+                  </button>
+
+                  {(isAdminOrPpl || currentUser.role === 'ADMIN_DINAS') && (
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteKades(item)}
+                      title="Hapus Kepala Desa"
+                      className="p-2 rounded-xl border border-rose-200 text-rose-600 hover:bg-rose-50 hover:border-rose-300 transition cursor-pointer"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
               </div>
             </div>
           ))}
         </div>
       )}
 
-      {/* Modal Edit Kepala Desa */}
+      {/* Modal Edit / Tambah Kepala Desa */}
       {editModalOpen && selectedKades && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/60 backdrop-blur-xs animate-in fade-in duration-150">
           <div className="bg-white rounded-3xl shadow-2xl border border-slate-200 w-full max-w-lg overflow-hidden flex flex-col max-h-[90vh]">
@@ -433,7 +516,9 @@ export default function KepalaDesaPage() {
                 </div>
                 <div>
                   <h3 className="text-sm sm:text-base font-black">
-                    Perbarui Data Kepala Desa {formData.desa}
+                    {isCreatingNew
+                      ? 'Tambah Data Kepala Desa / Pejabat Baru'
+                      : `Perbarui Data Kepala Desa ${formData.desa}`}
                   </h3>
                   <p className="text-[11px] text-emerald-200">
                     Wilayah Administrasi Kecamatan Lembeyan
@@ -453,17 +538,39 @@ export default function KepalaDesaPage() {
             <form onSubmit={handleSaveKades} className="p-5 overflow-y-auto space-y-4 text-xs">
               <div>
                 <label className="block font-bold text-slate-700 mb-1">
-                  Desa / Kelurahan
+                  Desa / Kelurahan *
                 </label>
-                <input
-                  type="text"
-                  value={formData.desa}
-                  disabled
-                  className="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl font-bold text-slate-700 cursor-not-allowed"
-                />
-                <span className="text-[10px] text-slate-400 mt-0.5 block">
-                  Nama wilayah desa dikunci sesuai data pemerintahan resmi.
-                </span>
+                {isCreatingNew ? (
+                  <input
+                    type="text"
+                    required
+                    placeholder="Contoh: Kediren / Tapen / Desa Baru"
+                    value={formData.desa}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setFormData((prev) => ({
+                        ...prev,
+                        desa: val,
+                        jabatan: prev.jabatan || (val ? `Kepala Desa ${val}` : ''),
+                        alamat: prev.alamat || (val ? `Kantor Desa ${val}, Kec. Lembeyan` : ''),
+                        stampUrl: generateOfficialStampSvg('KADES', val),
+                      }));
+                    }}
+                    className="w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white"
+                  />
+                ) : (
+                  <>
+                    <input
+                      type="text"
+                      value={formData.desa}
+                      disabled
+                      className="w-full px-3.5 py-2.5 bg-slate-100 border border-slate-200 rounded-xl font-bold text-slate-700 cursor-not-allowed"
+                    />
+                    <span className="text-[10px] text-slate-400 mt-0.5 block">
+                      Nama wilayah desa dikunci sesuai data pemerintahan resmi.
+                    </span>
+                  </>
+                )}
               </div>
 
               <div>
@@ -592,7 +699,7 @@ export default function KepalaDesaPage() {
                   className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-black text-xs shadow-md shadow-emerald-600/20 active:scale-95 transition cursor-pointer disabled:opacity-50"
                 >
                   <Save className="w-4 h-4" />
-                  <span>{saving ? 'Menyimpan Data...' : 'Simpan Perubahan'}</span>
+                  <span>{saving ? 'Menyimpan Data...' : isCreatingNew ? 'Tambah Kepala Desa' : 'Simpan Perubahan'}</span>
                 </button>
               </div>
             </form>
