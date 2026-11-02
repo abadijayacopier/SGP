@@ -16,6 +16,8 @@ import {
   X,
   ShieldCheck,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   LogOut,
   KeyRound,
   UserCog,
@@ -57,6 +59,10 @@ export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
   const { currentUser, permissions, isMounted, setRole, logoutUser, availableRoles } = useAuth();
+  const activeUser = currentUser;
+  const activePermissions = permissions;
+  const visibleNavItems = activePermissions.menuItems;
+
   const [dropdownOpen, setDropdownOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const [notifTab, setNotifTab] = useState<'alerts' | 'audit'>('alerts');
@@ -76,6 +82,85 @@ export default function Navbar() {
   const dropdownBtnRef = useRef<HTMLButtonElement>(null);
   const notifRef = useRef<HTMLDivElement>(null);
   const notifBtnRef = useRef<HTMLButtonElement>(null);
+
+  // Nav Scroll Horizontal Engine
+  const navScrollRef = useRef<HTMLDivElement>(null);
+  const [canScrollLeft, setCanScrollLeft] = useState(false);
+  const [canScrollRight, setCanScrollRight] = useState(false);
+  const [isDragging, setIsDragging] = useState(false);
+  const [startX, setStartX] = useState(0);
+  const [scrollLeftPos, setScrollLeftPos] = useState(0);
+
+  const checkScroll = () => {
+    if (navScrollRef.current) {
+      const { scrollLeft, scrollWidth, clientWidth } = navScrollRef.current;
+      setCanScrollLeft(scrollLeft > 6);
+      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 6);
+    }
+  };
+
+  useEffect(() => {
+    const el = navScrollRef.current;
+    if (!el) return;
+    checkScroll();
+    const timer = setTimeout(checkScroll, 200);
+    el.addEventListener('scroll', checkScroll);
+    window.addEventListener('resize', checkScroll);
+    return () => {
+      clearTimeout(timer);
+      el.removeEventListener('scroll', checkScroll);
+      window.removeEventListener('resize', checkScroll);
+    };
+  }, [visibleNavItems]);
+
+  // Otomatis pusatkan menu yang sedang aktif
+  useEffect(() => {
+    if (navScrollRef.current) {
+      const activeEl = navScrollRef.current.querySelector<HTMLElement>('[data-active="true"]');
+      if (activeEl) {
+        activeEl.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+      }
+      setTimeout(checkScroll, 350);
+    }
+  }, [pathname]);
+
+  const scrollNav = (direction: 'left' | 'right') => {
+    if (navScrollRef.current) {
+      const amount = direction === 'left' ? -220 : 220;
+      navScrollRef.current.scrollBy({ left: amount, behavior: 'smooth' });
+    }
+  };
+
+  // Geser menu dengan scroll mouse vertikal (Wheel)
+  const handleNavWheel = (e: React.WheelEvent<HTMLDivElement>) => {
+    if (navScrollRef.current) {
+      if (e.deltaY !== 0) {
+        navScrollRef.current.scrollLeft += e.deltaY;
+        checkScroll();
+      }
+    }
+  };
+
+  // Drag-to-scroll dengan mouse (Klik & Geser)
+  const handleMouseDown = (e: React.MouseEvent) => {
+    if (!navScrollRef.current) return;
+    setIsDragging(true);
+    setStartX(e.pageX - navScrollRef.current.offsetLeft);
+    setScrollLeftPos(navScrollRef.current.scrollLeft);
+  };
+
+  const handleMouseMove = (e: React.MouseEvent) => {
+    if (!isDragging || !navScrollRef.current) return;
+    e.preventDefault();
+    const x = e.pageX - navScrollRef.current.offsetLeft;
+    const walk = (x - startX) * 1.5;
+    navScrollRef.current.scrollLeft = scrollLeftPos - walk;
+    checkScroll();
+  };
+
+  const handleMouseUpOrLeave = () => {
+    setIsDragging(false);
+  };
 
   // Otomatis sembunyikan dropdown saat klik di sembarang tempat atau tekan tombol ESC
   useEffect(() => {
@@ -141,11 +226,6 @@ export default function Navbar() {
     return null;
   }
 
-  // Gunakan currentUser langsung (diinisialisasi sinkron dari sesi/cache) agar bebas lag & bebas hydration flicker
-  const activeUser = currentUser;
-  const activePermissions = permissions;
-  const visibleNavItems = activePermissions.menuItems;
-
   const handleLogout = () => {
     setDropdownOpen(false);
     logoutUser();
@@ -190,27 +270,66 @@ export default function Navbar() {
             </Link>
           </div>
 
-          {/* Desktop Navigation Links (Strictly Isolated per Role Group) */}
-          <nav suppressHydrationWarning className="hidden lg:flex items-center gap-1 min-w-0 overflow-x-auto no-scrollbar bg-slate-100/80 p-1 rounded-2xl border border-slate-200/70">
-            {visibleNavItems.map((item) => {
-              const Icon = ICON_MAP[item.iconName] || FileText;
-              const isActive = pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className={`flex items-center gap-1.5 px-2.5 xl:px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
-                    isActive
-                      ? 'bg-emerald-600 text-white shadow-xs'
-                      : 'text-slate-700 hover:text-emerald-700 hover:bg-white'
-                  }`}
-                >
-                  <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-amber-300' : 'text-emerald-600'}`} />
-                  <span>{item.label}</span>
-                </Link>
-              );
-            })}
-          </nav>
+          {/* Desktop Navigation Links with Horizontal Scroll Controls */}
+          <div className="hidden lg:flex items-center relative min-w-0 max-w-xl xl:max-w-2xl 2xl:max-w-3xl flex-1 px-1">
+            {/* Tombol Geser Kiri */}
+            {canScrollLeft && (
+              <button
+                type="button"
+                onClick={() => scrollNav('left')}
+                title="Geser menu ke kiri"
+                className="absolute left-0 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-white hover:bg-emerald-600 text-slate-700 hover:text-white border border-slate-300 shadow-md flex items-center justify-center transition cursor-pointer"
+              >
+                <ChevronLeft className="w-4 h-4" />
+              </button>
+            )}
+
+            {/* Scrollable Track */}
+            <nav
+              ref={navScrollRef}
+              onWheel={handleNavWheel}
+              onMouseDown={handleMouseDown}
+              onMouseMove={handleMouseMove}
+              onMouseUp={handleMouseUpOrLeave}
+              onMouseLeave={handleMouseUpOrLeave}
+              suppressHydrationWarning
+              className={`flex items-center gap-1 min-w-0 overflow-x-auto no-scrollbar bg-slate-100/80 p-1 rounded-2xl border border-slate-200/70 scroll-smooth w-full ${
+                isDragging ? 'cursor-grabbing' : 'cursor-grab'
+              }`}
+            >
+              {visibleNavItems.map((item) => {
+                const Icon = ICON_MAP[item.iconName] || FileText;
+                const isActive = pathname === item.href;
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    data-active={isActive ? 'true' : 'false'}
+                    className={`flex items-center gap-1.5 px-2.5 xl:px-3 py-1.5 rounded-xl text-xs font-bold transition-all whitespace-nowrap shrink-0 ${
+                      isActive
+                        ? 'bg-emerald-600 text-white shadow-xs'
+                        : 'text-slate-700 hover:text-emerald-700 hover:bg-white'
+                    }`}
+                  >
+                    <Icon className={`w-3.5 h-3.5 shrink-0 ${isActive ? 'text-amber-300' : 'text-emerald-600'}`} />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+
+            {/* Tombol Geser Kanan */}
+            {canScrollRight && (
+              <button
+                type="button"
+                onClick={() => scrollNav('right')}
+                title="Geser menu ke kanan (lihat menu lainnya)"
+                className="absolute right-0 top-1/2 -translate-y-1/2 z-20 w-7 h-7 rounded-full bg-white hover:bg-emerald-600 text-slate-700 hover:text-white border border-slate-300 shadow-md flex items-center justify-center transition cursor-pointer animate-pulse"
+              >
+                <ChevronRight className="w-4 h-4" />
+              </button>
+            )}
+          </div>
 
           {/* Right Side: Notification Bell + User Profile Badge & Mobile Menu Button */}
           <div className="flex items-center gap-1.5 shrink-0">
