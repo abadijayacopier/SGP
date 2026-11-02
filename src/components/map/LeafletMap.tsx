@@ -381,25 +381,12 @@ export default function LeafletMap({
     return null;
   }, [mapSearchText]);
 
-  // Pencarian cepat lokal (POI Lembeyan + 10 Desa Kec. Lembeyan + Petak Sawah Terdaftar)
+  // Pencarian cepat lokal (Petak Sawah Terdaftar)
   const localSearchResults = useMemo(() => {
     const q = mapSearchText.trim().toLowerCase().replace(/\s+/g, ' ');
     if (!q) {
-      return { poiMatches: [], desaMatches: [], lahanMatches: [] };
+      return { lahanMatches: [] };
     }
-    const poiMatches = LEMBEYAN_POI_LIST.filter(
-      (p) =>
-        p.name.toLowerCase().includes(q) ||
-        q.includes(p.name.toLowerCase()) ||
-        p.alamat.toLowerCase().includes(q) ||
-        p.kategori.toLowerCase().includes(q) ||
-        p.keywords?.some((k) => q.includes(k) || k.includes(q))
-    );
-    const desaMatches = Object.values(DESA_COORDINATES_LEMBEYAN).filter((d) =>
-      d.label.toLowerCase().includes(q) ||
-      d.key.toLowerCase().includes(q) ||
-      d.keterangan.toLowerCase().includes(q)
-    );
     const lahanMatches = lahanList
       .filter(
         (l) =>
@@ -408,7 +395,7 @@ export default function LeafletMap({
           (l.petani?.nama || '').toLowerCase().includes(q)
       )
       .slice(0, 5);
-    return { poiMatches, desaMatches, lahanMatches };
+    return { lahanMatches };
   }, [mapSearchText, lahanList]);
 
   // Debounced Live Global Geocoding via Internal /api/geocode (Google Maps-like)
@@ -496,54 +483,7 @@ export default function LeafletMap({
       return;
     }
 
-    // 2. Cek apakah cocok dengan POI Lembeyan (Fotocopy Abadi Jaya, BPP, dll.)
-    const exactPoi = LEMBEYAN_POI_LIST.find((p) => {
-      const qNorm = q.toLowerCase();
-      const pNorm = p.name.toLowerCase();
-      return (
-        pNorm.includes(qNorm) ||
-        qNorm.includes(pNorm) ||
-        p.keywords?.some((k) => qNorm.includes(k) || k.includes(qNorm))
-      );
-    });
-    if (exactPoi) {
-      setInternalFlyTo({
-        lat: exactPoi.lat,
-        lng: exactPoi.lng,
-        zoom: exactPoi.zoom || 18,
-        label: exactPoi.name,
-        keterangan: `${exactPoi.kategori} - ${exactPoi.alamat}`,
-        timestamp: Date.now(),
-      });
-      setMapSearchText(exactPoi.name);
-      setSearchDropdownOpen(false);
-      return;
-    }
-
-    // 3. Cek apakah cocok langsung dengan salah satu Desa di Lembeyan
-    const exactDesa = Object.values(DESA_COORDINATES_LEMBEYAN).find(
-      (d) =>
-        d.key.toLowerCase() === q.toLowerCase() ||
-        d.label.toLowerCase() === q.toLowerCase() ||
-        `desa ${d.key.toLowerCase()}` === q.toLowerCase()
-    );
-    if (exactDesa) {
-      setInternalFlyTo({
-        lat: exactDesa.lat,
-        lng: exactDesa.lng,
-        zoom: exactDesa.zoom,
-        label: exactDesa.label,
-        keterangan: exactDesa.keterangan,
-        timestamp: Date.now(),
-      });
-      setSearchDropdownOpen(false);
-      if (onSelectDesaFromMap) {
-        onSelectDesaFromMap(exactDesa.key);
-      }
-      return;
-    }
-
-    // 4. Cek apakah cocok dengan Petak Sawah Terdaftar
+    // 2. Cek apakah cocok dengan Petak Sawah Terdaftar
     const exactLahan = lahanList.find(
       (l) =>
         l.kodeLahan.toLowerCase() === q.toLowerCase() ||
@@ -562,7 +502,7 @@ export default function LeafletMap({
       return;
     }
 
-    // 5. Jika hasil global search live sudah ada di daftar
+    // 3. Jika hasil Google Maps Live sudah ada di daftar hasil
     if (globalSearchResults.length > 0) {
       applyGlobalHit(globalSearchResults[0]);
       setMapSearchText(globalSearchResults[0].name || q);
@@ -570,7 +510,7 @@ export default function LeafletMap({
       return;
     }
 
-    // 6. Fetch pencarian tempat global via internal API /api/geocode
+    // 4. Fetch pencarian tempat via Google Maps Live internal API /api/geocode
     try {
       setGeocodingLoading(true);
       const res = await fetch(`/api/geocode?q=${encodeURIComponent(q)}`);
@@ -911,94 +851,7 @@ export default function LeafletMap({
                   </button>
                 )}
 
-                {/* 2. Hasil POI / Usaha / Tempat Terkenal Lembeyan (Contoh: Fotocopy Abadi Jaya, BPP, Pasar, dll.) */}
-                {localSearchResults.poiMatches && localSearchResults.poiMatches.length > 0 && (
-                  <>
-                    <div className="px-3 py-1 bg-amber-50/80 text-[10px] font-bold text-amber-900 uppercase flex items-center justify-between">
-                      <div className="flex items-center gap-1">
-                        <span>⭐ Tempat & Layanan Kecamatan Lembeyan</span>
-                      </div>
-                      <span className="text-[9px] text-amber-700 font-semibold">Resmi Lokal</span>
-                    </div>
-                    {localSearchResults.poiMatches.map((poi) => (
-                      <button
-                        key={poi.id}
-                        type="button"
-                        onClick={() => {
-                          setInternalFlyTo({
-                            lat: poi.lat,
-                            lng: poi.lng,
-                            zoom: poi.zoom || 18,
-                            label: poi.name,
-                            keterangan: `${poi.kategori} &bull; ${poi.alamat}`,
-                            timestamp: Date.now(),
-                          });
-                          setMapSearchText(poi.name);
-                          setSearchDropdownOpen(false);
-                        }}
-                        className="w-full text-left px-3.5 py-2.5 hover:bg-amber-50/80 flex items-start justify-between gap-2 transition cursor-pointer"
-                      >
-                        <div className="min-w-0 flex-1">
-                          <div className="font-bold text-slate-900 flex items-center gap-1.5 truncate">
-                            <span className="text-sm shrink-0">{poi.icon || '📍'}</span>
-                            <span className="truncate">{poi.name}</span>
-                          </div>
-                          <div className="text-[11px] text-slate-500 pl-5 line-clamp-1">
-                            {poi.alamat}
-                          </div>
-                        </div>
-                        <span className="text-[10px] font-semibold text-amber-800 bg-amber-100 px-2 py-0.5 rounded-full shrink-0">
-                          {poi.kategori}
-                        </span>
-                      </button>
-                    ))}
-                  </>
-                )}
-
-                {/* 3. Hasil Wilayah Desa Kecamatan Lembeyan */}
-                {localSearchResults.desaMatches.length > 0 && (
-                  <>
-                    <div className="px-3 py-1 bg-slate-50 text-[10px] font-bold text-slate-500 uppercase flex items-center justify-between">
-                      <span>Wilayah Desa (Kec. Lembeyan)</span>
-                      <span className="text-[9px] text-slate-400 font-normal">Lokal Cepat</span>
-                    </div>
-                    {localSearchResults.desaMatches.map((d) => (
-                      <button
-                        key={d.key}
-                        type="button"
-                        onClick={() => {
-                          setInternalFlyTo({
-                            lat: d.lat,
-                            lng: d.lng,
-                            zoom: d.zoom,
-                            label: d.label,
-                            keterangan: d.keterangan,
-                            timestamp: Date.now(),
-                          });
-                          setMapSearchText(d.key === 'SEMUA' ? '' : d.label);
-                          setSearchDropdownOpen(false);
-                          if (onSelectDesaFromMap) {
-                            onSelectDesaFromMap(d.key);
-                          }
-                        }}
-                        className="w-full text-left px-3.5 py-2 hover:bg-emerald-50 flex items-start justify-between gap-2 transition cursor-pointer"
-                      >
-                        <div>
-                          <div className="font-bold text-slate-800 flex items-center gap-1.5">
-                            <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                            {d.label}
-                          </div>
-                          <div className="text-[10px] text-slate-500 pl-5">{d.keterangan}</div>
-                        </div>
-                        <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 shrink-0">
-                          {d.lat.toFixed(3)}, {d.lng.toFixed(3)}
-                        </span>
-                      </button>
-                    ))}
-                  </>
-                )}
-
-                {/* 4. Hasil Pencarian Petak Lahan Sawah & Petani */}
+                {/* 2. Hasil Pencarian Petak Lahan Sawah & Petani */}
                 {localSearchResults.lahanMatches.length > 0 && (
                   <>
                     <div className="px-3 py-1 bg-slate-50 text-[10px] font-bold text-slate-500 uppercase">
@@ -1106,10 +959,8 @@ export default function LeafletMap({
                   </>
                 )}
 
-                {/* 6. Placeholder jika sedang mencari atau belum ada hasil */}
+                {/* 3. Placeholder jika sedang mencari atau belum ada hasil */}
                 {!parsedCoordinate &&
-                  (!localSearchResults.poiMatches || localSearchResults.poiMatches.length === 0) &&
-                  localSearchResults.desaMatches.length === 0 &&
                   localSearchResults.lahanMatches.length === 0 &&
                   globalSearchResults.length === 0 &&
                   mapSearchText.trim().length >= 2 && (
