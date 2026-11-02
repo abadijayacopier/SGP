@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import CameraCaptureModal from '@/components/ui/CameraCaptureModal';
 import QrCodeView from '@/components/ui/QrCodeView';
 import {
+  DESA_LEMBEYAN_LIST,
   mapPengajuanToErdkkRows,
   generateErdkkCsvContent,
   generateErdkkImportTemplateCsv,
@@ -22,6 +23,7 @@ import {
   Eye,
   ShieldCheck,
   ChevronRight,
+  ChevronLeft,
   UserCheck,
   Building2,
   X,
@@ -31,6 +33,8 @@ import {
   Trash2,
   XCircle,
   Plus,
+  Search,
+  Filter,
 } from 'lucide-react';
 import {
   showSuccess,
@@ -97,6 +101,13 @@ export default function PengajuanPage() {
   const [importModalOpen, setImportModalOpen] = useState(false);
   const [importRows, setImportRows] = useState<Array<Record<string, string>>>([]);
   const [importing, setImporting] = useState(false);
+
+  // Filter, Pencarian & Pagination State
+  const [searchQuery, setSearchQuery] = useState('');
+  const [statusFilter, setStatusFilter] = useState('SEMUA');
+  const [desaFilter, setDesaFilter] = useState('SEMUA');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
 
   // Form State
   const [formData, setFormData] = useState({
@@ -210,6 +221,80 @@ export default function PengajuanPage() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scopePoktanId]);
+
+  const handleExportCsv = () => {
+    const rows = mapPengajuanToErdkkRows(
+      pengajuanList.map((item) => ({
+        ...item,
+        nik: item.nikPemilik,
+        namaPetani: item.namaPemilik,
+        komoditas: item.komoditasRencana,
+      }))
+    );
+    const csv = generateErdkkCsvContent(rows);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `Data-Usulan-eRDKK-Kec-Lembeyan-${new Date().getFullYear()}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const filteredPengajuan = useMemo(() => {
+    return pengajuanList.filter((item) => {
+      // 1. Filter Status
+      if (statusFilter !== 'SEMUA' && item.status !== statusFilter) {
+        return false;
+      }
+      // 2. Filter Desa
+      if (desaFilter !== 'SEMUA' && item.desa !== desaFilter) {
+        return false;
+      }
+      // 3. Filter Pencarian Teks
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const noMatch = (item.nomorPengajuan || '').toLowerCase().includes(q);
+        const namaMatch = (item.namaPemilik || '').toLowerCase().includes(q);
+        const nikMatch = (item.nikPemilik || '').includes(q);
+        const noKkMatch = (item.noKk || '').includes(q);
+        const pipilMatch = (item.nomorPipil || '').toLowerCase().includes(q);
+        const komoditasMatch = (item.komoditasRencana || '').toLowerCase().includes(q);
+        const poktanMatch = (item.poktan?.nama || '').toLowerCase().includes(q);
+        const desaMatch = (item.desa || '').toLowerCase().includes(q);
+
+        if (
+          !(
+            noMatch ||
+            namaMatch ||
+            nikMatch ||
+            noKkMatch ||
+            pipilMatch ||
+            komoditasMatch ||
+            poktanMatch ||
+            desaMatch
+          )
+        ) {
+          return false;
+        }
+      }
+      return true;
+    });
+  }, [pengajuanList, statusFilter, desaFilter, searchQuery]);
+
+  // Reset halaman pagination ke 1 jika filter berubah
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, statusFilter, desaFilter, pageSize]);
+
+  // Kalkulasi Pagination
+  const totalPages = Math.max(1, Math.ceil(filteredPengajuan.length / pageSize));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const startIndex = (safeCurrentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedPengajuan = useMemo(() => {
+    return filteredPengajuan.slice(startIndex, endIndex);
+  }, [filteredPengajuan, startIndex, endIndex]);
 
   const handleSelectPetani = (petaniId: string) => {
     if (petaniId === '__NEW__') {
@@ -437,14 +522,14 @@ export default function PengajuanPage() {
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 space-y-6">
       {/* Header Sesuai Kewenangan Jabatan */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-4 bg-white p-5 rounded-3xl border border-slate-200/80 shadow-xs">
         <div>
           <div className="flex items-center gap-2 mb-1">
             <span className="text-[10px] font-black uppercase tracking-wider px-2.5 py-0.5 rounded-full bg-emerald-100 text-emerald-900 border border-emerald-300">
               WEWENANG: {permissions.groupName}
             </span>
           </div>
-          <h1 className="text-2xl font-black text-slate-800 flex items-center gap-2">
+          <h1 className="text-xl sm:text-2xl font-black text-slate-800 flex items-center gap-2">
             <FileText className="w-6 h-6 text-emerald-600" />
             {currentUser.role === 'PPL'
               ? 'Verifikasi Lapangan Berkas e-RDKK (BPP Kecamatan Lembeyan)'
@@ -452,7 +537,7 @@ export default function PengajuanPage() {
               ? 'Otorisasi & Pengesahan Kuota e-RDKK (Admin Kecamatan Lembeyan)'
               : 'Input Pengajuan Lahan & Usulan e-RDKK (Pengurus Poktan)'}
           </h1>
-          <p className="text-xs sm:text-sm text-slate-500">
+          <p className="text-xs sm:text-sm text-slate-500 mt-0.5 max-w-2xl">
             {currentUser.role === 'PPL'
               ? 'Khusus Petugas BPP: Periksa kelengkapan KTP, KK, Pipil/SPPT dan sahkan hasil verifikasi lapangan PPL.'
               : currentUser.role === 'ADMIN_DINAS'
@@ -461,61 +546,18 @@ export default function PengajuanPage() {
           </p>
         </div>
 
-        <div className="flex flex-wrap items-center gap-2">
-          <Link
-            href="/cetak-erdkk"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-xs transition"
-          >
-            <Printer className="w-3.5 h-3.5" />
-            Cetak SK & Lampiran e-RDKK
-          </Link>
-
-          <button
-            type="button"
-            onClick={() => {
-              const rows = mapPengajuanToErdkkRows(
-                pengajuanList.map((item) => ({
-                  ...item,
-                  nik: item.nikPemilik,
-                  namaPetani: item.namaPemilik,
-                  komoditas: item.komoditasRencana,
-                }))
-              );
-              const csv = generateErdkkCsvContent(rows);
-              const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-              const url = URL.createObjectURL(blob);
-              const a = document.createElement('a');
-              a.href = url;
-              a.download = `Data-Usulan-eRDKK-Kec-Lembeyan-${new Date().getFullYear()}.csv`;
-              a.click();
-              URL.revokeObjectURL(url);
-            }}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 text-xs font-bold transition cursor-pointer"
-          >
-            <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
-            Export Excel/CSV Kementan
-          </button>
-
-          {(permissions.canSubmitPengajuan || currentUser.role === 'ADMIN_DINAS') && (
-            <button
-              type="button"
-              onClick={() => setImportModalOpen(true)}
-              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-200 text-xs font-bold transition cursor-pointer"
-            >
-              <Upload className="w-3.5 h-3.5 text-amber-600" />
-              Import Kolektif CSV
-            </button>
-          )}
-
+        {/* Grup Tombol Navigasi Tab & Aksi Dokumen Terpadu */}
+        <div className="flex flex-wrap items-center gap-2 shrink-0">
+          {/* Segmented Tab Navigasi Mode */}
           {canSubmitPengajuan ? (
-            <>
+            <div className="inline-flex p-1 bg-slate-100 rounded-2xl border border-slate-200">
               <button
                 type="button"
                 onClick={() => setActiveTab('list')}
-                className={`px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer ${
+                className={`px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
                   activeTab === 'list'
-                    ? 'bg-slate-900 text-white shadow-sm'
-                    : 'bg-white text-slate-700 border border-slate-200 hover:bg-slate-50'
+                    ? 'bg-white text-slate-900 shadow-xs'
+                    : 'text-slate-600 hover:text-slate-900'
                 }`}
               >
                 Daftar Usulan ({pengajuanList.length})
@@ -523,22 +565,56 @@ export default function PengajuanPage() {
               <button
                 type="button"
                 onClick={() => setActiveTab('form')}
-                className={`inline-flex items-center gap-1.5 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition cursor-pointer shadow-sm ${
+                className={`inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition cursor-pointer ${
                   activeTab === 'form'
-                    ? 'bg-emerald-600 text-white ring-2 ring-emerald-400'
-                    : 'bg-emerald-600 hover:bg-emerald-700 text-white active:scale-95'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'text-slate-600 hover:text-emerald-700'
                 }`}
               >
-                <Plus className="w-4 h-4" />
-                <span>+ Input Usulan e-RDKK Baru</span>
+                <Plus className="w-3.5 h-3.5" />
+                <span>Input Usulan Baru</span>
               </button>
-            </>
+            </div>
           ) : (
             <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-blue-50 border border-blue-200 text-blue-900 text-xs font-bold">
               <ShieldCheck className="w-4 h-4 text-blue-600" />
-              Mode Otorisasi Kuota Kecamatan (Verifikasi Lapangan oleh BPP)
+              Mode Otorisasi Kuota Kecamatan
             </span>
           )}
+
+          {/* Action Tools */}
+          <div className="flex items-center gap-1.5">
+            <Link
+              href="/cetak-erdkk"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-xs transition"
+              title="Cetak Berita Acara & SK e-RDKK"
+            >
+              <Printer className="w-3.5 h-3.5 text-emerald-300" />
+              <span className="hidden sm:inline">Cetak SK</span>
+            </Link>
+
+            <button
+              type="button"
+              onClick={handleExportCsv}
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold transition cursor-pointer shadow-2xs"
+              title="Export Format Excel / CSV Kementan"
+            >
+              <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
+              <span className="hidden sm:inline">Export Excel</span>
+            </button>
+
+            {(permissions.canSubmitPengajuan || currentUser.role === 'ADMIN_DINAS') && (
+              <button
+                type="button"
+                onClick={() => setImportModalOpen(true)}
+                className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white hover:bg-amber-50 text-amber-900 border border-amber-300 text-xs font-bold transition cursor-pointer shadow-2xs"
+                title="Import Data Usulan Massal CSV"
+              >
+                <Upload className="w-3.5 h-3.5 text-amber-600" />
+                <span className="hidden sm:inline">Import CSV</span>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 
@@ -924,35 +1000,95 @@ export default function PengajuanPage() {
       {/* TAB 2: DAFTAR STATUS PENGAJUAN & WORKFLOW APPROVAL */}
       {(activeTab === 'list' || !canSubmitPengajuan) && (
         <div className="bg-white rounded-3xl border border-slate-200 shadow-sm overflow-hidden">
-          <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+          <div className="p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div>
-              <h3 className="font-bold text-slate-800 text-base">
-                Daftar Pengajuan Lahan & Usulan e-RDKK
-              </h3>
-              <p className="text-xs text-slate-500">
+              <div className="flex items-center gap-2">
+                <h3 className="font-black text-slate-800 text-base">
+                  Daftar Pengajuan Lahan & Usulan e-RDKK
+                </h3>
+                <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100 border border-emerald-300 px-2.5 py-0.5 rounded-full">
+                  {filteredPengajuan.length} Berkas
+                </span>
+              </div>
+              <p className="text-xs text-slate-500 mt-0.5">
                 Alur verifikasi: Diajukan Poktan &rarr; Verifikasi Lapangan PPL &rarr; Persetujuan Kuota Dinas.
               </p>
             </div>
-            {canSubmitPengajuan && (
-              <button
-                type="button"
-                onClick={() => setActiveTab('form')}
-                className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-4 py-2 rounded-xl text-xs shadow-sm transition active:scale-95 cursor-pointer self-start sm:self-auto"
+
+            {/* Filter Status, Filter Desa & Search Bar */}
+            <div className="flex flex-wrap items-center gap-2">
+              {/* Filter Status */}
+              <select
+                value={statusFilter}
+                onChange={(e) => setStatusFilter(e.target.value)}
+                className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer shadow-2xs"
               >
-                <Plus className="w-4 h-4" />
-                <span>+ Buat Usulan e-RDKK Baru</span>
-              </button>
-            )}
+                <option value="SEMUA">Semua Status</option>
+                <option value="DIAJUKAN_POKTAN">Diajukan ke Poktan</option>
+                <option value="DIVERIFIKASI_PPL">Diverifikasi PPL</option>
+                <option value="DISETUJUI_DINAS">Disetujui Dinas (Kuota Terbit)</option>
+                <option value="DITOLAK">Ditolak</option>
+              </select>
+
+              {/* Filter Desa */}
+              <select
+                value={desaFilter}
+                onChange={(e) => setDesaFilter(e.target.value)}
+                className="px-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer shadow-2xs"
+              >
+                <option value="SEMUA">Semua Desa</option>
+                {DESA_LEMBEYAN_LIST.map((desa) => (
+                  <option key={desa} value={desa}>
+                    Ds. {desa}
+                  </option>
+                ))}
+              </select>
+
+              {/* Input Pencarian */}
+              <div className="relative min-w-[200px] sm:w-64">
+                <Search className="w-4 h-4 text-slate-400 absolute left-3 top-2.5 pointer-events-none" />
+                <input
+                  type="text"
+                  placeholder="Cari NIK, nama, pipil, no. usulan..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="w-full pl-9 pr-7 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-2xs"
+                />
+                {searchQuery && (
+                  <button
+                    type="button"
+                    onClick={() => setSearchQuery('')}
+                    className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"
+                  >
+                    <X className="w-3.5 h-3.5" />
+                  </button>
+                )}
+              </div>
+
+              {(searchQuery || statusFilter !== 'SEMUA' || desaFilter !== 'SEMUA') && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setStatusFilter('SEMUA');
+                    setDesaFilter('SEMUA');
+                  }}
+                  className="px-3 py-2 text-xs font-bold text-slate-600 bg-slate-100 hover:bg-slate-200 rounded-xl transition shadow-2xs cursor-pointer"
+                >
+                  Reset
+                </button>
+              )}
+            </div>
           </div>
 
           {/* Mobile Card View (Smartphone Friendly) */}
           <div className="block lg:hidden divide-y divide-slate-100">
-            {pengajuanList.length === 0 ? (
-              <div className="py-8 text-center text-slate-400 text-xs italic">
-                Belum ada pengajuan lahan yang terdaftar.
+            {filteredPengajuan.length === 0 ? (
+              <div className="py-12 text-center text-slate-400 text-xs italic">
+                Tidak ada berkas usulan yang sesuai dengan pencarian atau filter yang dipilih.
               </div>
             ) : (
-              pengajuanList.map((item) => {
+              paginatedPengajuan.map((item) => {
                 let badge = {
                   bg: 'bg-amber-50 text-amber-800 border-amber-200',
                   label: 'Diajukan ke Poktan',
@@ -1093,156 +1229,261 @@ export default function PengajuanPage() {
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-100">
-                {pengajuanList.map((item) => {
-                  let badge = {
-                    bg: 'bg-amber-50 text-amber-800 border-amber-200',
-                    label: 'Diajukan ke Poktan',
-                  };
-                  if (item.status === 'DIVERIFIKASI_PPL') {
-                    badge = {
-                      bg: 'bg-blue-50 text-blue-800 border-blue-200',
-                      label: 'Diverifikasi PPL',
+                {filteredPengajuan.length === 0 ? (
+                  <tr>
+                    <td colSpan={7} className="py-12 text-center text-slate-400 text-xs italic">
+                      Tidak ada berkas usulan yang sesuai dengan pencarian atau filter yang dipilih.
+                    </td>
+                  </tr>
+                ) : (
+                  paginatedPengajuan.map((item) => {
+                    let badge = {
+                      bg: 'bg-amber-50 text-amber-800 border-amber-200',
+                      label: 'Diajukan ke Poktan',
                     };
-                  } else if (item.status === 'DISETUJUI_DINAS') {
-                    badge = {
-                      bg: 'bg-emerald-50 text-emerald-800 border-emerald-200',
-                      label: 'Disetujui Dinas (Aktif)',
-                    };
-                  } else if (item.status === 'DITOLAK') {
-                    badge = {
-                      bg: 'bg-rose-50 text-rose-800 border-rose-200',
-                      label: 'Ditolak',
-                    };
-                  }
+                    if (item.status === 'DIVERIFIKASI_PPL') {
+                      badge = {
+                        bg: 'bg-blue-50 text-blue-800 border-blue-200',
+                        label: 'Diverifikasi PPL',
+                      };
+                    } else if (item.status === 'DISETUJUI_DINAS') {
+                      badge = {
+                        bg: 'bg-emerald-50 text-emerald-800 border-emerald-200',
+                        label: 'Disetujui Dinas (Aktif)',
+                      };
+                    } else if (item.status === 'DITOLAK') {
+                      badge = {
+                        bg: 'bg-rose-50 text-rose-800 border-rose-200',
+                        label: 'Ditolak',
+                      };
+                    }
 
-                  return (
-                    <tr key={item.id} className="hover:bg-slate-50 transition">
-                      <td className="py-3.5 px-4 font-mono font-bold text-slate-700">
-                        {item.nomorPengajuan}
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <div className="font-bold text-slate-900">{item.namaPemilik}</div>
-                        <div className="text-[11px] font-mono text-slate-500">NIK: {item.nikPemilik}</div>
-                        <div className="text-[10px] text-slate-500">
-                          TTL: <span className="font-semibold text-slate-700">{item.tempatLahir || 'Magetan'}, {item.tanggalLahir || '1975-04-23'}</span> &bull; Ibu: <span className="font-semibold text-slate-700">{item.namaIbuKandung || 'Hj. Sumirah'}</span>
-                        </div>
-                        <div className="text-[10px] text-slate-400">{item.poktan?.nama}</div>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <span className="font-bold text-emerald-700">{item.komoditasRencana}</span>
-                        <div className="text-slate-600">{item.luasHa} Ha</div>
-                        <div className="text-[10px] text-slate-400">
-                          Ds. {item.desa}, Kec. {item.kecamatan}, Kab. {item.kabupaten || 'Magetan'}
-                        </div>
-                      </td>
-                      <td className="py-3.5 px-4 font-mono font-semibold text-slate-700">
-                        {item.nomorPipil}
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <button
-                          onClick={() => {
-                            setSelectedPengajuan(item);
-                            setPreviewModalOpen(true);
-                          }}
-                          className="inline-flex items-center gap-1 font-bold text-[11px] text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-lg transition"
-                        >
-                          <Eye className="w-3.5 h-3.5" />
-                          Lihat KTP, KK, Pipil
-                        </button>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <span
-                          className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${badge.bg}`}
-                        >
-                          {badge.label}
-                        </span>
-                        {item.diverifikasiOleh && (
-                          <div className="text-[10px] text-slate-400 mt-1">
-                            PPL: {item.diverifikasiOleh}
+                    return (
+                      <tr key={item.id} className="hover:bg-slate-50 transition">
+                        <td className="py-3.5 px-4 font-mono font-bold text-slate-700">
+                          {item.nomorPengajuan}
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <div className="font-bold text-slate-900">{item.namaPemilik}</div>
+                          <div className="text-[11px] font-mono text-slate-500">NIK: {item.nikPemilik}</div>
+                          <div className="text-[10px] text-slate-500">
+                            TTL: <span className="font-semibold text-slate-700">{item.tempatLahir || 'Magetan'}, {item.tanggalLahir || '1975-04-23'}</span> &bull; Ibu: <span className="font-semibold text-slate-700">{item.namaIbuKandung || 'Hj. Sumirah'}</span>
                           </div>
-                        )}
-                        {item.disetujuiOleh && (
-                          <div className="text-[10px] text-emerald-600 font-medium">
-                            Dinas: {item.disetujuiOleh}
+                          <div className="text-[10px] text-slate-400">{item.poktan?.nama}</div>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <span className="font-bold text-emerald-700">{item.komoditasRencana}</span>
+                          <div className="text-slate-600">{item.luasHa} Ha</div>
+                          <div className="text-[10px] text-slate-400">
+                            Ds. {item.desa}, Kec. {item.kecamatan}, Kab. {item.kabupaten || 'Magetan'}
                           </div>
-                        )}
-                      </td>
-                      <td className="py-3.5 px-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5 flex-wrap">
-                          {item.status === 'DIAJUKAN_POKTAN' && (
-                            permissions.canVerifyPpl ? (
-                              <button
-                                onClick={() => handleApproveStatus(item.id, 'DIVERIFIKASI_PPL')}
-                                className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-2.5 py-1 rounded-lg text-xs shadow-2xs transition"
-                              >
-                                Verifikasi PPL
-                              </button>
-                            ) : (
-                              <span className="text-[10px] font-semibold text-slate-400 bg-slate-100 px-2 py-1 rounded-lg border border-slate-200">
-                                Menunggu Akun PPL
-                              </span>
-                            )
-                          )}
-                          {item.status === 'DIVERIFIKASI_PPL' && (
-                            permissions.canApproveDinas ? (
-                              <button
-                                onClick={() => handleApproveStatus(item.id, 'DISETUJUI_DINAS')}
-                                className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1 rounded-lg text-xs shadow-2xs transition"
-                              >
-                                Setujui & Terbitkan Kuota
-                              </button>
-                            ) : (
-                              <span className="text-[10px] font-semibold text-slate-400 bg-slate-100 px-2 py-1 rounded-lg border border-slate-200">
-                                Menunggu Admin Dinas
-                              </span>
-                            )
-                          )}
-                          {item.status === 'DISETUJUI_DINAS' && (
-                            <div className="inline-flex items-center gap-1.5 justify-end">
-                              <span className="text-[11px] font-bold text-emerald-700 flex items-center gap-1">
-                                <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Kuota Terbit
-                              </span>
-                              {permissions.canApproveDinas && (
-                                <button
-                                  type="button"
-                                  onClick={() => handleResetStatus(item)}
-                                  title="Batalkan Persetujuan Kuota Terbit & Kembalikan ke Verifikasi PPL"
-                                  className="px-1.5 py-0.5 rounded-md text-[10px] font-bold text-amber-700 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition cursor-pointer shadow-2xs"
-                                >
-                                  Batal Terbit
-                                </button>
-                              )}
+                        </td>
+                        <td className="py-3.5 px-4 font-mono font-semibold text-slate-700">
+                          {item.nomorPipil}
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <button
+                            onClick={() => {
+                              setSelectedPengajuan(item);
+                              setPreviewModalOpen(true);
+                            }}
+                            className="inline-flex items-center gap-1 font-bold text-[11px] text-emerald-700 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1 rounded-lg transition"
+                          >
+                            <Eye className="w-3.5 h-3.5" />
+                            Lihat KTP, KK, Pipil
+                          </button>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <span
+                            className={`inline-block px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${badge.bg}`}
+                          >
+                            {badge.label}
+                          </span>
+                          {item.diverifikasiOleh && (
+                            <div className="text-[10px] text-slate-400 mt-1">
+                              PPL: {item.diverifikasiOleh}
                             </div>
                           )}
+                          {item.disetujuiOleh && (
+                            <div className="text-[10px] text-emerald-600 font-medium">
+                              Dinas: {item.disetujuiOleh}
+                            </div>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4 text-right">
+                          <div className="flex items-center justify-end gap-1.5 flex-wrap">
+                            {item.status === 'DIAJUKAN_POKTAN' && (
+                              permissions.canVerifyPpl ? (
+                                <button
+                                  onClick={() => handleApproveStatus(item.id, 'DIVERIFIKASI_PPL')}
+                                  className="bg-blue-600 hover:bg-blue-700 text-white font-bold px-2.5 py-1 rounded-lg text-xs shadow-2xs transition"
+                                >
+                                  Verifikasi PPL
+                                </button>
+                              ) : (
+                                <span className="text-[10px] font-semibold text-slate-400 bg-slate-100 px-2 py-1 rounded-lg border border-slate-200">
+                                  Menunggu Akun PPL
+                                </span>
+                              )
+                            )}
+                            {item.status === 'DIVERIFIKASI_PPL' && (
+                              permissions.canApproveDinas ? (
+                                <button
+                                  onClick={() => handleApproveStatus(item.id, 'DISETUJUI_DINAS')}
+                                  className="bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-2.5 py-1 rounded-lg text-xs shadow-2xs transition"
+                                >
+                                  Setujui & Terbitkan Kuota
+                                </button>
+                              ) : (
+                                <span className="text-[10px] font-semibold text-slate-400 bg-slate-100 px-2 py-1 rounded-lg border border-slate-200">
+                                  Menunggu Admin Dinas
+                                </span>
+                              )
+                            )}
+                            {item.status === 'DISETUJUI_DINAS' && (
+                              <div className="inline-flex items-center gap-1.5 justify-end">
+                                <span className="text-[11px] font-bold text-emerald-700 flex items-center gap-1">
+                                  <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" /> Kuota Terbit
+                                </span>
+                                {permissions.canApproveDinas && (
+                                  <button
+                                    type="button"
+                                    onClick={() => handleResetStatus(item)}
+                                    title="Batalkan Persetujuan Kuota Terbit & Kembalikan ke Verifikasi PPL"
+                                    className="px-1.5 py-0.5 rounded-md text-[10px] font-bold text-amber-700 hover:text-amber-900 bg-amber-50 hover:bg-amber-100 border border-amber-200 transition cursor-pointer shadow-2xs"
+                                  >
+                                    Batal Terbit
+                                  </button>
+                                )}
+                              </div>
+                            )}
 
-                          {/* Tombol Tolak Pengajuan */}
-                          {item.status !== 'DISETUJUI_DINAS' && item.status !== 'DITOLAK' && (
+                            {/* Tombol Tolak Pengajuan */}
+                            {item.status !== 'DISETUJUI_DINAS' && item.status !== 'DITOLAK' && (
+                              <button
+                                type="button"
+                                onClick={() => handleTolakStatus(item)}
+                                title="Tolak Pengajuan & Catat Alasan"
+                                className="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs transition"
+                              >
+                                Tolak
+                              </button>
+                            )}
+
+                            {/* Tombol Hapus Pengajuan */}
                             <button
                               type="button"
-                              onClick={() => handleTolakStatus(item)}
-                              title="Tolak Pengajuan & Catat Alasan"
-                              className="px-2 py-1 rounded-lg bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold text-xs transition"
+                              onClick={() => handleDeletePengajuan(item)}
+                              title="Hapus Berkas Pengajuan"
+                              className="p-1 rounded-lg bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-600 border border-slate-200 transition"
                             >
-                              Tolak
+                              <Trash2 className="w-3.5 h-3.5" />
                             </button>
-                          )}
-
-                          {/* Tombol Hapus Pengajuan */}
-                          <button
-                            type="button"
-                            onClick={() => handleDeletePengajuan(item)}
-                            title="Hapus Berkas Pengajuan"
-                            className="p-1 rounded-lg bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-600 border border-slate-200 transition"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
-                      </td>
-                    </tr>
-                  );
-                })}
+                          </div>
+                        </td>
+                      </tr>
+                    );
+                  })
+                )}
               </tbody>
             </table>
+          </div>
+
+          {/* Baris Navigasi Pagination */}
+          <div className="p-4 bg-slate-50/80 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+            <div className="flex items-center gap-3 text-slate-600 font-medium">
+              <span>
+                Menampilkan{' '}
+                <strong className="text-slate-900 font-bold">
+                  {filteredPengajuan.length === 0 ? 0 : startIndex + 1}
+                </strong>{' '}
+                -{' '}
+                <strong className="text-slate-900 font-bold">
+                  {Math.min(endIndex, filteredPengajuan.length)}
+                </strong>{' '}
+                dari{' '}
+                <strong className="text-slate-900 font-bold">{filteredPengajuan.length}</strong> berkas usulan
+              </span>
+
+              <div className="flex items-center gap-1.5 ml-2">
+                <span className="text-slate-400">| Baris:</span>
+                <select
+                  value={pageSize}
+                  onChange={(e) => setPageSize(Number(e.target.value))}
+                  className="bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer shadow-2xs"
+                >
+                  <option value={5}>5</option>
+                  <option value={10}>10</option>
+                  <option value={20}>20</option>
+                  <option value={50}>50</option>
+                </select>
+              </div>
+            </div>
+
+            {totalPages > 1 && (
+              <div className="flex items-center gap-1">
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                  disabled={safeCurrentPage <= 1}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 font-bold hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer shadow-2xs"
+                >
+                  <ChevronLeft className="w-3.5 h-3.5" />
+                  <span className="hidden sm:inline">Sebelumnya</span>
+                </button>
+
+                <div className="flex items-center gap-1 px-1">
+                  {Array.from({ length: totalPages }, (_, i) => i + 1)
+                    .filter((p) => {
+                      if (totalPages <= 7) return true;
+                      if (p === 1 || p === totalPages) return true;
+                      if (Math.abs(p - safeCurrentPage) <= 1) return true;
+                      return false;
+                    })
+                    .reduce<(number | string)[]>((acc, p, idx, arr) => {
+                      if (idx > 0 && (p as number) - (arr[idx - 1] as number) > 1) {
+                        acc.push('...');
+                      }
+                      acc.push(p);
+                      return acc;
+                    }, [])
+                    .map((p, idx) => {
+                      if (p === '...') {
+                        return (
+                          <span key={`ellipsis-${idx}`} className="px-2 text-slate-400 font-bold">
+                            ...
+                          </span>
+                        );
+                      }
+                      const isCur = p === safeCurrentPage;
+                      return (
+                        <button
+                          key={`page-${p}`}
+                          type="button"
+                          onClick={() => setCurrentPage(p as number)}
+                          className={`w-7 h-7 flex items-center justify-center rounded-lg font-bold text-xs transition cursor-pointer ${
+                            isCur
+                              ? 'bg-emerald-600 text-white shadow-xs'
+                              : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 shadow-2xs'
+                          }`}
+                        >
+                          {p}
+                        </button>
+                      );
+                    })}
+                </div>
+
+                <button
+                  type="button"
+                  onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                  disabled={safeCurrentPage >= totalPages}
+                  className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 font-bold hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer shadow-2xs"
+                >
+                  <span className="hidden sm:inline">Selanjutnya</span>
+                  <ChevronRight className="w-3.5 h-3.5" />
+                </button>
+              </div>
+            )}
           </div>
         </div>
       )}
