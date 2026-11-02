@@ -141,15 +141,16 @@ function MapFlyTo({
   const map = useMap();
   useEffect(() => {
     if (selectedLahan && selectedLahan.centerLat && selectedLahan.centerLng) {
-      map.flyTo([selectedLahan.centerLat, selectedLahan.centerLng], 16, { duration: 1.2 });
+      map.flyTo([selectedLahan.centerLat, selectedLahan.centerLng], 17, { duration: 1.2 });
     }
   }, [selectedLahan, map]);
 
   useEffect(() => {
-    if (flyToTarget && flyToTarget.lat && flyToTarget.lng) {
-      map.flyTo([flyToTarget.lat, flyToTarget.lng], flyToTarget.zoom || 16, { duration: 1.2 });
+    if (flyToTarget && typeof flyToTarget.lat === 'number' && typeof flyToTarget.lng === 'number') {
+      const zoom = flyToTarget.zoom || 16;
+      map.flyTo([flyToTarget.lat, flyToTarget.lng], zoom, { duration: 1.2 });
     }
-  }, [flyToTarget, map]);
+  }, [flyToTarget, flyToTarget?.timestamp, map]);
 
   return null;
 }
@@ -343,11 +344,27 @@ export default function LeafletMap({
   const [minDistanceThreshold, setMinDistanceThreshold] = useState<number>(3); // Catat patok tiap minimal 3 meter
   const [trackingStatusMsg, setTrackingStatusMsg] = useState<string>('');
 
-  const activeFlyTo = internalFlyTo || flyToTarget || null;
+  // Prioritaskan target flyTo terbaru (antara tombol di halaman atau pencarian di peta)
+  const activeFlyTo = useMemo(() => {
+    if (!internalFlyTo && !flyToTarget) return null;
+    if (!internalFlyTo) return flyToTarget;
+    if (!flyToTarget) return internalFlyTo;
+    return (flyToTarget.timestamp || 0) >= (internalFlyTo.timestamp || 0)
+      ? flyToTarget
+      : internalFlyTo;
+  }, [internalFlyTo, flyToTarget]);
+
+  // Ketika parent mengirim flyToTarget baru (misal user klik tombol Pusatkan Desa), reset internalFlyTo
+  useEffect(() => {
+    if (flyToTarget) {
+      setInternalFlyTo(null);
+    }
+  }, [flyToTarget, flyToTarget?.timestamp]);
 
   // Deteksi format koordinat (misal: -7.768, 111.421 atau -7.768 111.421)
   const parsedCoordinate = useMemo(() => {
     const q = mapSearchText.trim();
+    if (!q) return null;
     const match = q.match(/^(-?\d{1,2}(?:\.\d+)?)[,\s]+(-?\d{1,3}(?:\.\d+)?)$/);
     if (match) {
       const lat = parseFloat(match[1]);
@@ -359,26 +376,25 @@ export default function LeafletMap({
     return null;
   }, [mapSearchText]);
 
-  // Pencarian cepat lokal (10 Desa Kec. Lembeyan + Petak Sawah Terdaftar)
+  // Pencarian cepat lokal (Hanya tampil saat user mengetik kata kunci pencarian, seperti Google Maps)
   const localSearchResults = useMemo(() => {
     const q = mapSearchText.trim().toLowerCase();
+    if (!q) {
+      return { desaMatches: [], lahanMatches: [] };
+    }
     const desaMatches = Object.values(DESA_COORDINATES_LEMBEYAN).filter((d) =>
-      !q
-        ? true
-        : d.label.toLowerCase().includes(q) ||
-          d.key.toLowerCase().includes(q) ||
-          d.keterangan.toLowerCase().includes(q)
+      d.label.toLowerCase().includes(q) ||
+      d.key.toLowerCase().includes(q) ||
+      d.keterangan.toLowerCase().includes(q)
     );
-    const lahanMatches = !q
-      ? []
-      : lahanList
-          .filter(
-            (l) =>
-              l.namaLahan.toLowerCase().includes(q) ||
-              l.kodeLahan.toLowerCase().includes(q) ||
-              (l.petani?.nama || '').toLowerCase().includes(q)
-          )
-          .slice(0, 5);
+    const lahanMatches = lahanList
+      .filter(
+        (l) =>
+          l.namaLahan.toLowerCase().includes(q) ||
+          l.kodeLahan.toLowerCase().includes(q) ||
+          (l.petani?.nama || '').toLowerCase().includes(q)
+      )
+      .slice(0, 5);
     return { desaMatches, lahanMatches };
   }, [mapSearchText, lahanList]);
 
@@ -761,10 +777,13 @@ export default function LeafletMap({
               <input
                 type="text"
                 value={mapSearchText}
-                onFocus={() => setSearchDropdownOpen(true)}
+                onFocus={() => {
+                  if (mapSearchText.trim().length > 0) setSearchDropdownOpen(true);
+                }}
                 onChange={(e) => {
-                  setMapSearchText(e.target.value);
-                  setSearchDropdownOpen(true);
+                  const val = e.target.value;
+                  setMapSearchText(val);
+                  setSearchDropdownOpen(val.trim().length > 0);
                 }}
                 placeholder="Cari lokasi global (desa, jalan, kota, koordinat, petak)..."
                 className="w-full px-2.5 py-2 text-xs font-medium text-slate-800 bg-transparent focus:outline-none"
@@ -799,7 +818,7 @@ export default function LeafletMap({
             </form>
 
             {/* Dropdown Hasil Pencarian Global, Koordinat, Desa & Petak Sawah */}
-            {searchDropdownOpen && (
+            {searchDropdownOpen && mapSearchText.trim().length > 0 && (
               <div className="absolute left-0 right-0 mt-1.5 bg-white rounded-2xl shadow-2xl border border-slate-200 max-h-80 overflow-y-auto z-50 divide-y divide-slate-100 text-xs">
                 <div className="px-3 py-1.5 bg-slate-50 flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase sticky top-0 z-10 border-b border-slate-100">
                   <div className="flex items-center gap-1.5">

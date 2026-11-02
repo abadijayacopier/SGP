@@ -621,52 +621,17 @@ export default function PetaPage() {
           </p>
         </div>
 
-        {/* Action Button Based on Role Access */}
-        <div className="flex flex-wrap items-center gap-2">
-          <Link
-            href="/field-maps"
-            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm transition shadow-sm"
-            title="Buka tampilan layar penuh khusus smartphone & patok GPS offline"
-          >
-            <Compass className="w-4 h-4 text-amber-300 animate-pulse" />
-            <span>📱 Mode Field Maps Lapangan</span>
-          </Link>
-
+        {/* Action Button: Export GeoJSON GIS */}
+        <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
             onClick={handleExportGeoJSON}
-            className="inline-flex items-center gap-1.5 px-3.5 py-2.5 rounded-xl bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 font-bold text-xs sm:text-sm transition shadow-2xs"
+            className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs sm:text-sm transition shadow-sm cursor-pointer active:scale-95"
             title="Unduh file poligon spasial GeoJSON untuk QGIS / ArcGIS"
           >
-            <Download className="w-4 h-4 text-emerald-600" />
-            Export GeoJSON GIS
+            <Download className="w-4 h-4" />
+            <span>Export GeoJSON GIS</span>
           </button>
-
-          {permissions.canDigitasiGis ? (
-            <button
-              onClick={() => setIsDrawingMode(!isDrawingMode)}
-              className={`inline-flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition shadow-sm ${
-                isDrawingMode
-                  ? 'bg-red-600 hover:bg-red-700 text-white'
-                  : 'bg-emerald-600 hover:bg-emerald-700 text-white'
-              }`}
-            >
-              {isDrawingMode ? (
-                <>
-                  <X className="w-4 h-4" /> Batal Digitasi
-                </>
-              ) : (
-                <>
-                  <Plus className="w-4 h-4" /> Digitasi Lahan (Klik / GPS Keliling Sawah)
-                </>
-              )}
-            </button>
-          ) : (
-            <span className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-emerald-50 border border-emerald-200 text-emerald-800 text-xs font-bold">
-              <Eye className="w-4 h-4 text-emerald-600" />
-              Mode Lihat Peta & Cetak Kartu Lahan ({currentUser.roleLabel})
-            </span>
-          )}
         </div>
       </div>
 
@@ -773,6 +738,7 @@ export default function PetaPage() {
                 onChange={(e) => {
                   const val = e.target.value;
                   setDesaFilter(val);
+                  setSelectedLahanId(null);
                   const coord = DESA_COORDINATES_LEMBEYAN[val] || DESA_COORDINATES_LEMBEYAN.SEMUA;
                   setFlyToTarget({
                     lat: coord.lat,
@@ -806,6 +772,7 @@ export default function PetaPage() {
             type="button"
             onClick={() => {
               setDesaFilter('SEMUA');
+              setSelectedLahanId(null);
               const c = DESA_COORDINATES_LEMBEYAN.SEMUA;
               setFlyToTarget({
                 lat: c.lat,
@@ -832,6 +799,7 @@ export default function PetaPage() {
                 type="button"
                 onClick={() => {
                   setDesaFilter(d);
+                  setSelectedLahanId(null);
                   const c = DESA_COORDINATES_LEMBEYAN[d];
                   if (c) {
                     setFlyToTarget({
@@ -959,7 +927,20 @@ export default function PetaPage() {
         onPolygonCreated={handlePolygonCreated}
         selectedLahanId={selectedLahanId}
         flyToTarget={flyToTarget}
-        onSelectDesaFromMap={(desaKey) => setDesaFilter(desaKey)}
+        onSelectDesaFromMap={(desaKey) => {
+          setDesaFilter(desaKey);
+          const c = DESA_COORDINATES_LEMBEYAN[desaKey] || DESA_COORDINATES_LEMBEYAN.SEMUA;
+          if (c) {
+            setFlyToTarget({
+              lat: c.lat,
+              lng: c.lng,
+              zoom: c.zoom,
+              label: c.label,
+              keterangan: c.keterangan,
+              timestamp: Date.now(),
+            });
+          }
+        }}
         onToggleDrawingMode={() => setIsDrawingMode(!isDrawingMode)}
         canDigitasiGis={permissions.canDigitasiGis}
       />
