@@ -191,6 +191,23 @@ export default function PengajuanPage() {
   useEffect(() => {
     fetchPengajuan();
     fetchMaster();
+
+    const handleSync = () => {
+      fetchPengajuan();
+      fetchMaster();
+    };
+    window.addEventListener('focus', handleSync);
+    window.addEventListener('storage', handleSync);
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') handleSync();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
+
+    return () => {
+      window.removeEventListener('focus', handleSync);
+      window.removeEventListener('storage', handleSync);
+      document.removeEventListener('visibilitychange', handleVisibility);
+    };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scopePoktanId]);
 

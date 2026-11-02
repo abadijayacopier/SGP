@@ -334,6 +334,7 @@ export const DEMO_USERS: Record<UserRole, UserSession> = {
 interface AuthContextType {
   currentUser: UserSession;
   isMounted: boolean;
+  isAuthenticated: boolean;
   setRole: (role: UserRole) => Promise<void> | void;
   loginUser: (session: UserSession) => void;
   updateCurrentUser: (updates: Partial<UserSession>) => void;
@@ -348,7 +349,7 @@ async function fetchSession(username: string): Promise<UserSession | null> {
     const res = await fetch('/api/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password: '123456' }),
+      body: JSON.stringify({ username, password: '123456', skip2FA: true }),
     });
     const json = await res.json();
     return json.success ? (json.data as UserSession) : null;
@@ -360,6 +361,7 @@ async function fetchSession(username: string): Promise<UserSession | null> {
 const AuthContext = createContext<AuthContextType>({
   currentUser: DEMO_USERS.ADMIN_DINAS,
   isMounted: false,
+  isAuthenticated: false,
   setRole: () => {},
   loginUser: () => {},
   updateCurrentUser: () => {},
@@ -369,6 +371,7 @@ const AuthContext = createContext<AuthContextType>({
 });
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
   const [currentUser, setCurrentUser] = useState<UserSession>(() => {
     if (typeof window !== 'undefined') {
       try {
@@ -387,10 +390,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             }
             return parsed;
           }
-        }
-        const savedRole = localStorage.getItem('pertanian_role') as UserRole;
-        if (savedRole && DEMO_USERS[savedRole]) {
-          return DEMO_USERS[savedRole];
         }
       } catch {}
     }
@@ -422,26 +421,25 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             parsed.username = 'kios_bumisubur';
           }
           setCurrentUser(parsed);
+          setIsAuthenticated(true);
           // Selalu segarkan sesi dari database agar nama, foto profil, dan scope selalu mutakhir
           if (parsed.username) {
             fetchSession(parsed.username).then((s) => s && persist(s));
           }
           return;
         }
-      }
-      const savedRole = localStorage.getItem('pertanian_role') as UserRole;
-      if (savedRole && DEMO_USERS[savedRole]) {
-        fetchSession(DEMO_USERS[savedRole].username).then((s) => s && persist(s));
       } else {
-        fetchSession(DEMO_USERS.ADMIN_DINAS.username).then((s) => s && persist(s));
+        setIsAuthenticated(false);
       }
     } catch (e) {
       console.error(e);
+      setIsAuthenticated(false);
     }
   }, []);
 
   const persist = (session: UserSession) => {
     setCurrentUser(session);
+    setIsAuthenticated(true);
     localStorage.setItem('pertanian_role', session.role);
     localStorage.setItem('pertanian_user_session', JSON.stringify(session));
   };
@@ -467,6 +465,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   const handleLogoutUser = () => {
+    setIsAuthenticated(false);
     localStorage.removeItem('pertanian_user_session');
     localStorage.removeItem('pertanian_role');
     setCurrentUser(DEMO_USERS.ADMIN_DINAS);
@@ -486,6 +485,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       value={{
         currentUser,
         isMounted,
+        isAuthenticated,
         setRole: handleSetRole,
         loginUser: handleLoginUser,
         updateCurrentUser: handleUpdateCurrentUser,

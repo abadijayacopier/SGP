@@ -181,10 +181,17 @@ export default function PetaniPage() {
     window.addEventListener('petani-updated', handlePetaniSync);
     window.addEventListener('poktan-updated', handlePetaniSync);
     window.addEventListener('storage', handlePetaniSync);
+    window.addEventListener('focus', handlePetaniSync);
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') handlePetaniSync();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
     return () => {
       window.removeEventListener('petani-updated', handlePetaniSync);
       window.removeEventListener('poktan-updated', handlePetaniSync);
       window.removeEventListener('storage', handlePetaniSync);
+      window.removeEventListener('focus', handlePetaniSync);
+      document.removeEventListener('visibilitychange', handleVisibility);
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [filterPoktan, currentUser.role, currentUser.poktanId, currentUser.petaniId]);

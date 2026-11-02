@@ -5,6 +5,7 @@ import {
   generateAutoSignatureSvg,
   generateOfficialStampSvg,
 } from '@/lib/signature-utils';
+import { create2FAChallenge, verify2FAChallenge } from '@/lib/two-factor';
 
 const ROLE_META: Record<
   string,
@@ -45,7 +46,7 @@ const ROLE_META: Record<
 export async function POST(req: Request) {
   try {
     const body = await req.json();
-    const { username, password } = body;
+    const { username, password, twoFactorCode, challengeToken, skip2FA } = body;
 
     if (!username) {
       return NextResponse.json(
@@ -111,6 +112,39 @@ export async function POST(req: Request) {
           },
           { status: 401 }
         );
+      }
+
+      // Verifikasi Keamanan 2-Faktor (2FA)
+      if (!skip2FA && !twoFactorCode) {
+        const challenge = create2FAChallenge(userRecord.username, userRecord.phone);
+        const maskedPhone = userRecord.phone
+          ? userRecord.phone.slice(0, 4) + '****' + userRecord.phone.slice(-3)
+          : '0812****9988';
+
+        return NextResponse.json({
+          success: true,
+          require2FA: true,
+          challengeToken: challenge.challengeToken,
+          otpCode: challenge.otpCode,
+          maskedPhone,
+          username: userRecord.username,
+          name: userRecord.name,
+          role: userRecord.role,
+        });
+      }
+
+      if (twoFactorCode) {
+        const check = verify2FAChallenge(
+          challengeToken || '',
+          twoFactorCode,
+          '123456'
+        );
+        if (!check.valid) {
+          return NextResponse.json(
+            { success: false, error: check.reason || 'Kode 2FA atau PIN tidak cocok!' },
+            { status: 401 }
+          );
+        }
       }
 
       const meta = ROLE_META[userRecord.role] || ROLE_META.PETANI;
@@ -190,6 +224,38 @@ export async function POST(req: Request) {
     });
 
     if (petaniRecord) {
+      if (!skip2FA && !twoFactorCode) {
+        const challenge = create2FAChallenge(petaniRecord.nik, petaniRecord.telepon);
+        const maskedPhone = petaniRecord.telepon
+          ? petaniRecord.telepon.slice(0, 4) + '****' + petaniRecord.telepon.slice(-3)
+          : '0856****2097';
+
+        return NextResponse.json({
+          success: true,
+          require2FA: true,
+          challengeToken: challenge.challengeToken,
+          otpCode: challenge.otpCode,
+          maskedPhone,
+          username: petaniRecord.nik,
+          name: petaniRecord.nama,
+          role: 'PETANI',
+        });
+      }
+
+      if (twoFactorCode) {
+        const check = verify2FAChallenge(
+          challengeToken || '',
+          twoFactorCode,
+          '123456'
+        );
+        if (!check.valid) {
+          return NextResponse.json(
+            { success: false, error: check.reason || 'Kode 2FA atau PIN tidak cocok!' },
+            { status: 401 }
+          );
+        }
+      }
+
       const meta = ROLE_META.PETANI;
       return NextResponse.json({
         success: true,

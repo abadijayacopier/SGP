@@ -4,6 +4,7 @@ import React from 'react';
 import { usePathname } from 'next/navigation';
 import RoleAccessGuard from '@/components/layout/RoleAccessGuard';
 import MobileBottomNav from '@/components/layout/MobileBottomNav';
+import SessionTimeoutGuard from '@/components/auth/SessionTimeoutGuard';
 
 export default function AppShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
@@ -12,9 +13,11 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   if (isFieldMaps) {
     return (
-      <main className="w-full h-screen h-[100dvh] overflow-hidden p-0 m-0 flex flex-col">
-        <RoleAccessGuard>{children}</RoleAccessGuard>
-      </main>
+      <SessionTimeoutGuard>
+        <main className="w-full h-screen h-[100dvh] overflow-hidden p-0 m-0 flex flex-col">
+          <RoleAccessGuard>{children}</RoleAccessGuard>
+        </main>
+      </SessionTimeoutGuard>
     );
   }
 
@@ -27,7 +30,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
   }
 
   return (
-    <>
+    <SessionTimeoutGuard>
       <main className="flex-1 w-full pb-24 md:pb-12">
         <RoleAccessGuard>{children}</RoleAccessGuard>
       </main>
@@ -45,6 +48,6 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
         </div>
       </footer>
       <MobileBottomNav />
-    </>
+    </SessionTimeoutGuard>
   );
 }

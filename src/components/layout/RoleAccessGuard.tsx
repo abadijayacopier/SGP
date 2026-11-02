@@ -41,7 +41,7 @@ const PATH_LABELS: Record<string, string> = {
 
 export default function RoleAccessGuard({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
-  const { currentUser, permissions, isMounted } = useAuth();
+  const { currentUser, permissions, isMounted, isAuthenticated } = useAuth();
 
   // Selama initial hydration belum mount, render children agar identik dengan SSR
   if (!isMounted) {
@@ -52,6 +52,22 @@ export default function RoleAccessGuard({ children }: { children: React.ReactNod
   const isExempt = PUBLIC_OR_PRINT_PREFIXES.some((prefix) => pathname.startsWith(prefix));
   if (isExempt || pathname === '/') {
     return <>{children}</>;
+  }
+
+  // Jika belum login dan mencoba mengakses rute internal yang dilindungi, arahkan ke halaman login
+  if (!isAuthenticated) {
+    if (typeof window !== 'undefined') {
+      window.location.href = `/login?from=${encodeURIComponent(pathname)}`;
+    }
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="text-center p-6 space-y-3">
+          <div className="w-10 h-10 border-4 border-emerald-600 border-t-transparent rounded-full animate-spin mx-auto" />
+          <p className="text-xs font-bold text-slate-700">Mengarahkan ke Halaman Login...</p>
+          <p className="text-[11px] text-slate-400">Silakan masuk dengan akun terdaftar untuk mengakses layanan.</p>
+        </div>
+      </div>
+    );
   }
 
   const isAllowed = permissions.allowedPaths.some(

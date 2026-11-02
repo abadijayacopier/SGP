@@ -2,7 +2,7 @@
   "name": "Sistem Pertanian & Field Maps Lembeyan",
   "short_name": "GIS Lembeyan",
   "description": "Aplikasi Pemetaan Lapangan GIS Sawah, Antrean Offline, e-RDKK dan Penyaluran Pupuk BPP Lembeyan",
-  "start_url": "/",
+  "start_url": "/login",
   "scope": "/",
   "display": "standalone",
   "orientation": "portrait",

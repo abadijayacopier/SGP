@@ -216,10 +216,16 @@ export default function PetaPage() {
     const handleDataUpdated = () => {
       fetchPetani();
       fetchPoktan();
+      fetchLahan();
     };
     window.addEventListener('petani-updated', handleDataUpdated);
     window.addEventListener('poktan-updated', handleDataUpdated);
     window.addEventListener('storage', handleDataUpdated);
+    window.addEventListener('focus', handleDataUpdated);
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') handleDataUpdated();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
 
     const checkOffline = () => {
       const surveys = getOfflineSurveys();
@@ -231,6 +237,8 @@ export default function PetaPage() {
       window.removeEventListener('petani-updated', handleDataUpdated);
       window.removeEventListener('poktan-updated', handleDataUpdated);
       window.removeEventListener('storage', handleDataUpdated);
+      window.removeEventListener('focus', handleDataUpdated);
+      document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('offline-surveys-changed', checkOffline);
     };
   }, [currentUser.role, currentUser.petaniId, currentUser.poktanId]);
@@ -242,11 +250,20 @@ export default function PetaPage() {
       return null;
     }
     const cleanNik = quickPetaniData.nik.replace(/\D/g, '');
-    if (cleanNik.length !== 16) {
-      showWarning('NIK Tidak Valid', 'NIK KTP Petani harus terdiri dari tepat 16 digit angka!');
+    if (cleanNik.length < 10) {
+      showWarning('NIK Tidak Valid', 'NIK Petani minimal harus 10 digit angka!');
       return null;
     }
-    const targetPoktanId = quickPetaniData.poktanId || poktanList[0]?.id;
+    let targetPoktanId = quickPetaniData.poktanId || poktanList[0]?.id;
+    if (!targetPoktanId) {
+      try {
+        const resPok = await fetch('/api/poktan');
+        const jsonPok = await resPok.json();
+        if (jsonPok.success && jsonPok.data?.length > 0) {
+          targetPoktanId = jsonPok.data[0].id;
+        }
+      } catch {}
+    }
     if (!targetPoktanId) {
       showWarning('Pilih Poktan', 'Pilih Kelompok Tani (Poktan) terlebih dahulu!');
       return null;

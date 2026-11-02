@@ -506,10 +506,17 @@ export default function FieldMapsMobile() {
     window.addEventListener('petani-updated', handleDataSync);
     window.addEventListener('poktan-updated', handleDataSync);
     window.addEventListener('storage', handleDataSync);
+    window.addEventListener('focus', handleDataSync);
+    const handleVisibility = () => {
+      if (document.visibilityState === 'visible') handleDataSync();
+    };
+    document.addEventListener('visibilitychange', handleVisibility);
     return () => {
       window.removeEventListener('petani-updated', handleDataSync);
       window.removeEventListener('poktan-updated', handleDataSync);
       window.removeEventListener('storage', handleDataSync);
+      window.removeEventListener('focus', handleDataSync);
+      document.removeEventListener('visibilitychange', handleVisibility);
     };
   }, []);
 

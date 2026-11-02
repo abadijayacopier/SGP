@@ -456,18 +456,31 @@ export default async function CetakKalenderTanamPage({ params, searchParams }: P
           </h4>
 
           <div className="overflow-x-auto border border-slate-300 rounded-lg">
-            <table className="w-full text-xs print:text-[9.5px] text-left border-collapse border border-slate-300">
-              <thead className="print-dark-header">
-                <tr
-                  className="bg-slate-900 print:bg-slate-900 text-white print:text-white text-[10px] print:text-[9px] uppercase tracking-wider font-bold print-dark-header"
-                  style={{ backgroundColor: '#0f172a', color: '#ffffff', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}
-                >
-                  <th className="py-2 px-2.5 border-r border-slate-700 text-center w-28 bg-slate-900 print:bg-slate-900 text-white print:text-white print-dark-header font-bold" style={{ backgroundColor: '#0f172a', color: '#ffffff', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>Fase HST</th>
-                  <th className="py-2 px-2.5 border-r border-slate-700 w-32 text-center bg-slate-900 print:bg-slate-900 text-white print:text-white print-dark-header font-bold" style={{ backgroundColor: '#0f172a', color: '#ffffff', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>Tanggal Pelaksanaan</th>
-                  <th className="py-2 px-2 border-r border-slate-700 text-center w-20 bg-slate-900 print:bg-slate-900 text-white print:text-white print-dark-header font-bold" style={{ backgroundColor: '#0f172a', color: '#ffffff', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>Urea (Kg)</th>
-                  <th className="py-2 px-2 border-r border-slate-700 text-center w-20 bg-slate-900 print:bg-slate-900 text-white print:text-white print-dark-header font-bold" style={{ backgroundColor: '#0f172a', color: '#ffffff', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>NPK (Kg)</th>
-                  <th className="py-2 px-2 border-r border-slate-700 text-center w-20 bg-slate-900 print:bg-slate-900 text-white print:text-white print-dark-header font-bold" style={{ backgroundColor: '#0f172a', color: '#ffffff', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>Organik (Kg)</th>
-                  <th className="py-2 px-2.5 bg-slate-900 print:bg-slate-900 text-white print:text-white print-dark-header font-bold" style={{ backgroundColor: '#0f172a', color: '#ffffff', WebkitPrintColorAdjust: 'exact', printColorAdjust: 'exact' }}>Petunjuk Teknis Agronomi BPP</th>
+            <style>{`
+              @media print {
+                .kalender-table thead tr th {
+                  background-color: #f1f5f9 !important;
+                  color: #0f172a !important;
+                  border: 1px solid #334155 !important;
+                  font-weight: 800 !important;
+                  -webkit-print-color-adjust: exact !important;
+                  print-color-adjust: exact !important;
+                }
+                .kalender-table tbody tr td {
+                  border: 1px solid #cbd5e1 !important;
+                  color: #0f172a !important;
+                }
+              }
+            `}</style>
+            <table className="kalender-table w-full text-xs print:text-[9.5px] text-left border-collapse border border-slate-300">
+              <thead>
+                <tr className="bg-slate-900 text-white print:bg-slate-100 print:text-slate-900 text-[10px] print:text-[9px] uppercase tracking-wider font-bold">
+                  <th className="py-2 px-2.5 border-r border-slate-700 print:border-slate-400 text-center w-28 font-bold">Fase HST</th>
+                  <th className="py-2 px-2.5 border-r border-slate-700 print:border-slate-400 w-32 text-center font-bold">Tanggal Pelaksanaan</th>
+                  <th className="py-2 px-2 border-r border-slate-700 print:border-slate-400 text-center w-20 font-bold">Urea (Kg)</th>
+                  <th className="py-2 px-2 border-r border-slate-700 print:border-slate-400 text-center w-20 font-bold">NPK (Kg)</th>
+                  <th className="py-2 px-2 border-r border-slate-700 print:border-slate-400 text-center w-20 font-bold">Organik (Kg)</th>
+                  <th className="py-2 px-2.5 font-bold">Petunjuk Teknis Agronomi BPP</th>
                 </tr>
               </thead>
               <tbody className="divide-y divide-slate-200">

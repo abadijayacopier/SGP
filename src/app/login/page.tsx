@@ -1,7 +1,7 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import React, { useState, useEffect, Suspense } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth, ROLE_PERMISSIONS, UserRole } from '@/lib/auth-context';
 import {
@@ -19,19 +19,42 @@ import {
   RefreshCw,
   Sparkles,
   CheckCircle2,
+  KeyRound,
+  Smartphone,
+  Send,
+  RotateCcw,
+  ArrowLeft,
+  Clock,
 } from 'lucide-react';
 import { showSuccess, showToast } from '@/lib/sweetalert';
 
-export default function LoginPage() {
+function LoginFormContent() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { loginUser } = useAuth();
 
+  const [step, setStep] = useState<'login' | '2fa'>('login');
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
   const [cacheCleared, setCacheCleared] = useState(false);
+
+  // 2FA Challenge State
+  const [challengeData, setChallengeData] = useState<{
+    challengeToken: string;
+    otpCode: string;
+    maskedPhone: string;
+    username: string;
+    name: string;
+    role: string;
+  } | null>(null);
+  const [twoFactorCode, setTwoFactorCode] = useState('');
+  const [resendCountdown, setResendCountdown] = useState(60);
+  const [resending, setResending] = useState(false);
+
+  const isTimeout = searchParams?.get('timeout') === '1';
 
   // Otomatis bersihkan stale cache login saat pertama kali membuka halaman login
   useEffect(() => {
@@ -45,6 +68,15 @@ export default function LoginPage() {
       // Abaikan jika storage dinonaktifkan di browser
     }
   }, []);
+
+  // Hitung mundur resend countdown OTP 2FA
+  useEffect(() => {
+    if (step !== '2fa' || resendCountdown <= 0) return;
+    const timer = setInterval(() => {
+      setResendCountdown((prev) => (prev > 0 ? prev - 1 : 0));
+    }, 1000);
+    return () => clearInterval(timer);
+  }, [step, resendCountdown]);
 
   const handleManualClearCache = async () => {
     try {
@@ -65,6 +97,8 @@ export default function LoginPage() {
       setPassword('');
       setErrorMsg(null);
       setCacheCleared(true);
+      setStep('login');
+      setChallengeData(null);
     } catch (err: any) {
       showToast('Gagal membersihkan cache: ' + err.message, 'error');
     }
@@ -96,6 +130,23 @@ export default function LoginPage() {
       });
 
       const json = await res.json();
+
+      if (json.require2FA) {
+        // Melangkah ke Verifikasi 2FA
+        setChallengeData({
+          challengeToken: json.challengeToken,
+          otpCode: json.otpCode,
+          maskedPhone: json.maskedPhone,
+          username: json.username,
+          name: json.name,
+          role: json.role,
+        });
+        setTwoFactorCode(json.otpCode || '');
+        setResendCountdown(60);
+        setStep('2fa');
+        return;
+      }
+
       if (json.success && json.data) {
         loginUser(json.data);
         if (json.data.role === 'SURVEYOR') {
@@ -110,6 +161,83 @@ export default function LoginPage() {
       setErrorMsg('Terjadi gangguan koneksi: ' + err.message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleVerify2FASubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErrorMsg(null);
+
+    if (!twoFactorCode.trim()) {
+      setErrorMsg('Masukkan 6 digit kode OTP 2FA atau PIN Darurat!');
+      return;
+    }
+
+    try {
+      setLoading(true);
+
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          username: username.trim(),
+          password: password.trim(),
+          twoFactorCode: twoFactorCode.trim(),
+          challengeToken: challengeData?.challengeToken,
+        }),
+      });
+
+      const json = await res.json();
+      if (json.success && json.data) {
+        loginUser(json.data);
+        showSuccess('Verifikasi Berhasil', `Selamat datang kembali, ${json.data.name}!`);
+        if (json.data.role === 'SURVEYOR') {
+          window.location.href = '/field-maps';
+        } else {
+          window.location.href = ROLE_PERMISSIONS[json.data.role as UserRole]?.defaultPath || '/dashboard';
+        }
+      } else {
+        setErrorMsg(json.error || 'Kode verifikasi salah atau kedaluwarsa. Masukkan PIN darurat 123456 jika darurat.');
+      }
+    } catch (err: any) {
+      setErrorMsg('Terjadi gangguan verifikasi 2FA: ' + err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendOTP = async () => {
+    if (resendCountdown > 0 || resending) return;
+    try {
+      setResending(true);
+      setErrorMsg(null);
+      const res = await fetch('/api/auth/2fa/resend', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ username: username.trim() }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        setChallengeData((prev) =>
+          prev
+            ? {
+                ...prev,
+                challengeToken: json.challengeToken,
+                otpCode: json.otpCode,
+                maskedPhone: json.maskedPhone,
+              }
+            : null
+        );
+        setTwoFactorCode(json.otpCode || '');
+        setResendCountdown(60);
+        showToast('Kode OTP 2FA baru telah dikirimkan!', 'success');
+      } else {
+        setErrorMsg(json.error || 'Gagal mengirim ulang kode OTP.');
+      }
+    } catch (err: any) {
+      setErrorMsg('Gagal kirim ulang OTP: ' + err.message);
+    } finally {
+      setResending(false);
     }
   };
 
@@ -148,11 +276,11 @@ export default function LoginPage() {
               </div>
 
               <div className="flex items-start gap-3 bg-white/10 backdrop-blur-xs p-3 rounded-2xl border border-white/10">
-                <Camera className="w-5 h-5 text-amber-300 shrink-0 mt-0.5" />
+                <ShieldCheck className="w-5 h-5 text-amber-300 shrink-0 mt-0.5" />
                 <div>
-                  <strong className="text-white block font-bold">Verifikasi Live Kamera &amp; Saksi Poktan</strong>
+                  <strong className="text-white block font-bold">Keamanan Akun Berlapis (2FA Otentikasi)</strong>
                   <span className="text-emerald-200 text-[11px]">
-                    Dokumentasi foto KTP asli &amp; wajah penerima langsung di Kios KPL.
+                    Proteksi kode verifikasi OTP WhatsApp, TOTP Authenticator, &amp; auto-logout 15 menit.
                   </span>
                 </div>
               </div>
@@ -170,25 +298,42 @@ export default function LoginPage() {
           </div>
         </div>
 
-        {/* Right Column: Form Login Bersih & Profesional (7 Cols) */}
+        {/* Right Column: Form Login & 2FA (7 Cols) */}
         <div className="lg:col-span-7 p-6 sm:p-10 flex flex-col justify-center bg-white">
           <div>
+            {/* Header Form */}
             <div className="flex items-center justify-between mb-6">
               <div>
                 <h2 className="text-xl sm:text-2xl font-black text-slate-900 tracking-tight">
-                  Masuk ke Portal Resmi
+                  {step === 'login' ? 'Masuk ke Portal Resmi' : 'Verifikasi Dua Langkah (2FA)'}
                 </h2>
                 <p className="text-xs text-slate-500 mt-1">
-                  Masukkan identitas kredensial akun petugas atau 16 digit NIK Petani terdaftar.
+                  {step === 'login'
+                    ? 'Masukkan identitas kredensial akun petugas atau 16 digit NIK Petani terdaftar.'
+                    : `Masukkan 6 digit kode OTP yang dikirimkan ke nomor ${challengeData?.maskedPhone || 'WhatsApp Anda'}.`}
                 </p>
               </div>
               <div className="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-200 text-emerald-700 flex items-center justify-center shrink-0 shadow-xs">
-                <ShieldCheck className="w-6 h-6 text-emerald-700" />
+                {step === 'login' ? (
+                  <ShieldCheck className="w-6 h-6 text-emerald-700" />
+                ) : (
+                  <KeyRound className="w-6 h-6 text-emerald-700" />
+                )}
               </div>
             </div>
 
+            {/* Peringatan Auto-Logout dari SessionTimeoutGuard */}
+            {isTimeout && step === 'login' && (
+              <div className="mb-4 p-3.5 rounded-2xl bg-amber-50 border border-amber-300 text-amber-900 text-xs font-semibold flex items-center gap-2.5">
+                <Clock className="w-4 h-4 text-amber-700 shrink-0" />
+                <span>
+                  Sesi Anda telah berakhir secara otomatis demi keamanan karena tidak ada aktivitas selama 15 menit. Silakan masuk kembali.
+                </span>
+              </div>
+            )}
+
             {/* Status Auto-Clear Cache Notice */}
-            {cacheCleared && (
+            {cacheCleared && !isTimeout && step === 'login' && (
               <div className="mb-4 py-1.5 px-3 rounded-xl bg-emerald-50/80 border border-emerald-200/80 text-emerald-800 text-[11px] font-semibold flex items-center justify-between">
                 <div className="flex items-center gap-1.5">
                   <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
@@ -213,79 +358,193 @@ export default function LoginPage() {
               </div>
             )}
 
-            <form onSubmit={handleLoginSubmit} className="space-y-4 text-xs">
-              <div>
-                <label className="block font-bold text-slate-700 mb-1.5">
-                  Username Petugas / NIK Petani Terdaftar *
-                </label>
-                <div className="relative">
-                  <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-                  <input
-                    type="text"
-                    required
-                    placeholder="Masukkan username petugas atau NIK..."
-                    value={username}
-                    onChange={(e) => setUsername(e.target.value)}
-                    autoComplete="username"
-                    className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition"
-                  />
+            {/* STEP 1: FORM LOGIN (Username & Password) */}
+            {step === 'login' && (
+              <form onSubmit={handleLoginSubmit} className="space-y-4 text-xs">
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1.5">
+                    Username Petugas / NIK Petani Terdaftar *
+                  </label>
+                  <div className="relative">
+                    <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                    <input
+                      type="text"
+                      required
+                      placeholder="Masukkan username petugas atau NIK..."
+                      value={username}
+                      onChange={(e) => setUsername(e.target.value)}
+                      autoComplete="username"
+                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition"
+                    />
+                  </div>
                 </div>
-              </div>
 
-              <div>
-                <label className="block font-bold text-slate-700 mb-1.5">Kata Sandi (Password) *</label>
-                <div className="relative">
-                  <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
-                  <input
-                    type={showPassword ? 'text' : 'password'}
-                    required
-                    placeholder="Masukkan kata sandi..."
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    autoComplete="current-password"
-                    className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword(!showPassword)}
-                    className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
-                  >
-                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-                  </button>
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1.5">Kata Sandi (Password) *</label>
+                  <div className="relative">
+                    <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      required
+                      placeholder="Masukkan kata sandi..."
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      autoComplete="current-password"
+                      className="w-full pl-10 pr-10 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-semibold focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
                 </div>
-              </div>
 
-              <div className="pt-2 space-y-2.5">
-                <button
-                  type="submit"
-                  disabled={loading}
-                  className="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-black py-3 rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2 text-sm cursor-pointer disabled:opacity-50"
-                >
-                  <span>{loading ? 'Memverifikasi Kredensial...' : 'Masuk ke Sistem Pertanian'}</span>
-                  <ArrowRight className="w-4 h-4" />
-                </button>
-
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                <div className="pt-2 space-y-2.5">
                   <button
-                    type="button"
-                    onClick={() => router.push('/cek-kuota')}
-                    className="w-full bg-slate-900 hover:bg-slate-800 text-amber-300 font-bold py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 text-xs border border-slate-800 cursor-pointer shadow-xs"
+                    type="submit"
+                    disabled={loading}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-black py-3 rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2 text-sm cursor-pointer disabled:opacity-50"
                   >
-                    <QrCode className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                    <span>Cek Kuota NIK Mandiri</span>
+                    <span>{loading ? 'Memverifikasi Kredensial...' : 'Masuk ke Sistem Pertanian'}</span>
+                    <ArrowRight className="w-4 h-4" />
                   </button>
 
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
+                    <button
+                      type="button"
+                      onClick={() => router.push('/cek-kuota')}
+                      className="w-full bg-slate-900 hover:bg-slate-800 text-amber-300 font-bold py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 text-xs border border-slate-800 cursor-pointer shadow-xs"
+                    >
+                      <QrCode className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
+                      <span>Cek Kuota NIK Mandiri</span>
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={handleManualClearCache}
+                      className="w-full bg-white hover:bg-slate-100 text-slate-700 font-bold py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 text-xs border border-slate-300 cursor-pointer shadow-xs"
+                    >
+                      <RefreshCw className="w-3.5 h-3.5 text-slate-500 shrink-0" />
+                      <span>Bersihkan Cache Sesi</span>
+                    </button>
+                  </div>
+                </div>
+              </form>
+            )}
+
+            {/* STEP 2: VERIFIKASI 2-FAKTOR (2FA OTP) */}
+            {step === '2fa' && (
+              <form onSubmit={handleVerify2FASubmit} className="space-y-4 text-xs animate-in fade-in duration-200">
+                {/* Info Akun yang sedang diverifikasi */}
+                <div className="p-3.5 bg-emerald-50 rounded-2xl border border-emerald-200 flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="w-9 h-9 rounded-xl bg-emerald-600 text-white font-black flex items-center justify-center text-xs shadow-xs">
+                      {challengeData?.name?.slice(0, 2).toUpperCase() || 'AD'}
+                    </div>
+                    <div>
+                      <p className="font-black text-slate-900 text-xs leading-tight">{challengeData?.name}</p>
+                      <p className="text-[11px] text-emerald-800 font-medium">
+                        Jabatan: <span className="font-bold">{challengeData?.role}</span>
+                      </p>
+                    </div>
+                  </div>
                   <button
                     type="button"
-                    onClick={handleManualClearCache}
-                    className="w-full bg-white hover:bg-slate-100 text-slate-700 font-bold py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 text-xs border border-slate-300 cursor-pointer shadow-xs"
+                    onClick={() => {
+                      setStep('login');
+                      setErrorMsg(null);
+                    }}
+                    className="text-[11px] text-emerald-700 hover:text-emerald-900 font-bold underline flex items-center gap-1"
                   >
-                    <RefreshCw className="w-3.5 h-3.5 text-slate-500 shrink-0" />
-                    <span>Bersihkan Cache Sesi</span>
+                    <ArrowLeft className="w-3 h-3" /> Ganti Akun
                   </button>
                 </div>
-              </div>
-            </form>
+
+                {/* Banner OTP WhatsApp Otomatis / Simulasi */}
+                <div className="p-3.5 bg-slate-900 text-white rounded-2xl space-y-1.5 shadow-md">
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1">
+                      <Smartphone className="w-3.5 h-3.5 text-emerald-400" /> WhatsApp OTP &bull; {challengeData?.maskedPhone}
+                    </span>
+                    <span className="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded text-[10px] font-mono font-bold">
+                      Aktif 5 Menit
+                    </span>
+                  </div>
+                  <p className="text-[11px] text-slate-300 leading-relaxed">
+                    Kode OTP simulasi resmi Anda:{' '}
+                    <button
+                      type="button"
+                      onClick={() => setTwoFactorCode(challengeData?.otpCode || '123456')}
+                      className="font-mono font-black text-amber-300 text-sm tracking-widest bg-slate-800 px-2 py-0.5 rounded border border-amber-400/40 hover:bg-slate-700 transition cursor-pointer"
+                      title="Klik untuk mengisi otomatis"
+                    >
+                      {challengeData?.otpCode || '123456'}
+                    </button>
+                  </p>
+                  <p className="text-[10px] text-slate-400">
+                    *Atau gunakan PIN Keamanan Darurat: <code className="text-amber-200 font-bold">123456</code>
+                  </p>
+                </div>
+
+                <div>
+                  <label className="block font-bold text-slate-700 mb-1.5">
+                    Masukkan 6 Digit Kode OTP / PIN Darurat *
+                  </label>
+                  <div className="relative">
+                    <KeyRound className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
+                    <input
+                      type="text"
+                      maxLength={6}
+                      required
+                      autoFocus
+                      placeholder="Contoh: 123456"
+                      value={twoFactorCode}
+                      onChange={(e) => setTwoFactorCode(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      className="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-slate-900 font-mono font-black text-base tracking-widest focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition text-center"
+                    />
+                  </div>
+                </div>
+
+                <div className="pt-2 space-y-2.5">
+                  <button
+                    type="submit"
+                    disabled={loading || twoFactorCode.length < 6}
+                    className="w-full bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-black py-3 rounded-xl shadow-lg shadow-emerald-600/20 transition flex items-center justify-center gap-2 text-sm cursor-pointer disabled:opacity-50"
+                  >
+                    <span>{loading ? 'Memvalidasi 2FA...' : 'Verifikasi & Masuk ke Sistem'}</span>
+                    <ArrowRight className="w-4 h-4" />
+                  </button>
+
+                  <div className="flex items-center justify-between pt-1">
+                    <button
+                      type="button"
+                      disabled={resendCountdown > 0 || resending}
+                      onClick={handleResendOTP}
+                      className="text-xs font-bold text-emerald-700 hover:text-emerald-900 disabled:text-slate-400 flex items-center gap-1.5 cursor-pointer disabled:cursor-not-allowed"
+                    >
+                      <RotateCcw className={`w-3.5 h-3.5 ${resending ? 'animate-spin' : ''}`} />
+                      {resendCountdown > 0
+                        ? `Kirim Ulang OTP (${resendCountdown}s)`
+                        : 'Kirim Ulang Kode OTP via WhatsApp'}
+                    </button>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setStep('login');
+                        setErrorMsg(null);
+                      }}
+                      className="text-xs font-semibold text-slate-500 hover:text-slate-800"
+                    >
+                      Kembali ke Login
+                    </button>
+                  </div>
+                </div>
+              </form>
+            )}
 
             <div className="mt-8 pt-4 border-t border-slate-100 text-center space-y-1.5 text-slate-500">
               <p className="font-bold text-slate-700 text-xs">
@@ -294,7 +553,7 @@ export default function LoginPage() {
               <div className="flex items-center justify-center gap-2 text-[11px] text-slate-400">
                 <span className="flex items-center gap-1">
                   <ShieldCheck className="w-3.5 h-3.5 text-emerald-600" />
-                  Sistem Terenkripsi &bull; Standar Keamanan BPP
+                  Keamanan 2FA &bull; Standar Keamanan BPP
                 </span>
                 <span>&bull;</span>
                 <span className="font-mono">Kec. Lembeyan</span>
@@ -314,5 +573,19 @@ export default function LoginPage() {
         </p>
       </footer>
     </div>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="min-h-screen bg-slate-900 flex items-center justify-center text-white">
+          <div className="animate-spin w-8 h-8 border-4 border-emerald-500 border-t-transparent rounded-full" />
+        </div>
+      }
+    >
+      <LoginFormContent />
+    </Suspense>
   );
 }
