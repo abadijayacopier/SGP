@@ -31,7 +31,7 @@ export default function AppShell({ children }: { children: React.ReactNode }) {
 
   return (
     <SessionTimeoutGuard>
-      <main className="flex-1 w-full pb-24 md:pb-12">
+      <main className="flex-1 w-full pt-16 pb-24 md:pb-12">
         <RoleAccessGuard>{children}</RoleAccessGuard>
       </main>
       <footer className="bg-white border-t border-slate-200 py-6 text-center text-xs text-slate-500 no-print mb-16 md:mb-0">

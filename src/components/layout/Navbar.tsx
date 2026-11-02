@@ -153,7 +153,7 @@ export default function Navbar() {
   };
 
   return (
-    <header className="sticky top-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs no-print">
+    <header className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-slate-200/80 shadow-xs no-print">
       {/* Main Navbar */}
       <div className="max-w-7xl mx-auto px-3 sm:px-6">
         <div className="flex items-center justify-between h-16 gap-2 sm:gap-3">
@@ -188,7 +188,7 @@ export default function Navbar() {
           </div>
 
           {/* Desktop Navigation Links (Strictly Isolated per Role Group) */}
-          <nav className="hidden lg:flex items-center gap-1 min-w-0 overflow-x-auto bg-slate-100/80 p-1 rounded-2xl border border-slate-200/70">
+          <nav className="hidden lg:flex items-center gap-1 min-w-0 overflow-x-auto no-scrollbar bg-slate-100/80 p-1 rounded-2xl border border-slate-200/70">
             {visibleNavItems.map((item) => {
               const Icon = ICON_MAP[item.iconName] || FileText;
               const isActive = pathname === item.href;

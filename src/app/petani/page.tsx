@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import {
@@ -12,6 +12,7 @@ import {
   Sprout,
   FileText,
   Printer,
+  ChevronLeft,
   ChevronRight,
   X,
   Compass,
@@ -43,6 +44,15 @@ export default function PetaniPage() {
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
   const [filterPoktan, setFilterPoktan] = useState('SEMUA');
+
+  // Pagination Petani
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+
+  // Reset pagination saat pencarian atau filter poktan berubah
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [search, filterPoktan]);
 
   // State Edit Kepala Desa
   const [editingKades, setEditingKades] = useState<any | null>(null);
@@ -504,11 +514,27 @@ export default function PetaniPage() {
     }
   };
 
-  const filteredPetani = petaniList.filter((p) => {
-    if (!search) return true;
-    const q = search.toLowerCase();
-    return p.nama.toLowerCase().includes(q) || p.nik.includes(q) || p.desa.toLowerCase().includes(q);
-  });
+  const filteredPetani = useMemo(() => {
+    return petaniList.filter((p) => {
+      if (!search) return true;
+      const q = search.toLowerCase().trim();
+      return (
+        p.nama.toLowerCase().includes(q) ||
+        p.nik.includes(q) ||
+        (p.desa && p.desa.toLowerCase().includes(q)) ||
+        (p.poktan?.nama && p.poktan.nama.toLowerCase().includes(q))
+      );
+    });
+  }, [petaniList, search]);
+
+  // Pagination Calculations
+  const totalPages = Math.ceil(filteredPetani.length / pageSize) || 1;
+  const safeCurrentPage = Math.min(Math.max(currentPage, 1), totalPages);
+  const startIndex = (safeCurrentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, filteredPetani.length);
+  const paginatedPetani = useMemo(() => {
+    return filteredPetani.slice(startIndex, endIndex);
+  }, [filteredPetani, startIndex, endIndex]);
 
   // Statistik Ringkas
   const totalBlokSawah = petaniList.reduce((acc, p) => acc + (p.lahan?.length || 0), 0);
@@ -663,20 +689,35 @@ export default function PetaniPage() {
                 placeholder="Cari nama, NIK, atau desa..."
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                className="w-full pl-9 pr-3 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full pl-9 pr-8 py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
+              {search && (
+                <button
+                  type="button"
+                  onClick={() => setSearch('')}
+                  className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
+                  title="Hapus pencarian"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
             </div>
           </div>
 
           {/* Table Petani */}
           <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
-            <div className="p-5 border-b border-slate-100">
-              <h3 className="font-black text-slate-800 text-base">
-                Daftar Anggota Petani ({filteredPetani.length} Orang)
-              </h3>
-              <p className="text-xs text-slate-500 mt-0.5">
-                Klik baris petani (misal: Kasdi Mulyono atau Sukirno) untuk melihat rincian daftar blok-blok sawah miliknya.
-              </p>
+            <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+              <div>
+                <h3 className="font-black text-slate-800 text-base">
+                  Daftar Anggota Petani ({filteredPetani.length} Orang)
+                </h3>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Klik baris petani (misal: Kasdi Mulyono atau Sukirno) untuk melihat rincian daftar blok-blok sawah miliknya.
+                </p>
+              </div>
+              <span className="text-xs font-semibold text-slate-500 shrink-0">
+                Total: <strong className="text-slate-900">{filteredPetani.length}</strong> petani
+              </span>
             </div>
 
             {/* Mobile Card View (Smartphone friendly - No horizontal scrolling!) */}
@@ -686,7 +727,7 @@ export default function PetaniPage() {
                   Tidak ada data petani yang sesuai pencarian.
                 </div>
               ) : (
-                filteredPetani.map((item) => (
+                paginatedPetani.map((item) => (
                   <div
                     key={item.id}
                     className="p-4 hover:bg-slate-50/80 transition space-y-2.5 cursor-pointer"
@@ -799,99 +840,204 @@ export default function PetaniPage() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-slate-100">
-                  {filteredPetani.map((item) => (
-                    <tr
-                      key={item.id}
-                      className="hover:bg-slate-50 transition cursor-pointer"
-                      onClick={() => {
-                        setSelectedPetani(item);
-                        setDetailModalOpen(true);
-                      }}
-                    >
-                      <td className="py-3.5 px-4">
-                        <div className="font-bold text-slate-900 text-sm">{item.nama}</div>
-                        <div className="text-[11px] font-mono text-slate-500">NIK: {item.nik}</div>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <span className="font-semibold text-slate-800">{item.poktan?.nama}</span>
-                        <div className="text-[10px] text-slate-400">Ketua: {item.poktan?.ketua}</div>
-                      </td>
-                      <td className="py-3.5 px-4 text-slate-600">
-                        <div>
-                          {item.desa}, {item.kecamatan}
-                        </div>
-                        <div className="text-[10px] text-slate-400">{item.alamat}</div>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <span className="font-black text-emerald-800 text-sm">
-                          {Number(item.totalLuasLahan || 0).toFixed(2)} Ha
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        <span className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-full border border-emerald-300 text-xs shadow-2xs hover:bg-emerald-200 transition">
-                          <Layers className="w-3.5 h-3.5" />
-                          {item.lahan?.length || 0} Blok Sawah
-                        </span>
-                      </td>
-                      <td className="py-3.5 px-4">
-                        {item.alokasiPupuk?.length > 0 ? (
-                          <span className="text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded text-[11px] border border-emerald-200">
-                            Aktif ({item.alokasiPupuk[0].komoditas})
-                          </span>
-                        ) : (
-                          <span className="text-slate-400 text-[11px]">Belum Ada</span>
-                        )}
-                      </td>
-                      <td className="py-3.5 px-4 text-right">
-                        <div className="flex items-center justify-end gap-1.5">
-                          <Link
-                            href={`/cetak-kartu-tani/${item.id}`}
-                            target="_blank"
-                            onClick={(e) => e.stopPropagation()}
-                            className="inline-flex items-center gap-1 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs px-2.5 py-1.5 rounded-lg shadow-2xs transition whitespace-nowrap"
-                          >
-                            <CreditCard className="w-3.5 h-3.5" />
-                            Kartu Tani
-                          </Link>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              setSelectedPetani(item);
-                              setDetailModalOpen(true);
-                            }}
-                            className="inline-flex items-center gap-1 bg-slate-900 hover:bg-emerald-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg shadow-2xs transition whitespace-nowrap"
-                          >
-                            Blok Sawah <ChevronRight className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleOpenEditPetani(item);
-                            }}
-                            className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 transition"
-                            title="Edit Data Petani"
-                          >
-                            <Edit3 className="w-3.5 h-3.5" />
-                          </button>
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeletePetani(item);
-                            }}
-                            className="p-1.5 rounded-lg border border-rose-300 text-rose-600 bg-rose-50/80 hover:bg-rose-100 transition shadow-2xs"
-                            title="Hapus Data Petani"
-                          >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        </div>
+                  {filteredPetani.length === 0 ? (
+                    <tr>
+                      <td colSpan={7} className="py-8 text-center text-slate-400 italic">
+                        Tidak ada data petani yang sesuai pencarian atau filter yang dipilih.
                       </td>
                     </tr>
-                  ))}
+                  ) : (
+                    paginatedPetani.map((item) => (
+                      <tr
+                        key={item.id}
+                        className="hover:bg-slate-50 transition cursor-pointer"
+                        onClick={() => {
+                          setSelectedPetani(item);
+                          setDetailModalOpen(true);
+                        }}
+                      >
+                        <td className="py-3.5 px-4">
+                          <div className="font-bold text-slate-900 text-sm">{item.nama}</div>
+                          <div className="text-[11px] font-mono text-slate-500">NIK: {item.nik}</div>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <span className="font-semibold text-slate-800">{item.poktan?.nama}</span>
+                          <div className="text-[10px] text-slate-400">Ketua: {item.poktan?.ketua}</div>
+                        </td>
+                        <td className="py-3.5 px-4 text-slate-600">
+                          <div>
+                            {item.desa}, {item.kecamatan}
+                          </div>
+                          <div className="text-[10px] text-slate-400">{item.alamat}</div>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <span className="font-black text-emerald-800 text-sm">
+                            {Number(item.totalLuasLahan || 0).toFixed(2)} Ha
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          <span className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-full border border-emerald-300 text-xs shadow-2xs hover:bg-emerald-200 transition">
+                            <Layers className="w-3.5 h-3.5" />
+                            {item.lahan?.length || 0} Blok Sawah
+                          </span>
+                        </td>
+                        <td className="py-3.5 px-4">
+                          {item.alokasiPupuk?.length > 0 ? (
+                            <span className="text-emerald-700 font-semibold bg-emerald-50 px-2 py-0.5 rounded text-[11px] border border-emerald-200">
+                              Aktif ({item.alokasiPupuk[0].komoditas})
+                            </span>
+                          ) : (
+                            <span className="text-slate-400 text-[11px]">Belum Ada</span>
+                          )}
+                        </td>
+                        <td className="py-3.5 px-4 text-right">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <Link
+                              href={`/cetak-kartu-tani/${item.id}`}
+                              target="_blank"
+                              onClick={(e) => e.stopPropagation()}
+                              className="inline-flex items-center gap-1 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs px-2.5 py-1.5 rounded-lg shadow-2xs transition whitespace-nowrap"
+                            >
+                              <CreditCard className="w-3.5 h-3.5" />
+                              Kartu Tani
+                            </Link>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setSelectedPetani(item);
+                                setDetailModalOpen(true);
+                              }}
+                              className="inline-flex items-center gap-1 bg-slate-900 hover:bg-emerald-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg shadow-2xs transition whitespace-nowrap"
+                            >
+                              Blok Sawah <ChevronRight className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenEditPetani(item);
+                              }}
+                              className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-slate-100 transition"
+                              title="Edit Data Petani"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeletePetani(item);
+                              }}
+                              className="p-1.5 rounded-lg border border-rose-300 text-rose-600 bg-rose-50/80 hover:bg-rose-100 transition shadow-2xs"
+                              title="Hapus Data Petani"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))
+                  )}
                 </tbody>
               </table>
+            </div>
+
+            {/* Baris Navigasi Pagination */}
+            <div className="p-4 bg-slate-50/80 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+              <div className="flex items-center gap-3 text-slate-600 font-medium">
+                <span>
+                  Menampilkan{' '}
+                  <strong className="text-slate-900 font-bold">
+                    {filteredPetani.length === 0 ? 0 : startIndex + 1}
+                  </strong>{' '}
+                  -{' '}
+                  <strong className="text-slate-900 font-bold">
+                    {endIndex}
+                  </strong>{' '}
+                  dari{' '}
+                  <strong className="text-slate-900 font-bold">{filteredPetani.length}</strong> anggota petani
+                </span>
+
+                <div className="flex items-center gap-1.5 ml-2">
+                  <span className="text-slate-400">| Baris:</span>
+                  <select
+                    value={pageSize}
+                    onChange={(e) => setPageSize(Number(e.target.value))}
+                    className="bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer shadow-2xs"
+                  >
+                    <option value={5}>5</option>
+                    <option value={10}>10</option>
+                    <option value={20}>20</option>
+                    <option value={50}>50</option>
+                  </select>
+                </div>
+              </div>
+
+              {totalPages > 1 && (
+                <div className="flex items-center gap-1">
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={safeCurrentPage <= 1}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 font-bold hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer shadow-2xs"
+                  >
+                    <ChevronLeft className="w-3.5 h-3.5" />
+                    <span className="hidden sm:inline">Sebelumnya</span>
+                  </button>
+
+                  <div className="flex items-center gap-1 px-1">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1)
+                      .filter((p) => {
+                        if (totalPages <= 7) return true;
+                        if (p === 1 || p === totalPages) return true;
+                        if (Math.abs(p - safeCurrentPage) <= 1) return true;
+                        return false;
+                      })
+                      .reduce<(number | string)[]>((acc, p, idx, arr) => {
+                        if (idx > 0 && (p as number) - (arr[idx - 1] as number) > 1) {
+                          acc.push('...');
+                        }
+                        acc.push(p);
+                        return acc;
+                      }, [])
+                      .map((p, idx) => {
+                        if (p === '...') {
+                          return (
+                            <span key={`ellipsis-${idx}`} className="px-2 text-slate-400 font-bold">
+                              ...
+                            </span>
+                          );
+                        }
+                        const isCur = p === safeCurrentPage;
+                        return (
+                          <button
+                            key={`page-${p}`}
+                            type="button"
+                            onClick={() => setCurrentPage(p as number)}
+                            className={`w-7 h-7 flex items-center justify-center rounded-lg font-bold text-xs transition cursor-pointer ${
+                              isCur
+                                ? 'bg-emerald-600 text-white shadow-2xs'
+                                : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                            }`}
+                          >
+                            {p}
+                          </button>
+                        );
+                      })}
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={safeCurrentPage >= totalPages}
+                    className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 font-bold hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer shadow-2xs"
+                  >
+                    <span className="hidden sm:inline">Selanjutnya</span>
+                    <ChevronRight className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+              )}
             </div>
           </div>
         </>
