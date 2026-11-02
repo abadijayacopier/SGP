@@ -159,7 +159,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16 gap-2 sm:gap-3">
           {/* Logo Brand */}
           <div className="flex items-center shrink-0 min-w-0">
-            <Link href={activeUser.role === 'PETANI' ? '/cek-kuota' : '/dashboard'} className="flex items-center gap-2 sm:gap-2.5 group">
+            <Link href={activeUser.role === 'PETANI' ? '/cek-kuota' : '/dashboard'} suppressHydrationWarning className="flex items-center gap-2 sm:gap-2.5 group">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-green-700 flex items-center justify-center text-white shadow-md shadow-emerald-600/20 group-hover:scale-105 transition-transform shrink-0">
                 <Sprout className="w-5 h-5" />
               </div>
@@ -168,7 +168,10 @@ export default function Navbar() {
                   <span className="text-xs sm:text-sm font-black tracking-tight text-slate-900 whitespace-nowrap">
                     SISTEM INFORMASI PERTANIAN
                   </span>
-                  <span className="hidden 2xl:inline-block text-[9px] uppercase font-extrabold tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 whitespace-nowrap border border-emerald-200">
+                  <span
+                    suppressHydrationWarning
+                    className="hidden 2xl:inline-block text-[9px] uppercase font-extrabold tracking-wider px-1.5 py-0.5 rounded-full bg-emerald-100 text-emerald-800 whitespace-nowrap border border-emerald-200"
+                  >
                     {activeUser.role === 'PPL'
                       ? 'MODUL BPP'
                       : activeUser.role === 'POKTAN'
@@ -188,7 +191,7 @@ export default function Navbar() {
           </div>
 
           {/* Desktop Navigation Links (Strictly Isolated per Role Group) */}
-          <nav className="hidden lg:flex items-center gap-1 min-w-0 overflow-x-auto no-scrollbar bg-slate-100/80 p-1 rounded-2xl border border-slate-200/70">
+          <nav suppressHydrationWarning className="hidden lg:flex items-center gap-1 min-w-0 overflow-x-auto no-scrollbar bg-slate-100/80 p-1 rounded-2xl border border-slate-200/70">
             {visibleNavItems.map((item) => {
               const Icon = ICON_MAP[item.iconName] || FileText;
               const isActive = pathname === item.href;
@@ -374,16 +377,17 @@ export default function Navbar() {
                   setDropdownOpen(!dropdownOpen);
                   setNotifOpen(false);
                 }}
+                suppressHydrationWarning
                 className="flex items-center gap-2 p-1 sm:p-1.5 sm:pr-2.5 rounded-full hover:bg-slate-100 transition border border-slate-200 shadow-2xs bg-white cursor-pointer"
               >
-                <div className="w-7 h-7 rounded-full bg-emerald-700 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-2xs overflow-hidden">
+                <div suppressHydrationWarning className="w-7 h-7 rounded-full bg-emerald-700 text-white font-black text-xs flex items-center justify-center shrink-0 shadow-2xs overflow-hidden">
                   {activeUser.avatarUrl ? (
                     <img src={activeUser.avatarUrl} alt={activeUser.name} className="w-full h-full object-cover" />
                   ) : (
                     activeUser.avatarText
                   )}
                 </div>
-                <div className="text-left hidden md:block max-w-[130px] xl:max-w-[150px]">
+                <div suppressHydrationWarning className="text-left hidden md:block max-w-[130px] xl:max-w-[150px]">
                   <div className="text-xs font-bold text-slate-800 leading-tight truncate">
                     {activeUser.name}
                   </div>

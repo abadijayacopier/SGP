@@ -369,29 +369,8 @@ const AuthContext = createContext<AuthContextType>({
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [isAuthenticated, setIsAuthenticated] = useState<boolean>(false);
-  const [currentUser, setCurrentUser] = useState<UserSession>(() => {
-    if (typeof window !== 'undefined') {
-      try {
-        const savedSession = localStorage.getItem('pertanian_user_session');
-        if (savedSession) {
-          const parsed = JSON.parse(savedSession) as UserSession;
-          if (parsed && parsed.role && ROLE_PERMISSIONS[parsed.role]) {
-            if (parsed.roleLabel === 'Admin Dinas Pertanian') {
-              parsed.roleLabel = 'Admin Kecamatan Lembeyan';
-            }
-            if (parsed.username === 'ppl_sugeng' || parsed.username === 'ppl_lembeyan') {
-              parsed.username = 'ppl_iissugiarti';
-            }
-            if (parsed.username === 'kios_subur') {
-              parsed.username = 'kios_bumisubur';
-            }
-            return parsed;
-          }
-        }
-      } catch {}
-    }
-    return DEMO_USERS.ADMIN_DINAS;
-  });
+  // Inisialisasi seragam DEMO_USERS.ADMIN_DINAS di SSR & initial client render untuk mencegah Next.js React hydration mismatch
+  const [currentUser, setCurrentUser] = useState<UserSession>(DEMO_USERS.ADMIN_DINAS);
   const [customMatrix, setCustomMatrix] = useState<Record<UserRole, any> | null>(null);
   const [isMounted, setIsMounted] = useState(false);
 
