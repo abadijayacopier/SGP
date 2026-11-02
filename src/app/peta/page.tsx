@@ -31,6 +31,8 @@ import {
   Sparkles,
   Camera,
   Edit3,
+  ChevronLeft,
+  ChevronRight,
 } from 'lucide-react';
 import {
   showSuccess,
@@ -55,6 +57,9 @@ export default function PetaPage() {
   const [flyToTarget, setFlyToTarget] = useState<FlyToTarget | null>(null);
   const [selectedPetaniFilter, setSelectedPetaniFilter] = useState('SEMUA');
   const [searchQuery, setSearchQuery] = useState('');
+  const [tableSearchQuery, setTableSearchQuery] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
   const [selectedLahanId, setSelectedLahanId] = useState<string | null>(null);
 
   // Mode Gambar Poligon
@@ -600,22 +605,52 @@ export default function PetaPage() {
         const lDesa = l.desa || l.petani?.desa || l.petani?.poktan?.desa;
         if (lDesa !== desaFilter) return false;
       }
-      // 3. Filter Pencarian Teks
-      if (!searchQuery.trim()) return true;
-      const q = searchQuery.toLowerCase().trim();
-      const namaMatch = (l.namaLahan || '').toLowerCase().includes(q);
-      const kodeMatch = (l.kodeLahan || '').toLowerCase().includes(q);
-      const petaniMatch = (l.petani?.nama || '').toLowerCase().includes(q);
-      const nikMatch = (l.petani?.nik || '').includes(q);
-      const poktanMatch = (l.petani?.poktan?.nama || '').toLowerCase().includes(q);
-      return namaMatch || kodeMatch || petaniMatch || nikMatch || poktanMatch;
+      // 3. Filter Pencarian Teks (Form Atas)
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase().trim();
+        const namaMatch = (l.namaLahan || '').toLowerCase().includes(q);
+        const kodeMatch = (l.kodeLahan || '').toLowerCase().includes(q);
+        const petaniMatch = (l.petani?.nama || '').toLowerCase().includes(q);
+        const nikMatch = (l.petani?.nik || '').includes(q);
+        const poktanMatch = (l.petani?.poktan?.nama || '').toLowerCase().includes(q);
+        if (!(namaMatch || kodeMatch || petaniMatch || nikMatch || poktanMatch)) return false;
+      }
+      // 4. Filter Pencarian Teks Tabel
+      if (tableSearchQuery.trim()) {
+        const tq = tableSearchQuery.toLowerCase().trim();
+        const namaMatch = (l.namaLahan || '').toLowerCase().includes(tq);
+        const kodeMatch = (l.kodeLahan || '').toLowerCase().includes(tq);
+        const petaniMatch = (l.petani?.nama || '').toLowerCase().includes(tq);
+        const nikMatch = (l.petani?.nik || '').includes(tq);
+        const poktanMatch = (l.petani?.poktan?.nama || '').toLowerCase().includes(tq);
+        const pipilMatch = (l.nomorPipil || '').toLowerCase().includes(tq);
+        const statusMatch = (l.statusKepemilikan || '').toLowerCase().includes(tq);
+        if (!(namaMatch || kodeMatch || petaniMatch || nikMatch || poktanMatch || pipilMatch || statusMatch)) {
+          return false;
+        }
+      }
+      return true;
     });
-  }, [lahanList, selectedPetaniFilter, desaFilter, searchQuery]);
+  }, [lahanList, selectedPetaniFilter, desaFilter, searchQuery, tableSearchQuery]);
+
+  // Reset pagination ke halaman 1 jika filter berubah
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [tableSearchQuery, searchQuery, selectedPetaniFilter, desaFilter, pageSize]);
+
+  // Pagination Calculation
+  const totalPages = Math.max(1, Math.ceil(filteredLahan.length / pageSize));
+  const safeCurrentPage = Math.min(currentPage, totalPages);
+  const startIndex = (safeCurrentPage - 1) * pageSize;
+  const endIndex = startIndex + pageSize;
+  const paginatedLahan = useMemo(() => {
+    return filteredLahan.slice(startIndex, endIndex);
+  }, [filteredLahan, startIndex, endIndex]);
 
   // Handler Submit Pencarian Petak Lahan (Otomatis seleksi dan terbangkan peta ke petak)
   const handleSearchLahanSubmit = (e?: React.FormEvent) => {
     if (e) e.preventDefault();
-    const q = searchQuery.trim().toLowerCase();
+    const q = (searchQuery || tableSearchQuery).trim().toLowerCase();
     if (!q) return;
 
     const match = lahanList.find((l: any) => {
@@ -623,7 +658,8 @@ export default function PetaPage() {
       const kodeMatch = (l.kodeLahan || '').toLowerCase().includes(q);
       const petaniMatch = (l.petani?.nama || '').toLowerCase().includes(q);
       const nikMatch = (l.petani?.nik || '').includes(q);
-      return namaMatch || kodeMatch || petaniMatch || nikMatch;
+      const poktanMatch = (l.petani?.poktan?.nama || '').toLowerCase().includes(q);
+      return namaMatch || kodeMatch || petaniMatch || nikMatch || poktanMatch;
     });
 
     if (match) {
@@ -644,7 +680,7 @@ export default function PetaPage() {
       });
       showToast(`Peta difokuskan ke petak sawah "${match.namaLahan}" (${match.kodeLahan})`, 'success');
     } else {
-      showWarning('Petak Tidak Ditemukan', `Tidak ada petak sawah atau petani yang cocok dengan kata kunci "${searchQuery}".`);
+      showWarning('Petak Tidak Ditemukan', `Tidak ada petak sawah atau petani yang cocok dengan kata kunci "${q}".`);
     }
   };
 
@@ -919,23 +955,96 @@ export default function PetaPage() {
 
       {/* Table list of Lahan with Direct Print Card button */}
       <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs overflow-hidden">
-        <div className="p-5 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+        {/* Table Header: Judul, Info, Pencarian Petak & Reset Filter */}
+        <div className="p-4 sm:p-5 border-b border-slate-100 flex flex-col md:flex-row md:items-center justify-between gap-3 bg-white">
           <div>
-            <h3 className="font-black text-slate-800 text-base">
-              Daftar Petak Lahan Terpetakan ({filteredLahan.length} Petak)
-            </h3>
+            <div className="flex items-center gap-2">
+              <h3 className="font-black text-slate-800 text-base">
+                Daftar Petak Lahan Terpetakan
+              </h3>
+              <span className="bg-emerald-100 text-emerald-800 text-xs font-black px-2.5 py-0.5 rounded-full border border-emerald-200">
+                {filteredLahan.length} Petak
+              </span>
+            </div>
             <p className="text-xs text-slate-500 mt-0.5">
               Klik nama petani untuk memfilter seluruh blok sawah miliknya, atau klik &quot;Cetak Kartu Lahan&quot; untuk mencetak laporan resmi.
             </p>
           </div>
-          {selectedPetaniFilter !== 'SEMUA' && (
+
+          <div className="flex flex-wrap items-center gap-2">
+            {/* Search Input Tabel */}
+            <div className="relative flex-1 sm:w-64">
+              <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Cari petak, NIK, petani, pipil..."
+                value={tableSearchQuery}
+                onChange={(e) => setTableSearchQuery(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    if (paginatedLahan.length > 0) {
+                      const first = paginatedLahan[0];
+                      setSelectedLahanId(first.id);
+                      setFlyToTarget({
+                        lat: first.centerLat,
+                        lng: first.centerLng,
+                        zoom: 18,
+                        label: `${first.kodeLahan} - ${first.namaLahan}`,
+                        keterangan: `Milik ${first.petani?.nama || '-'}`,
+                        timestamp: Date.now(),
+                      });
+                      showToast(`Fokus ke petak sawah "${first.namaLahan}"`, 'success');
+                    }
+                  }
+                }}
+                className="w-full pl-9 pr-7 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+              {tableSearchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setTableSearchQuery('')}
+                  className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+
+            {/* Tombol Cari Tabel */}
             <button
-              onClick={() => setSelectedPetaniFilter('SEMUA')}
-              className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-1.5 rounded-xl border border-emerald-200 hover:bg-emerald-100 transition"
+              type="button"
+              onClick={() => {
+                if (paginatedLahan.length > 0) {
+                  const first = paginatedLahan[0];
+                  setSelectedLahanId(first.id);
+                  setFlyToTarget({
+                    lat: first.centerLat,
+                    lng: first.centerLng,
+                    zoom: 18,
+                    label: `${first.kodeLahan} - ${first.namaLahan}`,
+                    keterangan: `Milik ${first.petani?.nama || '-'}`,
+                    timestamp: Date.now(),
+                  });
+                  showToast(`Fokus ke petak sawah "${first.namaLahan}"`, 'success');
+                } else if (tableSearchQuery.trim()) {
+                  showWarning('Tidak Ditemukan', `Tidak ada petak sawah yang cocok dengan "${tableSearchQuery}"`);
+                }
+              }}
+              className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer flex items-center gap-1 active:scale-95 shrink-0"
             >
-              Reset Filter Petani (Tampilkan Semua)
+              <Search className="w-3.5 h-3.5" />
+              <span>Cari</span>
             </button>
-          )}
+
+            {selectedPetaniFilter !== 'SEMUA' && (
+              <button
+                onClick={() => setSelectedPetaniFilter('SEMUA')}
+                className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-2 rounded-xl border border-emerald-200 hover:bg-emerald-100 transition shrink-0"
+              >
+                Reset Filter Petani
+              </button>
+            )}
+          </div>
         </div>
 
         {/* Mobile Card View (Smartphone Friendly) */}
@@ -945,7 +1054,7 @@ export default function PetaPage() {
               Tidak ada petak sawah yang sesuai pencarian.
             </div>
           ) : (
-            filteredLahan.map((item) => {
+            paginatedLahan.map((item) => {
               const countPetaniBlok = lahanList.filter((l) => l.petani?.id === item.petani?.id).length;
               const isSelected = selectedLahanId === item.id;
 
@@ -1076,136 +1185,241 @@ export default function PetaPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {filteredLahan.map((item) => {
-                const countPetaniBlok = lahanList.filter((l) => l.petani?.id === item.petani?.id).length;
+              {filteredLahan.length === 0 ? (
+                <tr>
+                  <td colSpan={6} className="py-12 text-center text-slate-400 text-xs italic">
+                    Tidak ada petak sawah yang sesuai dengan pencarian atau filter yang dipilih.
+                  </td>
+                </tr>
+              ) : (
+                paginatedLahan.map((item) => {
+                  const countPetaniBlok = lahanList.filter((l) => l.petani?.id === item.petani?.id).length;
 
-                return (
-                  <tr
-                    key={item.id}
-                    className={`hover:bg-slate-50 transition cursor-pointer ${
-                      selectedLahanId === item.id ? 'bg-emerald-50/60' : ''
-                    }`}
-                    onClick={() => setSelectedLahanId(item.id)}
-                  >
-                    <td className="py-3.5 px-4">
-                      <span className="font-mono text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.5 rounded">
-                        {item.kodeLahan}
-                      </span>
-                      <div className="font-bold text-slate-800 mt-1">{item.namaLahan}</div>
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (item.petani?.id) setSelectedPetaniFilter(item.petani.id);
-                        }}
-                        className="text-left group"
-                      >
-                        <div className="font-bold text-slate-900 group-hover:text-emerald-700 flex items-center gap-1.5">
-                          {item.petani?.nama || '-'}
-                          <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-full border border-emerald-200">
-                            {countPetaniBlok} Blok
-                          </span>
-                        </div>
-                        <div className="text-[11px] text-slate-400">
-                          NIK: {item.petani?.nik} &bull; {item.petani?.poktan?.nama}
-                        </div>
-                      </button>
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <span className="font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
-                        {item.komoditas}
-                      </span>
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <div className="font-bold text-slate-800">{item.luasHa} Ha</div>
-                      <div className="text-[11px] text-slate-400">{item.luasM2.toLocaleString('id-ID')} m²</div>
-                    </td>
-                    <td className="py-3.5 px-4">
-                      <div className="text-slate-700 font-medium">{item.statusKepemilikan}</div>
-                      <div className="text-[11px] font-mono text-amber-700">
-                        {item.nomorPipil || 'Belum ada pipil'}
-                      </div>
-                    </td>
-                    <td className="py-3.5 px-4 text-right">
-                      <div className="flex items-center justify-end gap-1.5">
+                  return (
+                    <tr
+                      key={item.id}
+                      className={`hover:bg-slate-50 transition cursor-pointer ${
+                        selectedLahanId === item.id ? 'bg-emerald-50/60' : ''
+                      }`}
+                      onClick={() => setSelectedLahanId(item.id)}
+                    >
+                      <td className="py-3.5 px-4">
+                        <span className="font-mono text-[10px] font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.5 rounded">
+                          {item.kodeLahan}
+                        </span>
+                        <div className="font-bold text-slate-800 mt-1">{item.namaLahan}</div>
+                      </td>
+                      <td className="py-3.5 px-4">
                         <button
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setSelectedLahanId(item.id);
+                            if (item.petani?.id) setSelectedPetaniFilter(item.petani.id);
                           }}
-                          className="inline-flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2.5 py-1.5 rounded-lg text-xs transition"
+                          className="text-left group"
                         >
-                          <Compass className="w-3.5 h-3.5 text-emerald-600" />
-                          Peta
+                          <div className="font-bold text-slate-900 group-hover:text-emerald-700 flex items-center gap-1.5">
+                            {item.petani?.nama || '-'}
+                            <span className="text-[10px] font-bold bg-emerald-100 text-emerald-800 px-1.5 py-0.5 rounded-full border border-emerald-200">
+                              {countPetaniBlok} Blok
+                            </span>
+                          </div>
+                          <div className="text-[11px] text-slate-400">
+                            NIK: {item.petani?.nik} &bull; {item.petani?.poktan?.nama}
+                          </div>
                         </button>
-                        <Link
-                          href={`/cek-kuota?tab=kalkulator&lahanId=${item.id}`}
-                          onClick={(e) => e.stopPropagation()}
-                          className="inline-flex items-center gap-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-bold px-2.5 py-1.5 rounded-lg text-xs transition"
-                          title="Hitung Jadwal Kalender Tanam & Pemupukan Presisi"
-                        >
-                          <Sparkles className="w-3.5 h-3.5 text-amber-600" />
-                          Kalender Tanam
-                        </Link>
-                        <Link
-                          href={`/cetak-lahan/${item.id}`}
-                          target="_blank"
-                          onClick={(e) => e.stopPropagation()}
-                          className="inline-flex items-center gap-1.5 bg-slate-900 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs shadow-xs transition"
-                        >
-                          <Printer className="w-3.5 h-3.5 text-emerald-300" />
-                          Cetak Kartu
-                        </Link>
-                        {item.fotoLahan && (
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <span className="font-semibold text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full border border-emerald-200">
+                          {item.komoditas}
+                        </span>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <div className="font-bold text-slate-800">{item.luasHa} Ha</div>
+                        <div className="text-[11px] text-slate-400">{item.luasM2.toLocaleString('id-ID')} m²</div>
+                      </td>
+                      <td className="py-3.5 px-4">
+                        <div className="text-slate-700 font-medium">{item.statusKepemilikan}</div>
+                        <div className="text-[11px] font-mono text-amber-700">
+                          {item.nomorPipil || 'Belum ada pipil'}
+                        </div>
+                      </td>
+                      <td className="py-3.5 px-4 text-right">
+                        <div className="flex items-center justify-end gap-1.5">
                           <button
                             type="button"
                             onClick={(e) => {
                               e.stopPropagation();
-                              setPreviewFotoLahan(item.fotoLahan || null);
+                              setSelectedLahanId(item.id);
                             }}
-                            className="inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold px-2.5 py-1.5 rounded-lg text-xs transition cursor-pointer"
-                            title="Lihat Foto Dokumentasi Ber-watermark GPS"
+                            className="inline-flex items-center gap-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold px-2.5 py-1.5 rounded-lg text-xs transition"
                           >
-                            <Camera className="w-3.5 h-3.5 text-emerald-600" />
-                            Foto GPS
+                            <Compass className="w-3.5 h-3.5 text-emerald-600" />
+                            Peta
                           </button>
-                        )}
-                        {permissions.canVerifyPpl && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleOpenEditLahan(item);
-                            }}
-                            className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 transition cursor-pointer"
-                            title="Edit Data Petak Lahan"
+                          <Link
+                            href={`/cek-kuota?tab=kalkulator&lahanId=${item.id}`}
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-flex items-center gap-1 bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200 font-bold px-2.5 py-1.5 rounded-lg text-xs transition"
+                            title="Hitung Jadwal Kalender Tanam & Pemupukan Presisi"
                           >
-                            <Edit3 className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                        {permissions.canVerifyPpl && (
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              handleDeleteLahan(item);
-                            }}
-                            className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition cursor-pointer"
-                            title="Hapus Petak Lahan"
+                            <Sparkles className="w-3.5 h-3.5 text-amber-600" />
+                            Kalender Tanam
+                          </Link>
+                          <Link
+                            href={`/cetak-lahan/${item.id}`}
+                            target="_blank"
+                            onClick={(e) => e.stopPropagation()}
+                            className="inline-flex items-center gap-1.5 bg-slate-900 hover:bg-emerald-700 text-white font-bold px-3 py-1.5 rounded-lg text-xs shadow-xs transition"
                           >
-                            <Trash2 className="w-3.5 h-3.5" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                );
-              })}
+                            <Printer className="w-3.5 h-3.5 text-emerald-300" />
+                            Cetak Kartu
+                          </Link>
+                          {item.fotoLahan && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setPreviewFotoLahan(item.fotoLahan || null);
+                              }}
+                              className="inline-flex items-center gap-1 bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 font-bold px-2.5 py-1.5 rounded-lg text-xs transition cursor-pointer"
+                              title="Lihat Foto Dokumentasi Ber-watermark GPS"
+                            >
+                              <Camera className="w-3.5 h-3.5 text-emerald-600" />
+                              Foto GPS
+                            </button>
+                          )}
+                          {permissions.canVerifyPpl && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleOpenEditLahan(item);
+                              }}
+                              className="p-1.5 rounded-lg border border-slate-200 text-slate-600 hover:bg-emerald-50 hover:text-emerald-700 hover:border-emerald-300 transition cursor-pointer"
+                              title="Edit Data Petak Lahan"
+                            >
+                              <Edit3 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                          {permissions.canVerifyPpl && (
+                            <button
+                              type="button"
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                handleDeleteLahan(item);
+                              }}
+                              className="p-1.5 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition cursor-pointer"
+                              title="Hapus Petak Lahan"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          )}
+                        </div>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
+        </div>
+
+        {/* Baris Pagination & Navigasi Halaman */}
+        <div className="p-4 bg-slate-50/80 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-3 text-slate-600 font-medium">
+            <span>
+              Menampilkan{' '}
+              <strong className="text-slate-900 font-bold">
+                {filteredLahan.length === 0 ? 0 : startIndex + 1}
+              </strong>{' '}
+              -{' '}
+              <strong className="text-slate-900 font-bold">
+                {Math.min(endIndex, filteredLahan.length)}
+              </strong>{' '}
+              dari{' '}
+              <strong className="text-slate-900 font-bold">{filteredLahan.length}</strong> petak sawah
+            </span>
+
+            <div className="flex items-center gap-1.5 ml-2">
+              <span className="text-slate-400">| Baris:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+                className="bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer shadow-2xs"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+          </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={safeCurrentPage <= 1}
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 font-bold hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer shadow-2xs"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Sebelumnya</span>
+              </button>
+
+              <div className="flex items-center gap-1 px-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter((p) => {
+                    if (totalPages <= 7) return true;
+                    if (p === 1 || p === totalPages) return true;
+                    if (Math.abs(p - safeCurrentPage) <= 1) return true;
+                    return false;
+                  })
+                  .reduce<(number | string)[]>((acc, p, idx, arr) => {
+                    if (idx > 0 && (p as number) - (arr[idx - 1] as number) > 1) {
+                      acc.push('...');
+                    }
+                    acc.push(p);
+                    return acc;
+                  }, [])
+                  .map((p, idx) => {
+                    if (p === '...') {
+                      return (
+                        <span key={`ellipsis-${idx}`} className="px-2 text-slate-400 font-bold">
+                          ...
+                        </span>
+                      );
+                    }
+                    const isCur = p === safeCurrentPage;
+                    return (
+                      <button
+                        key={`page-${p}`}
+                        type="button"
+                        onClick={() => setCurrentPage(p as number)}
+                        className={`w-7 h-7 flex items-center justify-center rounded-lg font-bold text-xs transition cursor-pointer ${
+                          isCur
+                            ? 'bg-emerald-600 text-white shadow-xs'
+                            : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100 shadow-2xs'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    );
+                  })}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={safeCurrentPage >= totalPages}
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 font-bold hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer shadow-2xs"
+              >
+                <span className="hidden sm:inline">Selanjutnya</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
