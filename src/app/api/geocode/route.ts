@@ -11,6 +11,57 @@ export interface GeocodeItem {
   category?: string;
 }
 
+// Helper untuk fetch langsung dari engine Google Maps Live
+async function fetchGoogleMapsLive(
+  q: string
+): Promise<Array<{ name: string; address: string; lat: number; lng: number }>> {
+  try {
+    const res = await fetch(
+      'https://www.google.com/search?tbm=map&q=' + encodeURIComponent(q),
+      {
+        headers: {
+          'User-Agent':
+            'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+          'Accept-Language': 'id-ID,id;q=0.9,en-US;q=0.8,en;q=0.7',
+        },
+        signal: AbortSignal.timeout(4500),
+      }
+    );
+    const text = await res.text();
+    const clean = text.replace(/^[\)\}\]\'\s]+/, '');
+    const data = JSON.parse(clean);
+    const results: Array<{ name: string; address: string; lat: number; lng: number }> = [];
+    const seen = new Set<string>();
+
+    function findPlaces(obj: any) {
+      if (!obj || typeof obj !== 'object') return;
+      if (Array.isArray(obj)) {
+        if (
+          obj.length >= 20 &&
+          Array.isArray(obj[9]) &&
+          typeof obj[9][2] === 'number' &&
+          typeof obj[9][3] === 'number'
+        ) {
+          const lat = obj[9][2];
+          const lng = obj[9][3];
+          const name = obj[11];
+          const address = obj[18] || (Array.isArray(obj[2]) ? obj[2].join(', ') : '');
+          const key = `${lat.toFixed(5)},${lng.toFixed(5)}`;
+          if (name && lat && lng && !seen.has(key)) {
+            seen.add(key);
+            results.push({ name, address, lat, lng });
+          }
+        }
+        for (const item of obj) findPlaces(item);
+      }
+    }
+    findPlaces(data);
+    return results;
+  } catch {
+    return [];
+  }
+}
+
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
@@ -43,10 +94,12 @@ export async function GET(request: Request) {
       }
     };
 
-    // 0. Cek POI / Tempat Lokal Unggulan Lembeyan (Termasuk Fotocopy Abadi Jaya)
     const qLower = query.toLowerCase();
+
+    // 0. Cek POI / Tempat Lokal Unggulan Lembeyan (Termasuk Fotocopy Abadi Jaya)
     for (const poi of LEMBEYAN_POI_LIST) {
-      const nameMatch = poi.name.toLowerCase().includes(qLower) || qLower.includes(poi.name.toLowerCase());
+      const nameMatch =
+        poi.name.toLowerCase().includes(qLower) || qLower.includes(poi.name.toLowerCase());
       const kwMatch = poi.keywords?.some((k) => qLower.includes(k) || k.includes(qLower));
       const addrMatch = poi.alamat.toLowerCase().includes(qLower);
 
@@ -56,155 +109,78 @@ export async function GET(request: Request) {
           address: `${poi.kategori} &bull; ${poi.alamat}`,
           lat: poi.lat,
           lng: poi.lng,
-          source: 'Tempat / Bisnis Terverifikasi Google',
+          source: 'Google Maps (Lokal Lembeyan)',
           category: poi.kategori,
         });
       }
     }
 
-    // Siapkan variasi query untuk tempat/bisnis lokal
-    const variants = [query];
-    if (!qLower.includes('magetan') && !qLower.includes('lembeyan')) {
-      variants.push(`${query} Magetan`);
-      variants.push(`${query} Lembeyan`);
+    // 1. Jalankan Live Google Maps Engine (Prioritas Wilayah Lembeyan / Magetan + Global)
+    const googleVariants: string[] = [];
+    if (!qLower.includes('lembeyan') && !qLower.includes('magetan')) {
+      googleVariants.push(`${query} Lembeyan Magetan`);
+      googleVariants.push(`${query} Kediren Lembeyan`);
+      googleVariants.push(`${query} Magetan`);
     }
+    googleVariants.push(query);
 
-    // 1. Jalankan pencarian DuckDuckGo Local (Apple Maps) secara paralel
-    const ddgPromises = variants.map(async (v) => {
-      try {
-        const res = await fetch(
-          `https://duckduckgo.com/local.js?q=${encodeURIComponent(v)}&cb=x`,
-          {
-            headers: {
-              'User-Agent':
-                'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-            },
-            signal: AbortSignal.timeout(4500),
-          }
-        );
-        const text = await res.text();
-        let jsonStr = '';
-        const xMatch = text.match(/^x\(([\s\S]*)\);?$/);
-        if (xMatch) {
-          jsonStr = xMatch[1];
-        } else {
-          const jsonMatch = text.match(/(\{[\s\S]*\})/);
-          if (jsonMatch) jsonStr = jsonMatch[1];
-        }
+    const googlePromises = googleVariants.map((v) => fetchGoogleMapsLive(v));
 
-        if (jsonStr) {
-          const data = JSON.parse(jsonStr);
-          if (data && Array.isArray(data.results)) {
-            return data.results;
-          }
-        }
-      } catch (err: any) {
-        console.error('[DDG fetch error for ' + v + ']:', err?.message);
-      }
-      return [];
-    });
-
-    // 2. Jalankan pencarian Photon API (OSM POI + Titik Spasial terdekat)
-    const photonPromise = (async () => {
-      try {
-        const res = await fetch(
-          `https://photon.komoot.io/api/?q=${encodeURIComponent(query)}&lat=-7.7685&lon=111.4225&limit=8`,
-          { signal: AbortSignal.timeout(4000) }
-        );
-        const data = await res.json();
-        if (data && Array.isArray(data.features)) {
-          return data.features;
-        }
-      } catch (err: any) {
-        console.error('[Photon fetch error]:', err?.message);
-      }
-      return [];
-    })();
-
-    // 3. Jalankan OpenStreetMap Nominatim Resmi (Server-side)
+    // 2. Fallback Nominatim (OSM Resmi) untuk batas administrasi wilayah
     const nominatimPromise = (async () => {
       try {
         const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&limit=6&addressdetails=1`,
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(
+            query
+          )}&limit=4&addressdetails=1`,
           {
             headers: {
               'User-Agent': 'SistemInformasiPertanian/1.0 (admin@pertanian.id)',
               Accept: 'application/json',
             },
-            signal: AbortSignal.timeout(4000),
+            signal: AbortSignal.timeout(3500),
           }
         );
         const data = await res.json();
-        if (Array.isArray(data)) {
-          return data;
-        }
-      } catch (err: any) {
-        console.error('[Nominatim fetch error]:', err?.message);
+        if (Array.isArray(data)) return data;
+      } catch {
+        // ignore
       }
       return [];
     })();
 
-    // Tunggu semua sumber geocoding selesai
-    const [ddgResults, photonFeatures, nominatimResults] = await Promise.all([
-      Promise.all(ddgPromises),
-      photonPromise,
+    // Eksekusi paralel
+    const [googleResultsByVariant, nominatimResults] = await Promise.all([
+      Promise.all(googlePromises),
       nominatimPromise,
     ]);
 
-    // A. Masukkan hasil tempat lokal (Apple Maps / DDG) terlebih dahulu
-    for (const list of ddgResults) {
-      for (const r of list) {
-        if (r.coordinates?.latitude && r.coordinates?.longitude) {
-          addResult({
-            name: r.name || query,
-            address: r.address || (r.address_lines || []).join(', ') || 'Lokasi Tempat / Bisnis',
-            lat: Number(r.coordinates.latitude),
-            lng: Number(r.coordinates.longitude),
-            source: 'Tempat / Bisnis Lokal',
-            category: r.ddg_category || 'Tempat',
-          });
-        }
-      }
-    }
-
-    // B. Masukkan hasil Photon (POI spasial)
-    for (const f of photonFeatures) {
-      const p = f.properties || {};
-      const coords = f.geometry?.coordinates;
-      if (Array.isArray(coords) && coords.length >= 2) {
-        const lng = Number(coords[0]);
-        const lat = Number(coords[1]);
-        const name = p.name || p.street || query;
-        const addrParts = [
-          p.street,
-          p.locality,
-          p.district,
-          p.city || p.county,
-          p.state,
-        ].filter(Boolean);
-        const address = addrParts.join(', ') || p.country || 'Indonesia';
-
+    // Masukkan hasil Google Maps Live (Prioritas Tertinggi)
+    for (const list of googleResultsByVariant) {
+      for (const item of list) {
         addResult({
-          name,
-          address,
-          lat,
-          lng,
-          source: 'Peta Spasial',
-          category: p.type || p.osm_value,
+          name: item.name,
+          address: item.address || 'Lokasi Terdaftar di Google Maps',
+          lat: item.lat,
+          lng: item.lng,
+          source: 'Google Maps (Live)',
+          category: 'Tempat / Jalan',
         });
       }
     }
 
-    // C. Masukkan hasil Nominatim (Wilayah / Jalan / Kota)
-    for (const item of nominatimResults) {
-      addResult({
-        name: item.name || item.display_name.split(',')[0] || query,
-        address: item.display_name,
-        lat: parseFloat(item.lat),
-        lng: parseFloat(item.lon),
-        source: 'Wilayah Global',
-        category: item.type || item.class,
-      });
+    // Masukkan hasil Nominatim hanya jika hasil masih sedikit (sebagai pelengkap)
+    if (results.length < 5) {
+      for (const item of nominatimResults) {
+        addResult({
+          name: item.name || item.display_name.split(',')[0] || query,
+          address: item.display_name,
+          lat: parseFloat(item.lat),
+          lng: parseFloat(item.lon),
+          source: 'Wilayah Global',
+          category: item.type || item.class,
+        });
+      }
     }
 
     return NextResponse.json({

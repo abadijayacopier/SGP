@@ -1037,21 +1037,25 @@ export default function LeafletMap({
                   </>
                 )}
 
-                {/* 5. Hasil Pencarian Global (Tempat, Usaha, Jalan, Kota - Layaknya Google Maps) */}
+                {/* 5. Hasil Pencarian Global & Google Maps Live (Tempat, Usaha, Jalan, Kota) */}
                 {globalSearchResults.length > 0 && (
                   <>
-                    <div className="px-3 py-1 bg-blue-50/80 text-[10px] font-bold text-blue-800 uppercase flex items-center justify-between">
+                    <div className="px-3 py-1.5 bg-emerald-50/80 text-[10px] font-bold text-emerald-800 uppercase flex items-center justify-between border-t border-slate-100">
                       <div className="flex items-center gap-1.5">
-                        <Globe className="w-3 h-3 text-blue-600" />
-                        <span>Hasil Pencarian Tempat & Wilayah (Peta)</span>
+                        <MapPin className="w-3.5 h-3.5 text-emerald-600" />
+                        <span>Hasil Pencarian Google Maps (Live)</span>
                       </div>
-                      <span className="text-[9px] text-blue-600 font-normal">Saran Otomatis</span>
+                      <span className="text-[9px] text-emerald-700 font-semibold bg-emerald-100/70 px-1.5 py-0.5 rounded">
+                        Sesuai Tampilan Peta
+                      </span>
                     </div>
                     {globalSearchResults.map((hit, idx) => {
                       const title = hit.name || hit.address?.split(',')[0] || hit.display_name?.split(',')[0] || 'Lokasi';
                       const subtitle = hit.address || hit.display_name || '';
                       const lat = typeof hit.lat === 'number' ? hit.lat : parseFloat(hit.lat);
                       const lng = typeof hit.lng === 'number' ? hit.lng : (typeof hit.lon === 'number' ? hit.lon : parseFloat(hit.lon || hit.lng || '0'));
+                      const isGoogleLive = hit.source?.includes('Google Maps');
+
                       return (
                         <button
                           key={hit.id || idx}
@@ -1061,11 +1065,17 @@ export default function LeafletMap({
                             setMapSearchText(title);
                             setSearchDropdownOpen(false);
                           }}
-                          className="w-full text-left px-3.5 py-2.5 hover:bg-blue-50/90 flex items-start justify-between gap-2 transition cursor-pointer"
+                          className={`w-full text-left px-3.5 py-2.5 flex items-start justify-between gap-2 transition cursor-pointer ${
+                            isGoogleLive ? 'hover:bg-emerald-50/80 bg-white' : 'hover:bg-blue-50/90'
+                          }`}
                         >
                           <div className="min-w-0 flex-1">
                             <div className="font-bold text-slate-900 flex items-center gap-1.5 truncate">
-                              <MapPin className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                              <MapPin
+                                className={`w-3.5 h-3.5 shrink-0 ${
+                                  isGoogleLive ? 'text-emerald-600' : 'text-blue-600'
+                                }`}
+                              />
                               <span className="truncate">{title}</span>
                             </div>
                             {subtitle && (
@@ -1076,7 +1086,13 @@ export default function LeafletMap({
                           </div>
                           <div className="flex flex-col items-end gap-0.5 shrink-0">
                             {hit.source && (
-                              <span className="text-[9px] font-semibold text-blue-700 bg-blue-100/70 px-1.5 py-0.2 rounded">
+                              <span
+                                className={`text-[9px] font-semibold px-1.5 py-0.5 rounded ${
+                                  isGoogleLive
+                                    ? 'text-emerald-800 bg-emerald-100/80 border border-emerald-200'
+                                    : 'text-blue-700 bg-blue-100/70'
+                                }`}
+                              >
                                 {hit.source}
                               </span>
                             )}
