@@ -514,24 +514,24 @@ export default function PetaniPage() {
             </button>
           </div>
 
-          {permissions.canDigitasiGis && (
-            <>
-              <button
-                onClick={handleOpenCreatePoktan}
-                className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-800 border border-slate-200 font-bold text-xs px-3.5 py-2.5 rounded-xl shadow-2xs transition cursor-pointer"
-              >
-                <Plus className="w-4 h-4 text-emerald-600" />
-                Tambah Poktan
-              </button>
+          {activeTab === 'poktan' && (permissions.canDigitasiGis || currentUser.role === 'ADMIN_DINAS') && (
+            <button
+              onClick={handleOpenCreatePoktan}
+              className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm transition cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              Tambah Poktan
+            </button>
+          )}
 
-              <button
-                onClick={handleOpenCreatePetani}
-                className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm transition"
-              >
-                <Plus className="w-4 h-4" />
-                Tambah Petani Baru
-              </button>
-            </>
+          {activeTab === 'petani' && (permissions.canDigitasiGis || currentUser.role === 'ADMIN_DINAS' || currentUser.role === 'POKTAN') && (
+            <button
+              onClick={handleOpenCreatePetani}
+              className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm transition cursor-pointer"
+            >
+              <Plus className="w-4 h-4" />
+              Tambah Petani Baru
+            </button>
           )}
         </div>
       </div>
