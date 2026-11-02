@@ -232,7 +232,7 @@ export const ROLE_PERMISSIONS: Record<
     description:
       'Khusus petani terdaftar: hanya melihat kuota pupuk milik sendiri, jadwal dosis pemupukan, peta sawah sendiri, dan mencetak Kartu Tani Digital / Kartu Lahan.',
     defaultPath: '/cek-kuota',
-    allowedPaths: ['/cek-kuota', '/peta', '/profil', '/cetak-erdkk', '/cetak-kalender-tanam'],
+    allowedPaths: ['/cek-kuota', '/peta', '/cetak-erdkk', '/cetak-kalender-tanam'],
     menuItems: [
       { label: 'Cek Kuota & Kartu Tani', href: '/cek-kuota', iconName: 'cek-kuota' },
       { label: 'Peta Lahan Saya', href: '/peta', iconName: 'peta' },

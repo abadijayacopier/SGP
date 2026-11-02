@@ -425,105 +425,118 @@ export default function Navbar() {
                     </div>
                   </div>
 
-                  {/* Menu Utama: Profil Saya, Foto Profil & Ganti Password */}
-                  <div className="py-2 px-2 border-b border-slate-100 space-y-1">
-                    <p className="px-2 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
-                      Pengaturan Profil & Akun Anda:
-                    </p>
-                    <Link
-                      href="/profil?tab=BIODATA"
-                      onClick={() => setDropdownOpen(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 hover:bg-emerald-50 hover:text-emerald-800 transition group"
-                    >
-                      <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition">
-                        <UserCircle className="w-4 h-4" />
+                  {/* Menu Utama: Profil Saya, Foto Profil & Ganti Password (Khusus Petugas / Admin) */}
+                  {activeUser.role !== 'PETANI' ? (
+                    <div className="py-2 px-2 border-b border-slate-100 space-y-1">
+                      <p className="px-2 pb-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                        Pengaturan Profil & Akun Anda:
+                      </p>
+                      <Link
+                        href="/profil?tab=BIODATA"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 hover:bg-emerald-50 hover:text-emerald-800 transition group"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition">
+                          <UserCircle className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="leading-tight">Foto Profil & Biodata Jabatan</div>
+                          <div className="text-[10px] text-slate-400 font-normal">Ubah foto identitas, nama, WA & email</div>
+                        </div>
+                      </Link>
+
+                      <Link
+                        href="/profil?tab=KEAMANAN"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 hover:bg-amber-50 hover:text-amber-800 transition group"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 group-hover:bg-amber-500 group-hover:text-white transition">
+                          <KeyRound className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="leading-tight">Ganti Kata Sandi (Password)</div>
+                          <div className="text-[10px] text-slate-400 font-normal">Perbarui keamanan sandi akun Anda</div>
+                        </div>
+                      </Link>
+
+                      <Link
+                        href="/profil?tab=RBAC"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 hover:bg-purple-50 hover:text-purple-800 transition group"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 group-hover:bg-purple-600 group-hover:text-white transition">
+                          <Lock className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="leading-tight">Rincian Hak Akses Saya (RBAC)</div>
+                          <div className="text-[10px] text-slate-400 font-normal">
+                            {activeUser.role === 'ADMIN_DINAS'
+                              ? 'Akses Superadmin: Dapat mencentang RBAC'
+                              : 'Lihat wewenang jabatan (Hanya Admin dapat ubah)'}
+                          </div>
+                        </div>
+                      </Link>
+
+                      <Link
+                        href="/pengaturan"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 hover:bg-emerald-50 hover:text-emerald-800 transition group"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition">
+                          <Sliders className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="leading-tight">Pengaturan & Parameter Sistem</div>
+                          <div className="text-[10px] text-slate-400 font-normal">HET pupuk, instansi BPP, GIS & backup</div>
+                        </div>
+                      </Link>
+
+                      <Link
+                        href="/field-maps"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-emerald-900 bg-emerald-50/60 hover:bg-emerald-100 transition group border border-emerald-200/60"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                          <Map className="w-4 h-4" />
+                        </div>
+                        <div>
+                          <div className="leading-tight font-black">Mode Field Maps Smartphone (PWA)</div>
+                          <div className="text-[10px] text-emerald-700 font-normal">Tampilan layar penuh khusus survei & GPS sawah</div>
+                        </div>
+                      </Link>
+                    </div>
+                  ) : (
+                    /* Khusus PETANI: Read-Only, Tidak Ada Edit Profil / Password */
+                    <div className="py-2.5 px-3 border-b border-slate-100 space-y-2">
+                      <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-200/80 text-xs">
+                        <div className="flex items-center gap-1.5 font-bold text-emerald-950">
+                          <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                          <span>Status Terdaftar Resmi e-RDKK</span>
+                        </div>
+                        <p className="text-[11px] text-emerald-800/90 mt-0.5 leading-relaxed">
+                          Data identitas, kuota pupuk, dan petak sawah diverifikasi oleh BPP Lembeyan (Mode Read-Only / Baca).
+                        </p>
                       </div>
-                      <div>
-                        <div className="leading-tight">Foto Profil & Biodata Jabatan</div>
-                        <div className="text-[10px] text-slate-400 font-normal">Ubah foto identitas, nama, WA & email</div>
-                      </div>
-                    </Link>
 
-                    <Link
-                      href="/profil?tab=KEAMANAN"
-                      onClick={() => setDropdownOpen(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 hover:bg-amber-50 hover:text-amber-800 transition group"
-                    >
-                      <div className="w-7 h-7 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center shrink-0 group-hover:bg-amber-500 group-hover:text-white transition">
-                        <KeyRound className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <div className="leading-tight">Ganti Kata Sandi (Password)</div>
-                        <div className="text-[10px] text-slate-400 font-normal">Perbarui keamanan sandi akun Anda</div>
-                      </div>
-                    </Link>
-
-                    {activeUser.role !== 'PETANI' && (
-                      <>
-                        <Link
-                          href="/profil?tab=RBAC"
-                          onClick={() => setDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 hover:bg-purple-50 hover:text-purple-800 transition group"
-                        >
-                          <div className="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 group-hover:bg-purple-600 group-hover:text-white transition">
-                            <Lock className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <div className="leading-tight">Rincian Hak Akses Saya (RBAC)</div>
-                            <div className="text-[10px] text-slate-400 font-normal">
-                              {activeUser.role === 'ADMIN_DINAS'
-                                ? 'Akses Superadmin: Dapat mencentang RBAC'
-                                : 'Lihat wewenang jabatan (Hanya Admin dapat ubah)'}
-                            </div>
-                          </div>
-                        </Link>
-
-                        <Link
-                          href="/pengaturan"
-                          onClick={() => setDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 hover:bg-emerald-50 hover:text-emerald-800 transition group"
-                        >
-                          <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition">
-                            <Sliders className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <div className="leading-tight">Pengaturan & Parameter Sistem</div>
-                            <div className="text-[10px] text-slate-400 font-normal">HET pupuk, instansi BPP, GIS & backup</div>
-                          </div>
-                        </Link>
-
-                        <Link
-                          href="/field-maps"
-                          onClick={() => setDropdownOpen(false)}
-                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-emerald-900 bg-emerald-50/60 hover:bg-emerald-100 transition group border border-emerald-200/60"
-                        >
-                          <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                            <Map className="w-4 h-4" />
-                          </div>
-                          <div>
-                            <div className="leading-tight font-black">Mode Field Maps Smartphone (PWA)</div>
-                            <div className="text-[10px] text-emerald-700 font-normal">Tampilan layar penuh khusus survei & GPS sawah</div>
-                          </div>
-                        </Link>
-                      </>
-                    )}
-
-                    {activeUser.role === 'PETANI' && (
                       <Link
                         href="/cek-kuota"
                         onClick={() => setDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-emerald-900 bg-emerald-50 hover:bg-emerald-100 transition group border border-emerald-200/60"
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-emerald-950 bg-emerald-100/70 hover:bg-emerald-200/80 transition group border border-emerald-300"
                       >
-                        <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                          <QrCode className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <div className="leading-tight font-black">Kartu Tani Digital & Kuota Saya</div>
-                          <div className="text-[10px] text-emerald-700 font-normal">Cek jatah pupuk subsidi & jadwal tanam</div>
-                        </div>
+                        <QrCode className="w-4 h-4 text-emerald-700" />
+                        <span>Cek Kuota &amp; Kartu Tani Digital</span>
                       </Link>
-                    )}
-                  </div>
+
+                      <Link
+                        href="/peta"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-700 hover:bg-slate-100 transition group border border-slate-200"
+                      >
+                        <Map className="w-4 h-4 text-emerald-600" />
+                        <span>Peta Petak Sawah Saya</span>
+                      </Link>
+                    </div>
+                  )}
 
                   {/* Daftar Menu Khusus Jabatan Ini */}
                   <div className="px-4 py-2.5 border-b border-slate-100 bg-slate-50/60">
@@ -558,10 +571,10 @@ export default function Navbar() {
                     <button
                       type="button"
                       onClick={handleLogout}
-                      className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50 transition"
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-red-600 hover:bg-red-50 transition cursor-pointer"
                     >
                       <LogOut className="w-4 h-4" />
-                      Keluar / Ganti Akun di Portal Login
+                      {activeUser.role === 'PETANI' ? 'Keluar dari Portal Petani' : 'Keluar / Ganti Akun di Portal Login'}
                     </button>
                   </div>
                 </div>

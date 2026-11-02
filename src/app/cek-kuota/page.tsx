@@ -200,6 +200,18 @@ export default function CekKuotaPage() {
       const json = await res.json();
       if (json.success) {
         setResultData(json);
+        if (json.petani) {
+          const matchedLahan = json.petani.lahan?.[0];
+          if (matchedLahan) {
+            setSelectedLahanId(matchedLahan.id);
+            setSelectedLahanObj({ ...matchedLahan, petani: json.petani });
+            const mainKom = matchedLahan.komoditas?.split(',')?.[0]?.trim() || 'Padi';
+            setCalcKomoditas(mainKom);
+            setCalcLuasHa(matchedLahan.luasHa?.toString() || '0.07');
+          } else if (json.petani.totalLuasLahan) {
+            setCalcLuasHa(json.petani.totalLuasLahan.toString());
+          }
+        }
       } else {
         setResultData(null);
         setErrorMsg(json.error || 'Data tidak ditemukan.');
@@ -515,7 +527,10 @@ export default function CekKuotaPage() {
   };
 
   const petani = resultData?.petani;
-  const alokasi = petani?.alokasiPupuk?.[0];
+  const alokasi =
+    petani?.alokasiPupuk?.find(
+      (a: any) => (a.jatahUreaKg > 0 || a.jatahNpkKg > 0 || a.luasTanamHa > 0)
+    ) || petani?.alokasiPupuk?.[0];
   const verifiedDoc = resultData?.verifiedDocument;
 
   return (
@@ -1080,129 +1095,212 @@ export default function CekKuotaPage() {
               </div>
 
               <div className="space-y-4 text-xs">
-                {/* 1. Pilih Petak Sawah Terdaftar GIS */}
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1.5 flex items-center justify-between">
-                    <span>1. Hubungkan Petak Sawah GIS (Opsional)</span>
-                    {selectedLahanId !== 'MANUAL' && (
-                      <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
-                        Data Terhubung
-                      </span>
-                    )}
-                  </label>
-                  <select
-                    value={selectedLahanId}
-                    onChange={(e) => {
-                      const val = e.target.value;
-                      setSelectedLahanId(val);
-                      if (val === 'MANUAL') {
-                        setSelectedLahanObj(null);
-                      } else {
-                        const matched = allLahanList.find((l) => l.id === val);
-                        if (matched) {
-                          setSelectedLahanObj(matched);
-                          setCalcKomoditas(matched.komoditas);
-                          setCalcLuasHa(matched.luasHa.toString());
-                        }
-                      }
-                    }}
-                    className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-                  >
-                    <option value="MANUAL">
-                      -- Simulasi Bebas / Input Mandiri (Tanpa Lahan Terdaftar) --
-                    </option>
-                    {allLahanList.map((l) => (
-                      <option key={l.id} value={l.id}>
-                        {l.kodeLahan} &bull; {l.namaLahan} ({l.petani?.nama || 'Petani'}) - {l.luasHa} Ha ({l.komoditas})
-                      </option>
-                    ))}
-                  </select>
-
-                  {/* Kartu Ringkas Lahan Terpilih */}
-                  {selectedLahanObj && (
-                    <div className="mt-2.5 p-3 rounded-xl bg-emerald-50/80 border border-emerald-200 text-xs space-y-1">
+                {isPetaniLocked ? (
+                  <div className="space-y-4">
+                    {/* Petak Lahan Terpilih Petani (Read-Only) */}
+                    <div className="p-4 rounded-2xl bg-emerald-50/80 border border-emerald-200/90 space-y-3">
                       <div className="flex items-center justify-between">
-                        <span className="font-bold text-emerald-950">{selectedLahanObj.namaLahan}</span>
-                        <span className="font-mono text-[10px] font-bold bg-emerald-200 text-emerald-900 px-1.5 py-0.5 rounded">
-                          {selectedLahanObj.kodeLahan}
+                        <span className="text-[10px] font-bold uppercase tracking-wider text-emerald-800 bg-emerald-200/80 px-2.5 py-0.5 rounded-full border border-emerald-300">
+                          Data Terverifikasi e-RDKK (Read-Only)
+                        </span>
+                        <span className="font-mono text-[11px] font-bold text-emerald-900">
+                          {selectedLahanObj?.kodeLahan || 'LHN-2026-001'}
                         </span>
                       </div>
-                      <div className="text-[11px] text-slate-600">
-                        Petani: <strong>{selectedLahanObj.petani?.nama || '-'}</strong> (NIK: {selectedLahanObj.petani?.nik || '-'})
+
+                      <div>
+                        <h4 className="text-sm font-black text-emerald-950">
+                          {selectedLahanObj?.namaLahan || 'Blok Klampisiren'}
+                        </h4>
+                        <p className="text-[11px] text-emerald-800 mt-0.5">
+                          Petani: <strong>{petani?.nama || currentUser.name}</strong> &bull; Poktan: <strong>{petani?.poktan?.nama || 'SRI MULYO'}</strong>
+                        </p>
                       </div>
-                      <div className="text-[11px] text-slate-600">
-                        Kelompok Tani: <strong>{selectedLahanObj.petani?.poktan?.nama || '-'}</strong> ({selectedLahanObj.petani?.desa || 'Kediren'}, Lembeyan)
+
+                      <div className="grid grid-cols-2 gap-2 pt-1 border-t border-emerald-200/60 text-xs">
+                        <div className="bg-white/80 p-2.5 rounded-xl border border-emerald-200">
+                          <span className="text-[10px] text-slate-500 font-semibold block">Komoditas Lahan</span>
+                          <span className="text-xs font-black text-slate-900">{calcKomoditas || 'Padi, Jagung'}</span>
+                        </div>
+                        <div className="bg-white/80 p-2.5 rounded-xl border border-emerald-200">
+                          <span className="text-[10px] text-slate-500 font-semibold block">Luas Baku Sawah</span>
+                          <span className="text-xs font-black text-emerald-700">{calcLuasHa} Ha ({Math.round((parseFloat(calcLuasHa) || 0) * 10000)} m²)</span>
+                        </div>
                       </div>
                     </div>
-                  )}
-                </div>
 
-                {/* 2. Pilih Komoditas Tanaman */}
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1.5">
-                    2. Pilih Komoditas Tanaman *
-                  </label>
-                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
-                    {['Padi', 'Jagung', 'Kedelai', 'Tebu', 'Cabai'].map((kom) => (
-                      <button
-                        key={kom}
-                        type="button"
-                        onClick={() => setCalcKomoditas(kom)}
-                        className={`py-2 px-2.5 rounded-xl font-bold border text-xs transition ${
-                          calcKomoditas === kom
-                            ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
-                            : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
-                        }`}
-                      >
-                        {kom}
-                      </button>
-                    ))}
+                    {/* Jika memiliki lebih dari 1 petak lahan */}
+                    {petani?.lahan && petani.lahan.length > 1 && (
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-1.5 text-xs">
+                          Pilih Petak Sawah Anda ({petani.lahan.length} Blok):
+                        </label>
+                        <select
+                          value={selectedLahanId}
+                          onChange={(e) => {
+                            const val = e.target.value;
+                            setSelectedLahanId(val);
+                            const matched = petani.lahan.find((l: any) => l.id === val);
+                            if (matched) {
+                              setSelectedLahanObj({ ...matched, petani });
+                              setCalcKomoditas(matched.komoditas?.split(',')?.[0]?.trim() || 'Padi');
+                              setCalcLuasHa(matched.luasHa.toString());
+                            }
+                          }}
+                          className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800"
+                        >
+                          {petani.lahan.map((l: any) => (
+                            <option key={l.id} value={l.id}>
+                              {l.kodeLahan} &bull; {l.namaLahan} - {l.luasHa} Ha ({l.komoditas})
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+                    )}
+
+                    {/* Tanggal Mulai Tanam */}
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1.5 text-xs">
+                        Tanggal Mulai Tanam (0 HST) *
+                      </label>
+                      <input
+                        type="date"
+                        value={calcTanggalTanam}
+                        onChange={(e) => setCalcTanggalTanam(e.target.value)}
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500"
+                      />
+                      <p className="text-[11px] text-slate-400 mt-1">
+                        Jadwal tanggal aplikasi pupuk 3 fase di samping dihitung otomatis dari tanggal tanam ini.
+                      </p>
+                    </div>
                   </div>
-                </div>
-
-                {/* 3. Luas Lahan Garapan */}
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1.5">
-                    3. Luas Lahan Garapan (Hektar / Ha) *
-                  </label>
-                  <input
-                    type="number"
-                    step="0.05"
-                    min="0.05"
-                    max="50"
-                    value={calcLuasHa}
-                    onChange={(e) => setCalcLuasHa(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-black text-slate-900 focus:ring-2 focus:ring-emerald-500"
-                  />
-                  <div className="flex flex-wrap gap-1.5 mt-2">
-                    {['0.25', '0.50', '1.00', '1.50', '2.00'].map((preset) => (
-                      <button
-                        key={preset}
-                        type="button"
-                        onClick={() => setCalcLuasHa(preset)}
-                        className="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-100 text-slate-700 transition"
+                ) : (
+                  <>
+                    {/* 1. Pilih Petak Sawah Terdaftar GIS */}
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1.5 flex items-center justify-between">
+                        <span>1. Hubungkan Petak Sawah GIS (Opsional)</span>
+                        {selectedLahanId !== 'MANUAL' && (
+                          <span className="text-[10px] font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full">
+                            Data Terhubung
+                          </span>
+                        )}
+                      </label>
+                      <select
+                        value={selectedLahanId}
+                        onChange={(e) => {
+                          const val = e.target.value;
+                          setSelectedLahanId(val);
+                          if (val === 'MANUAL') {
+                            setSelectedLahanObj(null);
+                          } else {
+                            const matched = allLahanList.find((l) => l.id === val);
+                            if (matched) {
+                              setSelectedLahanObj(matched);
+                              setCalcKomoditas(matched.komoditas);
+                              setCalcLuasHa(matched.luasHa.toString());
+                            }
+                          }
+                        }}
+                        className="w-full px-3 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 focus:outline-none"
                       >
-                        {preset} Ha ({parseFloat(preset) * 10000} m²)
-                      </button>
-                    ))}
-                  </div>
-                </div>
+                        <option value="MANUAL">
+                          -- Simulasi Bebas / Input Mandiri (Tanpa Lahan Terdaftar) --
+                        </option>
+                        {allLahanList.map((l) => (
+                          <option key={l.id} value={l.id}>
+                            {l.kodeLahan} &bull; {l.namaLahan} ({l.petani?.nama || 'Petani'}) - {l.luasHa} Ha ({l.komoditas})
+                          </option>
+                        ))}
+                      </select>
 
-                {/* 4. Tanggal Mulai Tanam (0 HST) */}
-                <div>
-                  <label className="block font-bold text-slate-700 mb-1.5">
-                    4. Tanggal Mulai Tanam (0 HST) *
-                  </label>
-                  <input
-                    type="date"
-                    value={calcTanggalTanam}
-                    onChange={(e) => setCalcTanggalTanam(e.target.value)}
-                    className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500"
-                  />
-                  <p className="text-[10px] text-slate-400 mt-1">
-                    *Semua jadwal pemupukan dan tanggal panen akan dihitung otomatis dari tanggal ini.
-                  </p>
-                </div>
+                      {/* Kartu Ringkas Lahan Terpilih */}
+                      {selectedLahanObj && (
+                        <div className="mt-2.5 p-3 rounded-xl bg-emerald-50/80 border border-emerald-200 text-xs space-y-1">
+                          <div className="flex items-center justify-between">
+                            <span className="font-bold text-emerald-950">{selectedLahanObj.namaLahan}</span>
+                            <span className="font-mono text-[10px] font-bold bg-emerald-200 text-emerald-900 px-1.5 py-0.5 rounded">
+                              {selectedLahanObj.kodeLahan}
+                            </span>
+                          </div>
+                          <div className="text-[11px] text-slate-600">
+                            Petani: <strong>{selectedLahanObj.petani?.nama || '-'}</strong> (NIK: {selectedLahanObj.petani?.nik || '-'})
+                          </div>
+                          <div className="text-[11px] text-slate-600">
+                            Kelompok Tani: <strong>{selectedLahanObj.petani?.poktan?.nama || '-'}</strong> ({selectedLahanObj.petani?.desa || 'Kediren'}, Lembeyan)
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* 2. Pilih Komoditas Tanaman */}
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1.5">
+                        2. Pilih Komoditas Tanaman *
+                      </label>
+                      <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                        {['Padi', 'Jagung', 'Kedelai', 'Tebu', 'Cabai'].map((kom) => (
+                          <button
+                            key={kom}
+                            type="button"
+                            onClick={() => setCalcKomoditas(kom)}
+                            className={`py-2 px-2.5 rounded-xl font-bold border text-xs transition ${
+                              calcKomoditas === kom
+                                ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
+                                : 'bg-slate-50 text-slate-700 border-slate-200 hover:bg-slate-100'
+                            }`}
+                          >
+                            {kom}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 3. Luas Lahan Garapan */}
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1.5">
+                        3. Luas Lahan Garapan (Hektar / Ha) *
+                      </label>
+                      <input
+                        type="number"
+                        step="0.05"
+                        min="0.05"
+                        max="50"
+                        value={calcLuasHa}
+                        onChange={(e) => setCalcLuasHa(e.target.value)}
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm font-black text-slate-900 focus:ring-2 focus:ring-emerald-500"
+                      />
+                      <div className="flex flex-wrap gap-1.5 mt-2">
+                        {['0.25', '0.50', '1.00', '1.50', '2.00'].map((preset) => (
+                          <button
+                            key={preset}
+                            type="button"
+                            onClick={() => setCalcLuasHa(preset)}
+                            className="text-[11px] font-semibold px-2.5 py-1 rounded-lg bg-slate-100 hover:bg-emerald-100 text-slate-700 transition"
+                          >
+                            {preset} Ha ({parseFloat(preset) * 10000} m²)
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* 4. Tanggal Mulai Tanam (0 HST) */}
+                    <div>
+                      <label className="block font-bold text-slate-700 mb-1.5">
+                        4. Tanggal Mulai Tanam (0 HST) *
+                      </label>
+                      <input
+                        type="date"
+                        value={calcTanggalTanam}
+                        onChange={(e) => setCalcTanggalTanam(e.target.value)}
+                        className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500"
+                      />
+                      <p className="text-[10px] text-slate-400 mt-1">
+                        *Semua jadwal pemupukan dan tanggal panen akan dihitung otomatis dari tanggal ini.
+                      </p>
+                    </div>
+                  </>
+                )}
               </div>
 
               {/* Ringkasan Estimasi Biaya HET Subsidi */}

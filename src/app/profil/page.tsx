@@ -56,6 +56,13 @@ const PRESET_AVATARS = [
 
 export default function ProfilePage() {
   const { currentUser, permissions, updateCurrentUser } = useAuth();
+
+  // Pengalihan untuk akun PETANI: Petani tidak memiliki wewenang mengedit data profil/password kedinasan
+  useEffect(() => {
+    if (currentUser.role === 'PETANI') {
+      window.location.href = '/cek-kuota';
+    }
+  }, [currentUser.role]);
   const [activeTab, setActiveTab] = useState<'BIODATA' | 'KEAMANAN' | 'RBAC'>('BIODATA');
 
   // Matriks Wewenang RBAC State (Hanya Admin yang dapat mencentang/mengubah)
