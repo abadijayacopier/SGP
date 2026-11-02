@@ -214,6 +214,14 @@ export default function PetaniPage() {
   };
 
   useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const tabParam = params.get('tab');
+      if (tabParam === 'kades' || tabParam === 'poktan' || tabParam === 'petani') {
+        setActiveTab(tabParam);
+      }
+    }
+
     fetchPetani();
     fetchPoktan();
     fetchKades();

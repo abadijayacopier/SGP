@@ -52,9 +52,9 @@ export default function MobileBottomNav() {
   };
 
   let rightItem2 = {
-    href: '/kepala-desa',
-    label: 'Kades',
-    icon: Building2,
+    href: '/laporan',
+    label: 'Laporan',
+    icon: BarChart3,
   };
 
   if (role === 'PETANI') {
@@ -101,9 +101,9 @@ export default function MobileBottomNav() {
       icon: Calculator,
     };
     rightItem2 = {
-      href: '/kepala-desa',
-      label: 'Kades',
-      icon: Building2,
+      href: '/kasir-poktan',
+      label: 'Kasir',
+      icon: ShoppingBag,
     };
   } else if (role === 'SURVEYOR') {
     leftItem2 = {
