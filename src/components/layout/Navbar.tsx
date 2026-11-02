@@ -159,7 +159,7 @@ export default function Navbar() {
         <div className="flex items-center justify-between h-16 gap-2 sm:gap-3">
           {/* Logo Brand */}
           <div className="flex items-center shrink-0 min-w-0">
-            <Link href="/dashboard" className="flex items-center gap-2 sm:gap-2.5 group">
+            <Link href={activeUser.role === 'PETANI' ? '/cek-kuota' : '/dashboard'} className="flex items-center gap-2 sm:gap-2.5 group">
               <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-green-700 flex items-center justify-center text-white shadow-md shadow-emerald-600/20 group-hover:scale-105 transition-transform shrink-0">
                 <Sprout className="w-5 h-5" />
               </div>
@@ -458,51 +458,71 @@ export default function Navbar() {
                       </div>
                     </Link>
 
-                    <Link
-                      href="/profil?tab=RBAC"
-                      onClick={() => setDropdownOpen(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 hover:bg-purple-50 hover:text-purple-800 transition group"
-                    >
-                      <div className="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 group-hover:bg-purple-600 group-hover:text-white transition">
-                        <Lock className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <div className="leading-tight">Rincian Hak Akses Saya (RBAC)</div>
-                        <div className="text-[10px] text-slate-400 font-normal">
-                          {activeUser.role === 'ADMIN_DINAS'
-                            ? 'Akses Superadmin: Dapat mencentang RBAC'
-                            : 'Lihat wewenang jabatan (Hanya Admin dapat ubah)'}
+                    {activeUser.role !== 'PETANI' && (
+                      <>
+                        <Link
+                          href="/profil?tab=RBAC"
+                          onClick={() => setDropdownOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 hover:bg-purple-50 hover:text-purple-800 transition group"
+                        >
+                          <div className="w-7 h-7 rounded-lg bg-purple-100 text-purple-700 flex items-center justify-center shrink-0 group-hover:bg-purple-600 group-hover:text-white transition">
+                            <Lock className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <div className="leading-tight">Rincian Hak Akses Saya (RBAC)</div>
+                            <div className="text-[10px] text-slate-400 font-normal">
+                              {activeUser.role === 'ADMIN_DINAS'
+                                ? 'Akses Superadmin: Dapat mencentang RBAC'
+                                : 'Lihat wewenang jabatan (Hanya Admin dapat ubah)'}
+                            </div>
+                          </div>
+                        </Link>
+
+                        <Link
+                          href="/pengaturan"
+                          onClick={() => setDropdownOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 hover:bg-emerald-50 hover:text-emerald-800 transition group"
+                        >
+                          <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition">
+                            <Sliders className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <div className="leading-tight">Pengaturan & Parameter Sistem</div>
+                            <div className="text-[10px] text-slate-400 font-normal">HET pupuk, instansi BPP, GIS & backup</div>
+                          </div>
+                        </Link>
+
+                        <Link
+                          href="/field-maps"
+                          onClick={() => setDropdownOpen(false)}
+                          className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-emerald-900 bg-emerald-50/60 hover:bg-emerald-100 transition group border border-emerald-200/60"
+                        >
+                          <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                            <Map className="w-4 h-4" />
+                          </div>
+                          <div>
+                            <div className="leading-tight font-black">Mode Field Maps Smartphone (PWA)</div>
+                            <div className="text-[10px] text-emerald-700 font-normal">Tampilan layar penuh khusus survei & GPS sawah</div>
+                          </div>
+                        </Link>
+                      </>
+                    )}
+
+                    {activeUser.role === 'PETANI' && (
+                      <Link
+                        href="/cek-kuota"
+                        onClick={() => setDropdownOpen(false)}
+                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-emerald-900 bg-emerald-50 hover:bg-emerald-100 transition group border border-emerald-200/60"
+                      >
+                        <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+                          <QrCode className="w-4 h-4" />
                         </div>
-                      </div>
-                    </Link>
-
-                    <Link
-                      href="/pengaturan"
-                      onClick={() => setDropdownOpen(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 hover:bg-emerald-50 hover:text-emerald-800 transition group"
-                    >
-                      <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition">
-                        <Sliders className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <div className="leading-tight">Pengaturan & Parameter Sistem</div>
-                        <div className="text-[10px] text-slate-400 font-normal">HET pupuk, instansi BPP, GIS & backup</div>
-                      </div>
-                    </Link>
-
-                    <Link
-                      href="/field-maps"
-                      onClick={() => setDropdownOpen(false)}
-                      className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-emerald-900 bg-emerald-50/60 hover:bg-emerald-100 transition group border border-emerald-200/60"
-                    >
-                      <div className="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-xs">
-                        <Map className="w-4 h-4" />
-                      </div>
-                      <div>
-                        <div className="leading-tight font-black">Mode Field Maps Smartphone (PWA)</div>
-                        <div className="text-[10px] text-emerald-700 font-normal">Tampilan layar penuh khusus survei & GPS sawah</div>
-                      </div>
-                    </Link>
+                        <div>
+                          <div className="leading-tight font-black">Kartu Tani Digital & Kuota Saya</div>
+                          <div className="text-[10px] text-emerald-700 font-normal">Cek jatah pupuk subsidi & jadwal tanam</div>
+                        </div>
+                      </Link>
+                    )}
                   </div>
 
                   {/* Daftar Menu Khusus Jabatan Ini */}

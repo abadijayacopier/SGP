@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import {
   Search,
   QrCode,
@@ -37,6 +38,7 @@ import Swal from 'sweetalert2';
 import 'sweetalert2/dist/sweetalert2.min.css';
 
 export default function CekKuotaPage() {
+  const router = useRouter();
   const { currentUser, isMounted } = useAuth();
 
   // Privasi Petani: Akun Petani dikunci hanya ke data dan kuotanya sendiri
@@ -74,6 +76,13 @@ export default function CekKuotaPage() {
   // Muat data awal: petani terkunci -> data miliknya; selain itu daftar sampel
   useEffect(() => {
     if (!isMounted) return;
+
+    // Pastikan ada sesi aktif; jika belum login sama sekali, arahkan ke login untuk verifikasi 16 digit NIK
+    const saved = typeof window !== 'undefined' ? localStorage.getItem('pertanian_user_session') : null;
+    if (!saved) {
+      router.push('/login?cekKuota=1');
+      return;
+    }
 
     // Muat seluruh lahan GIS untuk dropdown kalkulator
     fetch('/api/lahan')

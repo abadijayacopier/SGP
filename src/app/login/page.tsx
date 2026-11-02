@@ -25,6 +25,10 @@ import {
   RotateCcw,
   ArrowLeft,
   Clock,
+  X,
+  CreditCard,
+  Search,
+  Users,
 } from 'lucide-react';
 import { showSuccess, showToast } from '@/lib/sweetalert';
 
@@ -55,7 +59,84 @@ function LoginFormContent() {
   const [resendCountdown, setResendCountdown] = useState(60);
   const [resending, setResending] = useState(false);
 
+  // Modal Cek Kuota NIK Mandiri Petani
+  const [showNikModal, setShowNikModal] = useState(false);
+  const [nikInput, setNikInput] = useState('');
+  const [nikLoading, setNikLoading] = useState(false);
+  const [nikError, setNikError] = useState<string | null>(null);
+  const [samplePetaniList, setSamplePetaniList] = useState<any[]>([]);
+
   const isTimeout = searchParams?.get('timeout') === '1';
+
+  // Otomatis buka modal NIK jika diarahkan dari cek kuota mandiri
+  useEffect(() => {
+    if (searchParams?.get('cekKuota') === '1') {
+      setShowNikModal(true);
+    }
+  }, [searchParams]);
+
+  // Muat sampel petani terdaftar saat modal NIK dibuka
+  useEffect(() => {
+    if (showNikModal && samplePetaniList.length === 0) {
+      fetch('/api/auth/login-petani')
+        .then((res) => res.json())
+        .then((json) => {
+          if (json.success && Array.isArray(json.data)) {
+            setSamplePetaniList(json.data);
+          }
+        })
+        .catch(() => {});
+    }
+  }, [showNikModal, samplePetaniList.length]);
+
+  const handlePetaniNikSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setNikError(null);
+
+    const cleanNik = nikInput.trim().replace(/[^0-9]/g, '');
+
+    if (!cleanNik) {
+      setNikError('Silakan masukkan Nomor Induk Kependudukan (NIK) terdaftar!');
+      return;
+    }
+
+    if (cleanNik.length < 8) {
+      setNikError('Format NIK minimal 8-16 digit angka!');
+      return;
+    }
+
+    try {
+      setNikLoading(true);
+
+      const res = await fetch('/api/auth/login-petani', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ nik: cleanNik }),
+      });
+
+      const json = await res.json();
+
+      if (json.success && json.data) {
+        // Otentikasi murni role PETANI (bukan admin)
+        loginUser(json.data);
+        showSuccess(
+          'Verifikasi NIK Berhasil',
+          `Selamat datang Bpk/Ibu <strong>${json.data.name}</strong>.<br/>Membuka Portal Mandiri Petani...`
+        );
+        setShowNikModal(false);
+        window.location.href = json.redirectUrl || '/cek-kuota';
+      } else {
+        setNikError(
+          json.error ||
+            `NIK "${cleanNik}" belum terdaftar dalam sistem e-RDKK Kecamatan Lembeyan. Pastikan NIK sudah sesuai e-KTP dan terdaftar di Kelompok Tani setempat.`
+        );
+      }
+    } catch (err: any) {
+      setNikError('Terjadi gangguan jaringan: ' + err.message);
+    } finally {
+      setNikLoading(false);
+    }
+  };
 
   // Otomatis bersihkan stale cache login saat pertama kali membuka halaman login
   useEffect(() => {
@@ -417,8 +498,12 @@ function LoginFormContent() {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
                     <button
                       type="button"
-                      onClick={() => router.push('/cek-kuota')}
-                      className="w-full bg-slate-900 hover:bg-slate-800 text-amber-300 font-bold py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 text-xs border border-slate-800 cursor-pointer shadow-xs"
+                      onClick={() => {
+                        setNikError(null);
+                        setNikInput('');
+                        setShowNikModal(true);
+                      }}
+                      className="w-full bg-slate-900 hover:bg-slate-800 text-amber-300 font-bold py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 text-xs border border-slate-800 cursor-pointer shadow-xs active:scale-[0.99]"
                     >
                       <QrCode className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
                       <span>Cek Kuota NIK Mandiri</span>
@@ -583,6 +668,163 @@ function LoginFormContent() {
           </div>
         </div>
       </div>
+
+      {/* MODAL KHUSUS PETANI: CEK KUOTA NIK MANDIRI */}
+      {showNikModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/75 backdrop-blur-xs animate-in fade-in duration-150"
+          onClick={() => {
+            setShowNikModal(false);
+            setNikError(null);
+          }}
+        >
+          <div
+            className="bg-white rounded-3xl shadow-2xl border border-slate-200 max-w-lg w-full overflow-hidden animate-in zoom-in-95 duration-150 relative text-left"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header Modal */}
+            <div className="bg-gradient-to-r from-emerald-950 via-emerald-900 to-teal-950 p-5 text-white flex items-center justify-between border-b border-emerald-800">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center font-black shadow-md shrink-0">
+                  <QrCode className="w-5 h-5" />
+                </div>
+                <div>
+                  <h3 className="font-black text-sm sm:text-base leading-tight">
+                    Cek Kuota NIK Mandiri Petani
+                  </h3>
+                  <p className="text-[11px] text-emerald-300 leading-tight mt-0.5">
+                    Portal Khusus Petani Terdaftar e-RDKK &bull; Kec. Lembeyan
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowNikModal(false);
+                  setNikError(null);
+                }}
+                className="p-1.5 rounded-xl text-emerald-300 hover:text-white hover:bg-white/10 transition cursor-pointer"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {/* Body Form */}
+            <form onSubmit={handlePetaniNikSubmit} className="p-5 sm:p-6 space-y-4 text-xs">
+              <div className="bg-emerald-50/90 border border-emerald-200 rounded-2xl p-3.5 text-emerald-900 space-y-1">
+                <p className="font-bold flex items-center gap-1.5 text-emerald-950">
+                  <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Verifikasi Identitas Petani Penerima Subsidi</span>
+                </p>
+                <p className="text-[11px] text-emerald-800/90 leading-relaxed">
+                  Masukkan 16 digit Nomor Induk Kependudukan (NIK) e-KTP Anda untuk membuka Portal Khusus Petani: rincian kuota pupuk subsidi, sisa kuota, peta sawah, dan Kartu Tani Digital.
+                </p>
+              </div>
+
+              {nikError && (
+                <div className="p-3.5 bg-red-50 border border-red-200 rounded-2xl flex items-start gap-2.5 text-xs text-red-800 animate-in fade-in">
+                  <AlertCircle className="w-4 h-4 text-red-600 shrink-0 mt-0.5" />
+                  <div className="flex-1 leading-relaxed">
+                    <p className="font-bold">Verifikasi NIK Gagal</p>
+                    <p className="text-[11px] mt-0.5">{nikError}</p>
+                  </div>
+                </div>
+              )}
+
+              <div>
+                <label className="block text-xs font-bold text-slate-700 mb-1.5">
+                  Nomor Induk Kependudukan (16 Digit NIK e-KTP) *
+                </label>
+                <div className="relative">
+                  <CreditCard className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    maxLength={16}
+                    required
+                    autoFocus
+                    placeholder="Contoh: 3520033010900002"
+                    value={nikInput}
+                    onChange={(e) => {
+                      setNikInput(e.target.value.replace(/[^0-9]/g, ''));
+                      if (nikError) setNikError(null);
+                    }}
+                    className="w-full pl-10 pr-10 py-3 bg-slate-50 border border-slate-300 rounded-xl text-slate-900 font-mono text-sm tracking-wider font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:bg-white transition"
+                  />
+                  {nikInput && (
+                    <button
+                      type="button"
+                      onClick={() => setNikInput('')}
+                      className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 cursor-pointer"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  )}
+                </div>
+                <div className="flex items-center justify-between text-[11px] text-slate-500 mt-1">
+                  <span>Hanya 16 digit angka e-KTP</span>
+                  <span className={nikInput.length === 16 ? 'text-emerald-600 font-bold' : ''}>
+                    {nikInput.length}/16 digit
+                  </span>
+                </div>
+              </div>
+
+              {/* Quick Sample Chips dari Database e-RDKK */}
+              {samplePetaniList.length > 0 && (
+                <div className="space-y-1.5 pt-1">
+                  <p className="text-[11px] font-bold text-slate-600 flex items-center gap-1">
+                    <Sparkles className="w-3 h-3 text-amber-500" />
+                    <span>Contoh NIK Petani Terdaftar (Klik untuk Isi Cepat):</span>
+                  </p>
+                  <div className="flex flex-wrap gap-1.5">
+                    {samplePetaniList.map((p) => (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => {
+                          setNikInput(p.nik);
+                          setNikError(null);
+                        }}
+                        className={`text-[11px] px-2.5 py-1 rounded-lg border transition flex items-center gap-1.5 cursor-pointer ${
+                          nikInput === p.nik
+                            ? 'bg-emerald-600 text-white border-emerald-700 font-bold shadow-2xs'
+                            : 'bg-slate-100 hover:bg-emerald-50 text-slate-700 border-slate-200'
+                        }`}
+                      >
+                        <User className="w-3 h-3 text-emerald-600" />
+                        <span className="font-semibold">{p.nama}</span>
+                        <span className="font-mono text-[10px] text-slate-500">({p.nik})</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowNikModal(false);
+                    setNikError(null);
+                  }}
+                  className="px-4 py-2.5 rounded-xl border border-slate-300 text-slate-700 font-bold text-xs hover:bg-slate-100 transition cursor-pointer"
+                >
+                  Batal
+                </button>
+                <button
+                  type="submit"
+                  disabled={nikLoading || !nikInput.trim()}
+                  className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.98] text-white font-black text-xs shadow-md shadow-emerald-600/20 transition flex items-center gap-2 cursor-pointer disabled:opacity-50"
+                >
+                  <span>{nikLoading ? 'Memverifikasi NIK...' : 'Buka Portal Mandiri Petani'}</span>
+                  <ArrowRight className="w-4 h-4" />
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
 
       {/* Footer Bawah Halaman Login Rata Tengah */}
       <footer className="mt-6 text-center text-xs text-emerald-100/90 max-w-2xl px-4 space-y-1 font-sans">

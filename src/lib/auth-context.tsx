@@ -231,10 +231,9 @@ export const ROLE_PERMISSIONS: Record<
     themeColor: 'teal',
     description:
       'Khusus petani terdaftar: hanya melihat kuota pupuk milik sendiri, jadwal dosis pemupukan, peta sawah sendiri, dan mencetak Kartu Tani Digital / Kartu Lahan.',
-    defaultPath: '/dashboard',
-    allowedPaths: ['/dashboard', '/cek-kuota', '/peta', '/profil', '/cetak-erdkk', '/cetak-kalender-tanam'],
+    defaultPath: '/cek-kuota',
+    allowedPaths: ['/cek-kuota', '/peta', '/profil', '/cetak-erdkk', '/cetak-kalender-tanam'],
     menuItems: [
-      { label: 'Portal Mandiri Petani', href: '/dashboard', iconName: 'dashboard' },
       { label: 'Cek Kuota & Kartu Tani', href: '/cek-kuota', iconName: 'cek-kuota' },
       { label: 'Peta Lahan Saya', href: '/peta', iconName: 'peta' },
     ],
@@ -420,8 +419,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           }
           setCurrentUser(parsed);
           setIsAuthenticated(true);
-          // Selalu segarkan sesi dari database agar nama, foto profil, dan scope selalu mutakhir
-          if (parsed.username) {
+          // Selalu segarkan sesi dari database agar nama, foto profil, dan scope selalu mutakhir (kecuali PETANI yang diautentikasi via NIK)
+          if (parsed.username && parsed.role !== 'PETANI') {
             fetchSession(parsed.username).then((s) => s && persist(s));
           }
           return;
