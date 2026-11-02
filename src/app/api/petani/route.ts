@@ -299,6 +299,17 @@ export async function DELETE(request: Request) {
     await prisma.lahan.deleteMany({ where: { petaniId: id } });
     await prisma.petani.delete({ where: { id } });
 
+    // Rekalkulasi jumlah anggota pada Poktan agar kartu Poktan selalu akurat
+    if (target.poktanId) {
+      try {
+        const remainingCount = await prisma.petani.count({ where: { poktanId: target.poktanId } });
+        await prisma.poktan.update({
+          where: { id: target.poktanId },
+          data: { jumlahAnggota: remainingCount },
+        });
+      } catch (err) {}
+    }
+
     return NextResponse.json(
       { success: true },
       {

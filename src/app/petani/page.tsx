@@ -248,6 +248,13 @@ export default function PetaniPage() {
         showSuccess('Petani Dihapus', `Data petani "${p.nama}" berhasil dihapus.`);
         if (selectedPetani?.id === p.id) setDetailModalOpen(false);
         if (typeof window !== 'undefined') {
+          try {
+            const rawCached = localStorage.getItem('gis_lembeyan_cached_petani_v1');
+            if (rawCached) {
+              const list = JSON.parse(rawCached).filter((item: any) => item.id !== p.id && item.nik !== p.nik);
+              localStorage.setItem('gis_lembeyan_cached_petani_v1', JSON.stringify(list));
+            }
+          } catch {}
           window.dispatchEvent(new CustomEvent('petani-updated'));
           window.dispatchEvent(new CustomEvent('poktan-updated'));
           try {
