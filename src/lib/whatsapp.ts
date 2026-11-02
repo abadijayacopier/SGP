@@ -124,3 +124,126 @@ export function openWhatsApp(phone: string, message: string) {
     window.open(url, '_blank', 'noopener,noreferrer');
   }
 }
+
+/**
+ * WhatsApp Gateway Server-Side Integration Helper
+ * Mendukung Fonnte, Wablas, Starsender, dan Custom Webhook.
+ */
+export interface SendWhatsAppParams {
+  phone: string;
+  message: string;
+  provider?: 'fonnte' | 'wablas' | 'starsender' | 'custom';
+  apiKey?: string;
+  senderNumber?: string;
+}
+
+export interface SendWhatsAppResult {
+  success: boolean;
+  simulated: boolean;
+  messageId?: string;
+  error?: string;
+}
+
+export async function sendWhatsAppMessage({
+  phone,
+  message,
+  provider = 'fonnte',
+  apiKey,
+  senderNumber,
+}: SendWhatsAppParams): Promise<SendWhatsAppResult> {
+  if (!phone) {
+    return { success: false, simulated: false, error: 'Nomor telepon tujuan tidak boleh kosong' };
+  }
+
+  const cleanPhone = cleanPhoneForWhatsApp(phone);
+
+  // Jika belum memasukkan API Key, sistem otomatis berjalan dalam mode Simulasi / Sandbox
+  if (!apiKey || apiKey.trim() === '') {
+    return {
+      success: true,
+      simulated: true,
+      messageId: 'sim-' + Date.now(),
+    };
+  }
+
+  try {
+    if (provider === 'fonnte') {
+      const res = await fetch('https://api.fonnte.com/send', {
+        method: 'POST',
+        headers: {
+          Authorization: apiKey.trim(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          target: cleanPhone,
+          message,
+        }),
+      });
+      const data = await res.json();
+      if (data.status === true || data.status === 'success') {
+        return { success: true, simulated: false, messageId: data.id || 'fonnte-' + Date.now() };
+      }
+      return { success: false, simulated: false, error: data.reason || data.message || 'Gagal mengirim pesan via Fonnte' };
+    }
+
+    if (provider === 'wablas') {
+      const res = await fetch('https://kudus.wablas.com/api/send-message', {
+        method: 'POST',
+        headers: {
+          Authorization: apiKey.trim(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          phone: cleanPhone,
+          message,
+        }),
+      });
+      const data = await res.json();
+      if (data.status === true || data.status === 'success') {
+        return { success: true, simulated: false, messageId: data.id || 'wablas-' + Date.now() };
+      }
+      return { success: false, simulated: false, error: data.message || 'Gagal mengirim pesan via Wablas' };
+    }
+
+    if (provider === 'starsender') {
+      const res = await fetch('https://api.starsender.online/api/send', {
+        method: 'POST',
+        headers: {
+          apikey: apiKey.trim(),
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          messageType: 'text',
+          to: cleanPhone,
+          body: message,
+        }),
+      });
+      const data = await res.json();
+      if (data.status === true || data.status === 'success') {
+        return { success: true, simulated: false, messageId: data.id || 'starsender-' + Date.now() };
+      }
+      return { success: false, simulated: false, error: data.message || 'Gagal mengirim pesan via Starsender' };
+    }
+
+    // Custom Webhook Endpoint
+    if (provider === 'custom' && senderNumber && senderNumber.startsWith('http')) {
+      const res = await fetch(senderNumber, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${apiKey.trim()}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          phone: cleanPhone,
+          message,
+        }),
+      });
+      const data = await res.json();
+      return { success: res.ok, simulated: false, messageId: data?.id };
+    }
+
+    return { success: false, simulated: false, error: 'Penyedia WhatsApp Gateway tidak dikenali.' };
+  } catch (err: any) {
+    return { success: false, simulated: false, error: `Kesalahan koneksi WhatsApp API: ${err.message}` };
+  }
+}

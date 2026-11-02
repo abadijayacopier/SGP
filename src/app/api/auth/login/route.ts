@@ -6,6 +6,8 @@ import {
   generateOfficialStampSvg,
 } from '@/lib/signature-utils';
 import { create2FAChallenge, verify2FAChallenge } from '@/lib/two-factor';
+import { getSystemSettings } from '@/lib/system-settings';
+import { sendWhatsAppMessage } from '@/lib/whatsapp';
 
 const ROLE_META: Record<
   string,
@@ -114,18 +116,37 @@ export async function POST(req: Request) {
         );
       }
 
-      // Verifikasi Keamanan 2-Faktor (2FA)
-      if (!skip2FA && !twoFactorCode) {
+      // Verifikasi Keamanan 2-Faktor (2FA) - Dapat diaktifkan / dinonaktifkan via Pengaturan Sistem
+      const sysSettings = getSystemSettings();
+      const is2FAActive = Boolean(sysSettings.keamanan?.enable2FA);
+      const emergencyPin = sysSettings.keamanan?.emergencyPin || '123456';
+
+      if (is2FAActive && !skip2FA && !twoFactorCode) {
         const challenge = create2FAChallenge(userRecord.username, userRecord.phone);
         const maskedPhone = userRecord.phone
           ? userRecord.phone.slice(0, 4) + '****' + userRecord.phone.slice(-3)
           : '0812****9988';
 
+        // Jika admin sudah memasukkan WhatsApp API Key, kirimkan pesan asli via gateway
+        let isRealWhatsAppSent = false;
+        if (sysSettings.keamanan?.whatsappApiKey && userRecord.phone) {
+          const waRes = await sendWhatsAppMessage({
+            phone: userRecord.phone,
+            message: `*SISTEM PERTANIAN KECAMATAN LEMBEYAN*\n\nKode Verifikasi 2FA Anda: *${challenge.otpCode}*\n\nKode berlaku 5 menit. Jangan berikan kepada siapapun.`,
+            provider: sysSettings.keamanan.whatsappProvider || 'fonnte',
+            apiKey: sysSettings.keamanan.whatsappApiKey,
+            senderNumber: sysSettings.keamanan.whatsappSenderNumber,
+          });
+          isRealWhatsAppSent = waRes.success && !waRes.simulated;
+        }
+
         return NextResponse.json({
           success: true,
           require2FA: true,
           challengeToken: challenge.challengeToken,
-          otpCode: challenge.otpCode,
+          // Jangan kirim kode OTP ke browser jika pesan asli sudah terkirim via WhatsApp!
+          otpCode: isRealWhatsAppSent ? undefined : challenge.otpCode,
+          isRealWhatsAppSent,
           maskedPhone,
           username: userRecord.username,
           name: userRecord.name,
@@ -133,11 +154,11 @@ export async function POST(req: Request) {
         });
       }
 
-      if (twoFactorCode) {
+      if (is2FAActive && twoFactorCode) {
         const check = verify2FAChallenge(
           challengeToken || '',
           twoFactorCode,
-          '123456'
+          emergencyPin
         );
         if (!check.valid) {
           return NextResponse.json(
@@ -224,17 +245,34 @@ export async function POST(req: Request) {
     });
 
     if (petaniRecord) {
-      if (!skip2FA && !twoFactorCode) {
+      const sysSettings = getSystemSettings();
+      const is2FAActive = Boolean(sysSettings.keamanan?.enable2FA);
+      const emergencyPin = sysSettings.keamanan?.emergencyPin || '123456';
+
+      if (is2FAActive && !skip2FA && !twoFactorCode) {
         const challenge = create2FAChallenge(petaniRecord.nik, petaniRecord.telepon);
         const maskedPhone = petaniRecord.telepon
           ? petaniRecord.telepon.slice(0, 4) + '****' + petaniRecord.telepon.slice(-3)
           : '0856****2097';
 
+        let isRealWhatsAppSent = false;
+        if (sysSettings.keamanan?.whatsappApiKey && petaniRecord.telepon) {
+          const waRes = await sendWhatsAppMessage({
+            phone: petaniRecord.telepon,
+            message: `*SISTEM PERTANIAN KECAMATAN LEMBEYAN*\n\nKode Verifikasi 2FA Anda: *${challenge.otpCode}*\n\nKode berlaku 5 menit. Jangan berikan kepada siapapun.`,
+            provider: sysSettings.keamanan.whatsappProvider || 'fonnte',
+            apiKey: sysSettings.keamanan.whatsappApiKey,
+            senderNumber: sysSettings.keamanan.whatsappSenderNumber,
+          });
+          isRealWhatsAppSent = waRes.success && !waRes.simulated;
+        }
+
         return NextResponse.json({
           success: true,
           require2FA: true,
           challengeToken: challenge.challengeToken,
-          otpCode: challenge.otpCode,
+          otpCode: isRealWhatsAppSent ? undefined : challenge.otpCode,
+          isRealWhatsAppSent,
           maskedPhone,
           username: petaniRecord.nik,
           name: petaniRecord.nama,
@@ -242,11 +280,11 @@ export async function POST(req: Request) {
         });
       }
 
-      if (twoFactorCode) {
+      if (is2FAActive && twoFactorCode) {
         const check = verify2FAChallenge(
           challengeToken || '',
           twoFactorCode,
-          '123456'
+          emergencyPin
         );
         if (!check.valid) {
           return NextResponse.json(

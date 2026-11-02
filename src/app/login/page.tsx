@@ -44,7 +44,8 @@ function LoginFormContent() {
   // 2FA Challenge State
   const [challengeData, setChallengeData] = useState<{
     challengeToken: string;
-    otpCode: string;
+    otpCode?: string;
+    isRealWhatsAppSent?: boolean;
     maskedPhone: string;
     username: string;
     name: string;
@@ -132,16 +133,17 @@ function LoginFormContent() {
       const json = await res.json();
 
       if (json.require2FA) {
-        // Melangkah ke Verifikasi 2FA
+        // Melangkah ke Verifikasi 2FA (Jika diaktifkan oleh Admin)
         setChallengeData({
           challengeToken: json.challengeToken,
           otpCode: json.otpCode,
+          isRealWhatsAppSent: Boolean(json.isRealWhatsAppSent),
           maskedPhone: json.maskedPhone,
           username: json.username,
           name: json.name,
           role: json.role,
         });
-        setTwoFactorCode(json.otpCode || '');
+        setTwoFactorCode(json.isRealWhatsAppSent ? '' : (json.otpCode || ''));
         setResendCountdown(60);
         setStep('2fa');
         return;
@@ -463,31 +465,50 @@ function LoginFormContent() {
                   </button>
                 </div>
 
-                {/* Banner OTP WhatsApp Otomatis / Simulasi */}
-                <div className="p-3.5 bg-slate-900 text-white rounded-2xl space-y-1.5 shadow-md">
-                  <div className="flex items-center justify-between">
-                    <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1">
-                      <Smartphone className="w-3.5 h-3.5 text-emerald-400" /> WhatsApp OTP &bull; {challengeData?.maskedPhone}
-                    </span>
-                    <span className="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded text-[10px] font-mono font-bold">
-                      Aktif 5 Menit
-                    </span>
+                {/* Banner Notifikasi Pengiriman OTP WhatsApp */}
+                {challengeData?.isRealWhatsAppSent ? (
+                  <div className="p-4 bg-emerald-950 text-white rounded-2xl space-y-2 border border-emerald-500/30 shadow-md">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[11px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <Smartphone className="w-4 h-4 text-emerald-400" /> WhatsApp Resmi BPP
+                      </span>
+                      <span className="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded text-[10px] font-mono font-bold">
+                        Aktif 5 Menit
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-200 leading-relaxed">
+                      Kode verifikasi 6 digit telah dikirimkan via WhatsApp ke nomor <strong className="text-amber-300 font-mono">{challengeData.maskedPhone}</strong>. Silakan buka aplikasi WhatsApp di ponsel Anda dan ketikkan kodenya di bawah ini.
+                    </p>
+                    <p className="text-[10px] text-slate-400">
+                      *Jika ponsel mati atau ada kendala koneksi WhatsApp, gunakan PIN Darurat resmi Anda.
+                    </p>
                   </div>
-                  <p className="text-[11px] text-slate-300 leading-relaxed">
-                    Kode OTP simulasi resmi Anda:{' '}
-                    <button
-                      type="button"
-                      onClick={() => setTwoFactorCode(challengeData?.otpCode || '123456')}
-                      className="font-mono font-black text-amber-300 text-sm tracking-widest bg-slate-800 px-2 py-0.5 rounded border border-amber-400/40 hover:bg-slate-700 transition cursor-pointer"
-                      title="Klik untuk mengisi otomatis"
-                    >
-                      {challengeData?.otpCode || '123456'}
-                    </button>
-                  </p>
-                  <p className="text-[10px] text-slate-400">
-                    *Atau gunakan PIN Keamanan Darurat: <code className="text-amber-200 font-bold">123456</code>
-                  </p>
-                </div>
+                ) : (
+                  <div className="p-3.5 bg-slate-900 text-white rounded-2xl space-y-1.5 shadow-md">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-emerald-400 uppercase tracking-wider flex items-center gap-1">
+                        <Smartphone className="w-3.5 h-3.5 text-emerald-400" /> WhatsApp OTP &bull; {challengeData?.maskedPhone}
+                      </span>
+                      <span className="bg-emerald-500/20 text-emerald-300 px-2 py-0.5 rounded text-[10px] font-mono font-bold">
+                        Mode Simulasi (Belum Ada API Key)
+                      </span>
+                    </div>
+                    <p className="text-[11px] text-slate-300 leading-relaxed">
+                      Kode OTP simulasi Anda:{' '}
+                      <button
+                        type="button"
+                        onClick={() => setTwoFactorCode(challengeData?.otpCode || '123456')}
+                        className="font-mono font-black text-amber-300 text-sm tracking-widest bg-slate-800 px-2 py-0.5 rounded border border-amber-400/40 hover:bg-slate-700 transition cursor-pointer"
+                        title="Klik untuk mengisi otomatis"
+                      >
+                        {challengeData?.otpCode || '123456'}
+                      </button>
+                    </p>
+                    <p className="text-[10px] text-slate-400">
+                      *Atau gunakan PIN Keamanan Darurat: <code className="text-amber-200 font-bold">123456</code>
+                    </p>
+                  </div>
+                )}
 
                 <div>
                   <label className="block font-bold text-slate-700 mb-1.5">

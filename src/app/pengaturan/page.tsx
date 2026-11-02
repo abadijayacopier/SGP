@@ -36,18 +36,25 @@ import {
   Copy,
   Check,
   ExternalLink,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { showSuccess, showError, showConfirm, showToast } from '@/lib/sweetalert';
 import { copyToClipboard } from '@/lib/clipboard';
 import { formatRupiah } from '@/lib/calculations';
 
-type SettingsTab = 'INSTANSI' | 'PUPUK' | 'GIS' | 'DOKUMEN' | 'INTEGRASI' | 'BACKUP' | 'LOG_AKTIVITAS';
+type SettingsTab = 'INSTANSI' | 'PUPUK' | 'GIS' | 'DOKUMEN' | 'INTEGRASI' | 'KEAMANAN' | 'BACKUP' | 'LOG_AKTIVITAS';
 
 export default function PengaturanPage() {
   const { currentUser, permissions } = useAuth();
   const [activeTab, setActiveTab] = useState<SettingsTab>('INSTANSI');
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+
+  // State Keamanan & WhatsApp API Gateway
+  const [showWaApiKey, setShowWaApiKey] = useState(false);
+  const [testingWa, setTestingWa] = useState(false);
+  const [testWaPhone, setTestWaPhone] = useState('085655620979');
 
   // State Pengaturan Sistem
   const [settings, setSettings] = useState<any>({
@@ -105,6 +112,14 @@ export default function PengaturanPage() {
       alertStokMenipisPersen: 20,
       peringatanBatasTebusHari: 7,
       notifikasiPengajuanBaru: true,
+    },
+    keamanan: {
+      enable2FA: false, // Default NONAKTIF
+      whatsappProvider: 'fonnte',
+      whatsappApiKey: '',
+      whatsappSenderNumber: '',
+      emergencyPin: '123456',
+      otpExpiryMinutes: 5,
     },
   });
 
@@ -261,6 +276,40 @@ export default function PengaturanPage() {
     setTimeout(() => setCopiedScript(false), 2500);
   };
 
+  const handleTestWhatsApp = async () => {
+    if (!settings.keamanan?.whatsappApiKey) {
+      showError('API Key Kosong', 'Masukkan API Key WhatsApp Gateway Anda terlebih dahulu sebelum menguji koneksi.');
+      return;
+    }
+    if (!testWaPhone) {
+      showError('Nomor HP Kosong', 'Masukkan nomor WhatsApp tujuan uji coba.');
+      return;
+    }
+    try {
+      setTestingWa(true);
+      const res = await fetch('/api/auth/2fa/test-wa', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          phone: testWaPhone,
+          provider: settings.keamanan?.whatsappProvider || 'fonnte',
+          apiKey: settings.keamanan?.whatsappApiKey,
+          senderNumber: settings.keamanan?.whatsappSenderNumber,
+        }),
+      });
+      const json = await res.json();
+      if (json.success) {
+        showSuccess('WhatsApp Terkirim!', json.message || 'Pesan tes WhatsApp berhasil terkirim. Koneksi API siap!');
+      } else {
+        showError('Uji Coba Gagal', json.error || 'Gagal mengirim pesan WhatsApp. Periksa kembali token API Key Anda.');
+      }
+    } catch (err: any) {
+      showError('Kesalahan Jaringan', err.message);
+    } finally {
+      setTestingWa(false);
+    }
+  };
+
   const handleSave = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     try {
@@ -407,6 +456,19 @@ export default function PengaturanPage() {
         >
           <Cloud className="w-4 h-4 text-blue-600" />
           <span>Cloud & Webhook</span>
+        </button>
+
+        <button
+          type="button"
+          onClick={() => setActiveTab('KEAMANAN')}
+          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-bold text-xs sm:text-sm transition cursor-pointer shrink-0 ${
+            activeTab === 'KEAMANAN'
+              ? 'bg-white text-emerald-800 shadow-sm'
+              : 'text-slate-600 hover:text-slate-900 hover:bg-white/50'
+          }`}
+        >
+          <ShieldCheck className="w-4 h-4 text-emerald-600" />
+          <span>Keamanan & 2FA (WhatsApp)</span>
         </button>
 
         <button
@@ -1457,6 +1519,248 @@ export default function PengaturanPage() {
                     </p>
                   </div>
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* TAB 5B: KEAMANAN & 2FA WHATSAPP GATEWAY */}
+          {activeTab === 'KEAMANAN' && (
+            <div className="bg-white rounded-3xl border border-slate-200 shadow-sm p-6 sm:p-8 space-y-6">
+              <div className="border-b border-slate-100 pb-3 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                <div>
+                  <h2 className="text-base font-black text-slate-800 flex items-center gap-2">
+                    <ShieldCheck className="w-5 h-5 text-emerald-600" />
+                    Keamanan Akun & Otentikasi 2-Langkah (2FA WhatsApp)
+                  </h2>
+                  <p className="text-xs text-slate-500">
+                    Konfigurasi aktivasi 2FA, integrasi WhatsApp Gateway API resmi, serta PIN keamanan darurat.
+                  </p>
+                </div>
+                <div>
+                  {settings.keamanan?.enable2FA ? (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-emerald-100 text-emerald-800 border border-emerald-300">
+                      <CheckCircle2 className="w-3.5 h-3.5 text-emerald-600" />
+                      Status: 2FA AKTIF (Wajib OTP)
+                    </span>
+                  ) : (
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black bg-slate-100 text-slate-700 border border-slate-300">
+                      <Lock className="w-3.5 h-3.5 text-slate-500" />
+                      Status: 2FA NONAKTIF (Login Langsung Kredensial)
+                    </span>
+                  )}
+                </div>
+              </div>
+
+              {/* SAKLAR UTAMA ON / OFF 2FA */}
+              <div className="p-5 bg-gradient-to-r from-emerald-50 via-teal-50 to-emerald-50 border-2 border-emerald-200 rounded-2xl flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+                <div className="space-y-1">
+                  <div className="flex items-center gap-2">
+                    <Smartphone className="w-5 h-5 text-emerald-700" />
+                    <h3 className="text-sm font-black text-emerald-950">
+                      Saklar Otentikasi 2-Langkah (2FA OTP)
+                    </h3>
+                  </div>
+                  <p className="text-xs text-emerald-800 max-w-xl leading-relaxed">
+                    Saat ini dinonaktifkan agar Anda dan petugas dapat langsung masuk dengan Username dan Kata Sandi. Ketika Admin sudah berlangganan WhatsApp API Gateway (Fonnte/Wablas), Anda cukup mengaktifkan saklar ini tanpa harus koding ulang.
+                  </p>
+                </div>
+
+                <label className="relative inline-flex items-center cursor-pointer shrink-0">
+                  <input
+                    type="checkbox"
+                    checked={Boolean(settings.keamanan?.enable2FA)}
+                    onChange={(e) =>
+                      setSettings({
+                        ...settings,
+                        keamanan: { ...settings.keamanan, enable2FA: e.target.checked },
+                      })
+                    }
+                    className="sr-only peer"
+                  />
+                  <div className="w-14 h-7 bg-slate-300 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[4px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-6 after:w-6 after:transition-all peer-checked:bg-emerald-600"></div>
+                </label>
+              </div>
+
+              {/* FORM PENGATURAN WHATSAPP GATEWAY */}
+              <div className="space-y-4 pt-2">
+                <h3 className="text-xs font-black uppercase text-slate-700 tracking-wider flex items-center gap-2">
+                  <Send className="w-4 h-4 text-emerald-600" />
+                  Konfigurasi Penyedia Layanan WhatsApp API Gateway
+                </h3>
+
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Penyedia Layanan (WhatsApp Provider) *
+                    </label>
+                    <select
+                      value={settings.keamanan?.whatsappProvider || 'fonnte'}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          keamanan: { ...settings.keamanan, whatsappProvider: e.target.value },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-bold bg-white focus:ring-2 focus:ring-emerald-500"
+                    >
+                      <option value="fonnte">Fonnte (Rekomendasi Indonesia &bull; api.fonnte.com)</option>
+                      <option value="wablas">Wablas (Resmi Indonesia &bull; wablas.com)</option>
+                      <option value="starsender">Starsender (starsender.online)</option>
+                      <option value="custom">Custom Webhook / Gateway Pribadi</option>
+                    </select>
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      Pilih layanan WhatsApp Gateway yang Anda langgani.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Nomor Pengirim / Device ID (Opsional)
+                    </label>
+                    <input
+                      type="text"
+                      placeholder="Contoh: 081234567890 atau URL webhook custom"
+                      value={settings.keamanan?.whatsappSenderNumber || ''}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          keamanan: { ...settings.keamanan, whatsappSenderNumber: e.target.value },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-medium focus:ring-2 focus:ring-emerald-500"
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      Nomor WhatsApp pengirim resmi atau URL jika memilih Custom Webhook.
+                    </p>
+                  </div>
+
+                  <div className="sm:col-span-2">
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Token / API Key WhatsApp Gateway *
+                    </label>
+                    <div className="relative">
+                      <input
+                        type={showWaApiKey ? 'text' : 'password'}
+                        placeholder="Masukkan API Key dari dashboard provider (misal: fonnte_token_xxxxxxxx)"
+                        value={settings.keamanan?.whatsappApiKey || ''}
+                        onChange={(e) =>
+                          setSettings({
+                            ...settings,
+                            keamanan: { ...settings.keamanan, whatsappApiKey: e.target.value },
+                          })
+                        }
+                        className="w-full pl-3.5 pr-10 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-mono bg-white focus:ring-2 focus:ring-emerald-500"
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowWaApiKey(!showWaApiKey)}
+                        className="absolute right-3 top-2.5 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
+                      >
+                        {showWaApiKey ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      </button>
+                    </div>
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      Dapatkan Token API ini di akun provider WhatsApp Anda. Jika dikosongkan, sistem berjalan dalam Mode Simulasi Mandiri.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      PIN Keamanan Darurat (Emergency Override PIN)
+                    </label>
+                    <input
+                      type="text"
+                      maxLength={6}
+                      value={settings.keamanan?.emergencyPin || '123456'}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          keamanan: { ...settings.keamanan, emergencyPin: e.target.value.replace(/\D/g, '').slice(0, 6) },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-mono font-bold tracking-widest text-emerald-900 bg-white focus:ring-2 focus:ring-emerald-500"
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      PIN 6-digit rahasia cadangan jika HP petugas mati atau WhatsApp sedang gangguan.
+                    </p>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold text-slate-700 mb-1">
+                      Masa Kedaluwarsa Kode OTP (Menit)
+                    </label>
+                    <input
+                      type="number"
+                      min={1}
+                      max={30}
+                      value={settings.keamanan?.otpExpiryMinutes || 5}
+                      onChange={(e) =>
+                        setSettings({
+                          ...settings,
+                          keamanan: { ...settings.keamanan, otpExpiryMinutes: parseInt(e.target.value) || 5 },
+                        })
+                      }
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-bold bg-white focus:ring-2 focus:ring-emerald-500"
+                    />
+                    <p className="text-[10px] text-slate-400 mt-1">
+                      Standar keamanan perbankan / instansi: 5 menit.
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* PANEL UJI COBA KONEKSI WHATSAPP GATEWAY */}
+              <div className="pt-4 border-t border-slate-100 space-y-3">
+                <h3 className="text-xs font-black uppercase text-slate-700 tracking-wider flex items-center gap-2">
+                  <Sparkles className="w-4 h-4 text-amber-500" />
+                  Uji Coba Pengiriman Pesan WhatsApp (Live Test)
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Kirim pesan percobaan ke WhatsApp HP Anda untuk memastikan API Key bekerja sempurna sebelum 2FA diaktifkan ke seluruh petugas.
+                </p>
+
+                <div className="flex flex-col sm:flex-row items-center gap-3">
+                  <div className="w-full sm:w-80">
+                    <input
+                      type="text"
+                      placeholder="Nomor WhatsApp pengujian (misal: 085655620979)"
+                      value={testWaPhone}
+                      onChange={(e) => setTestWaPhone(e.target.value)}
+                      className="w-full px-3.5 py-2.5 rounded-xl border border-slate-300 text-xs sm:text-sm font-semibold focus:ring-2 focus:ring-emerald-500"
+                    />
+                  </div>
+                  <button
+                    type="button"
+                    disabled={testingWa}
+                    onClick={handleTestWhatsApp}
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold px-5 py-2.5 rounded-xl text-xs shadow-sm transition cursor-pointer disabled:opacity-50"
+                  >
+                    {testingWa ? (
+                      <>
+                        <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                        <span>Mengirim Pesan...</span>
+                      </>
+                    ) : (
+                      <>
+                        <Send className="w-3.5 h-3.5" />
+                        <span>Kirim Pesan Uji Coba WhatsApp</span>
+                      </>
+                    )}
+                  </button>
+                </div>
+              </div>
+
+              {/* TOMBOL SIMPAN PENGATURAN KEAMANAN */}
+              <div className="pt-4 border-t border-slate-100 flex items-center justify-end">
+                <button
+                  type="button"
+                  disabled={saving}
+                  onClick={() => handleSave()}
+                  className="inline-flex items-center gap-2 bg-emerald-600 hover:bg-emerald-700 text-white font-black px-6 py-2.5 rounded-xl text-xs sm:text-sm shadow-md transition cursor-pointer disabled:opacity-50"
+                >
+                  <Save className="w-4 h-4" />
+                  <span>{saving ? 'Menyimpan...' : 'Simpan Pengaturan Keamanan'}</span>
+                </button>
               </div>
             </div>
           )}

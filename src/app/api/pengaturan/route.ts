@@ -67,6 +67,14 @@ const defaultSettings = {
     peringatanBatasTebusHari: 7,
     notifikasiPengajuanBaru: true,
   },
+  keamanan: {
+    enable2FA: false,
+    whatsappProvider: 'fonnte',
+    whatsappApiKey: '',
+    whatsappSenderNumber: '',
+    emergencyPin: '123456',
+    otpExpiryMinutes: 5,
+  },
 };
 
 function readSettings() {
@@ -120,6 +128,7 @@ function mergeWithDefaults(parsed: any) {
     dokumen: { ...defaultSettings.dokumen, ...(parsed?.dokumen || {}) },
     integrasi: { ...defaultSettings.integrasi, ...(parsed?.integrasi || {}) },
     notifikasi: { ...defaultSettings.notifikasi, ...(parsed?.notifikasi || {}) },
+    keamanan: { ...defaultSettings.keamanan, ...(parsed?.keamanan || {}) },
   };
 }
 

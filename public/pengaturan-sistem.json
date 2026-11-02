@@ -53,5 +53,13 @@
     "alertStokMenipisPersen": 20,
     "peringatanBatasTebusHari": 7,
     "notifikasiPengajuanBaru": true
+  },
+  "keamanan": {
+    "enable2FA": false,
+    "whatsappProvider": "fonnte",
+    "whatsappApiKey": "",
+    "whatsappSenderNumber": "",
+    "emergencyPin": "123456",
+    "otpExpiryMinutes": 5
   }
 }
