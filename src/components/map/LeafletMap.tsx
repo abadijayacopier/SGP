@@ -44,6 +44,8 @@ import {
   Smartphone,
   Radio,
   Sparkles,
+  Globe,
+  Loader2,
 } from 'lucide-react';
 import { DESA_COORDINATES_LEMBEYAN, DESA_LEMBEYAN_LIST } from '@/lib/erdkk-format';
 import { calculateDistanceMeters } from '@/lib/calculations';
@@ -318,6 +320,15 @@ export default function LeafletMap({
   const [mapSearchText, setMapSearchText] = useState('');
   const [searchDropdownOpen, setSearchDropdownOpen] = useState(false);
   const [geocodingLoading, setGeocodingLoading] = useState(false);
+  const [globalSearchResults, setGlobalSearchResults] = useState<Array<{
+    display_name: string;
+    name?: string;
+    lat: string;
+    lon: string;
+    type?: string;
+    class?: string;
+  }>>([]);
+  const [isSearchingGlobal, setIsSearchingGlobal] = useState(false);
   const centerPosition: [number, number] = [-7.7685, 111.4225]; // Pusat Pemetaan Kecamatan Lembeyan, Kabupaten Magetan
 
   // Mode GPS Walk-Tracking (Keliling Batas Sawah via Smartphone)
@@ -328,6 +339,20 @@ export default function LeafletMap({
   const [trackingStatusMsg, setTrackingStatusMsg] = useState<string>('');
 
   const activeFlyTo = internalFlyTo || flyToTarget || null;
+
+  // Deteksi format koordinat (misal: -7.768, 111.421 atau -7.768 111.421)
+  const parsedCoordinate = useMemo(() => {
+    const q = mapSearchText.trim();
+    const match = q.match(/^(-?\d{1,2}(?:\.\d+)?)[,\s]+(-?\d{1,3}(?:\.\d+)?)$/);
+    if (match) {
+      const lat = parseFloat(match[1]);
+      const lng = parseFloat(match[2]);
+      if (lat >= -90 && lat <= 90 && lng >= -180 && lng <= 180) {
+        return { lat, lng };
+      }
+    }
+    return null;
+  }, [mapSearchText]);
 
   // Pencarian cepat lokal (10 Desa Kec. Lembeyan + Petak Sawah Terdaftar)
   const localSearchResults = useMemo(() => {
@@ -352,13 +377,82 @@ export default function LeafletMap({
     return { desaMatches, lahanMatches };
   }, [mapSearchText, lahanList]);
 
-  // Pencarian Wilayah / Desa via OpenStreetMap Nominatim jika user mencari di luar daftar cepat
+  // Debounced Live Global Geocoding via OpenStreetMap Nominatim
+  useEffect(() => {
+    const q = mapSearchText.trim();
+    if (q.length < 3 || parsedCoordinate) {
+      setGlobalSearchResults([]);
+      setIsSearchingGlobal(false);
+      return;
+    }
+
+    const timer = setTimeout(async () => {
+      try {
+        setIsSearchingGlobal(true);
+        const res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=5&addressdetails=1`
+        );
+        const data = await res.json();
+        if (Array.isArray(data)) {
+          setGlobalSearchResults(data);
+        }
+      } catch {
+        // Abaikan error jaringan saat mengetik
+      } finally {
+        setIsSearchingGlobal(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [mapSearchText, parsedCoordinate]);
+
+  const applyGlobalHit = (hit: any) => {
+    const lat = parseFloat(hit.lat);
+    const lng = parseFloat(hit.lon);
+
+    let targetZoom = 16;
+    const type = hit.type || '';
+    const category = hit.class || '';
+
+    if (type === 'country') targetZoom = 6;
+    else if (type === 'state' || type === 'province') targetZoom = 9;
+    else if (type === 'city' || type === 'administrative') targetZoom = 13;
+    else if (type === 'town' || type === 'village' || type === 'suburb') targetZoom = 15;
+    else if (category === 'highway' || category === 'building' || category === 'amenity') targetZoom = 18;
+
+    const shortName = hit.name || hit.display_name.split(',')[0] || mapSearchText;
+
+    setInternalFlyTo({
+      lat,
+      lng,
+      zoom: targetZoom,
+      label: shortName,
+      keterangan: hit.display_name,
+      timestamp: Date.now(),
+    });
+  };
+
+  // Pencarian Wilayah / Desa / Tempat Global via OSM Nominatim atau Titik Koordinat
   const handleExternalGeocodeSearch = async (e?: React.FormEvent) => {
     if (e) e.preventDefault();
     const q = mapSearchText.trim();
     if (!q) return;
 
-    // Jika cocok langsung dengan salah satu Desa di Lembeyan, langsung pusatkan
+    // 1. Cek Koordinat GPS Langsung
+    if (parsedCoordinate) {
+      setInternalFlyTo({
+        lat: parsedCoordinate.lat,
+        lng: parsedCoordinate.lng,
+        zoom: 17,
+        label: `Titik [${parsedCoordinate.lat.toFixed(5)}, ${parsedCoordinate.lng.toFixed(5)}]`,
+        keterangan: 'Koordinat Geografis GPS',
+        timestamp: Date.now(),
+      });
+      setSearchDropdownOpen(false);
+      return;
+    }
+
+    // 2. Cek apakah cocok langsung dengan salah satu Desa di Lembeyan
     const exactDesa = Object.values(DESA_COORDINATES_LEMBEYAN).find(
       (d) =>
         d.key.toLowerCase() === q.toLowerCase() ||
@@ -375,32 +469,66 @@ export default function LeafletMap({
         timestamp: Date.now(),
       });
       setSearchDropdownOpen(false);
+      if (onSelectDesaFromMap) {
+        onSelectDesaFromMap(exactDesa.key);
+      }
       return;
     }
 
+    // 3. Cek apakah cocok dengan Petak Sawah Terdaftar
+    const exactLahan = lahanList.find(
+      (l) =>
+        l.kodeLahan.toLowerCase() === q.toLowerCase() ||
+        l.namaLahan.toLowerCase() === q.toLowerCase()
+    );
+    if (exactLahan) {
+      setInternalFlyTo({
+        lat: exactLahan.centerLat,
+        lng: exactLahan.centerLng,
+        zoom: 18,
+        label: `${exactLahan.kodeLahan} - ${exactLahan.namaLahan}`,
+        keterangan: `Milik ${exactLahan.petani?.nama || '-'} (${exactLahan.luasHa} Ha)`,
+        timestamp: Date.now(),
+      });
+      setSearchDropdownOpen(false);
+      return;
+    }
+
+    // 4. Jika hasil global search live sudah ada di daftar
+    if (globalSearchResults.length > 0) {
+      applyGlobalHit(globalSearchResults[0]);
+      setSearchDropdownOpen(false);
+      return;
+    }
+
+    // 5. Fetch pencarian tempat global secara langsung
     try {
       setGeocodingLoading(true);
-      const queryWithContext = q.toLowerCase().includes('magetan') ? q : `${q}, Magetan, Jawa Timur`;
-      const res = await fetch(
-        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(queryWithContext)}&limit=1`
+      let res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q)}&limit=1&addressdetails=1`
       );
-      const data = await res.json();
+      let data = await res.json();
+
+      // Coba fallback dengan konteks Indonesia jika belum ditemukan dan tidak eksplisit menyebut negara lain
+      if ((!Array.isArray(data) || data.length === 0) && !q.toLowerCase().includes('indonesia')) {
+        res = await fetch(
+          `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(q + ', Indonesia')}&limit=1&addressdetails=1`
+        );
+        data = await res.json();
+      }
+
       if (Array.isArray(data) && data.length > 0) {
         const hit = data[0];
-        setInternalFlyTo({
-          lat: parseFloat(hit.lat),
-          lng: parseFloat(hit.lon),
-          zoom: 16,
-          label: hit.display_name.split(',')[0] || q,
-          keterangan: hit.display_name,
-          timestamp: Date.now(),
-        });
+        applyGlobalHit(hit);
         setSearchDropdownOpen(false);
       } else {
-        showWarning('Wilayah Tidak Ditemukan', `Wilayah "${q}" tidak ditemukan. Silakan pilih dari daftar 10 Desa Kecamatan Lembeyan.`);
+        showWarning(
+          'Lokasi Tidak Ditemukan',
+          `Tempat "${q}" tidak ditemukan di peta. Coba periksa ejaan, tambahkan nama kota/kecamatan, atau masukkan koordinat (contoh: -7.768, 111.421).`
+        );
       }
     } catch {
-      showError('Pencarian Gagal', 'Gagal menghubungi layanan pencarian peta.');
+      showError('Pencarian Gagal', 'Gagal menghubungi server pencarian peta global. Periksa koneksi internet Anda.');
     } finally {
       setGeocodingLoading(false);
     }
@@ -618,8 +746,8 @@ export default function LeafletMap({
       {/* Floating Control: Pencarian Wilayah / Desa & Pusatkan Lokasi (Saat tidak dalam mode gambar) */}
       {!isDrawingMode && (
         <div className="absolute top-3 left-14 right-14 sm:right-auto z-[400] flex flex-wrap items-center gap-2 max-w-xl">
-          {/* Search Box Wilayah / Desa */}
-          <div className="relative flex-1 min-w-0 w-full sm:min-w-[290px]">
+          {/* Search Box Wilayah / Tempat Global / Koordinat / Desa */}
+          <div className="relative flex-1 min-w-0 w-full sm:min-w-[320px] md:min-w-[380px]">
             <form
               onSubmit={handleExternalGeocodeSearch}
               className="flex items-center bg-white/95 backdrop-blur-md rounded-2xl shadow-lg border border-slate-200/90 overflow-hidden"
@@ -633,7 +761,7 @@ export default function LeafletMap({
                   setMapSearchText(e.target.value);
                   setSearchDropdownOpen(true);
                 }}
-                placeholder="Cari Desa (Kediren, Tunggur, Tapen...) / Petak..."
+                placeholder="Cari lokasi global (desa, jalan, kota, koordinat, petak)..."
                 className="w-full px-2.5 py-2 text-xs font-medium text-slate-800 bg-transparent focus:outline-none"
               />
               {mapSearchText && (
@@ -642,6 +770,7 @@ export default function LeafletMap({
                   onClick={() => {
                     setMapSearchText('');
                     setSearchDropdownOpen(false);
+                    setGlobalSearchResults([]);
                   }}
                   className="p-1 text-slate-400 hover:text-slate-600"
                 >
@@ -651,60 +780,118 @@ export default function LeafletMap({
               <button
                 type="submit"
                 disabled={geocodingLoading}
-                className="px-3 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition shrink-0 cursor-pointer"
+                className="px-3.5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold transition shrink-0 cursor-pointer flex items-center gap-1"
               >
-                {geocodingLoading ? '...' : 'Pusatkan'}
+                {geocodingLoading ? (
+                  <>
+                    <Loader2 className="w-3.5 h-3.5 animate-spin" />
+                    <span>Mencari...</span>
+                  </>
+                ) : (
+                  'Pusatkan'
+                )}
               </button>
             </form>
 
-            {/* Dropdown Hasil Pencarian Desa & Petak Sawah */}
+            {/* Dropdown Hasil Pencarian Global, Koordinat, Desa & Petak Sawah */}
             {searchDropdownOpen && (
-              <div className="absolute left-0 right-0 mt-1.5 bg-white rounded-2xl shadow-2xl border border-slate-200 max-h-72 overflow-y-auto z-50 divide-y divide-slate-100 text-xs">
-                <div className="px-3 py-1.5 bg-slate-50 flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase">
-                  <span>Pilih Wilayah / Desa Kecamatan Lembeyan</span>
-                  <button
-                    type="button"
-                    onClick={() => setSearchDropdownOpen(false)}
-                    className="text-slate-400 hover:text-slate-700"
-                  >
-                    Tutup
-                  </button>
+              <div className="absolute left-0 right-0 mt-1.5 bg-white rounded-2xl shadow-2xl border border-slate-200 max-h-80 overflow-y-auto z-50 divide-y divide-slate-100 text-xs">
+                <div className="px-3 py-1.5 bg-slate-50 flex items-center justify-between text-[10px] font-bold text-slate-500 uppercase sticky top-0 z-10 border-b border-slate-100">
+                  <div className="flex items-center gap-1.5">
+                    <Compass className="w-3 h-3 text-emerald-600" />
+                    <span>Pencarian Lokasi Global & Lembeyan</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    {isSearchingGlobal && (
+                      <span className="text-[10px] text-emerald-600 flex items-center gap-1 font-semibold normal-case">
+                        <Loader2 className="w-3 h-3 animate-spin" />
+                        Peta Global...
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={() => setSearchDropdownOpen(false)}
+                      className="text-slate-400 hover:text-slate-700"
+                    >
+                      Tutup
+                    </button>
+                  </div>
                 </div>
 
-                {localSearchResults.desaMatches.map((d) => (
+                {/* 1. Hasil Deteksi Koordinat GPS */}
+                {parsedCoordinate && (
                   <button
-                    key={d.key}
                     type="button"
                     onClick={() => {
                       setInternalFlyTo({
-                        lat: d.lat,
-                        lng: d.lng,
-                        zoom: d.zoom,
-                        label: d.label,
-                        keterangan: d.keterangan,
+                        lat: parsedCoordinate.lat,
+                        lng: parsedCoordinate.lng,
+                        zoom: 17,
+                        label: `Koordinat [${parsedCoordinate.lat.toFixed(5)}, ${parsedCoordinate.lng.toFixed(5)}]`,
+                        keterangan: 'Titik Koordinat Geografis GPS Pengguna',
                         timestamp: Date.now(),
                       });
-                      setMapSearchText(d.key === 'SEMUA' ? '' : d.label);
                       setSearchDropdownOpen(false);
-                      if (onSelectDesaFromMap) {
-                        onSelectDesaFromMap(d.key);
-                      }
                     }}
-                    className="w-full text-left px-3 py-2 hover:bg-emerald-50 flex items-start justify-between gap-2 transition cursor-pointer"
+                    className="w-full text-left px-3.5 py-2.5 bg-emerald-50/80 hover:bg-emerald-100 flex items-center justify-between gap-2 transition cursor-pointer"
                   >
                     <div>
-                      <div className="font-bold text-slate-800 flex items-center gap-1.5">
-                        <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
-                        {d.label}
+                      <div className="font-black text-emerald-900 flex items-center gap-1.5">
+                        <Crosshair className="w-4 h-4 text-emerald-600 shrink-0" />
+                        Pusatkan ke Titik Koordinat: {parsedCoordinate.lat.toFixed(5)}, {parsedCoordinate.lng.toFixed(5)}
                       </div>
-                      <div className="text-[10px] text-slate-500 pl-5">{d.keterangan}</div>
+                      <div className="text-[10px] text-emerald-700 pl-5">Klik untuk terbang langsung ke posisi lintang & bujur ini</div>
                     </div>
-                    <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 shrink-0">
-                      {d.lat.toFixed(3)}, {d.lng.toFixed(3)}
+                    <span className="text-[10px] font-bold text-white bg-emerald-600 px-2 py-0.5 rounded-full shrink-0">
+                      GPS Koordinat
                     </span>
                   </button>
-                ))}
+                )}
 
+                {/* 2. Hasil Wilayah Desa Kecamatan Lembeyan */}
+                {localSearchResults.desaMatches.length > 0 && (
+                  <>
+                    <div className="px-3 py-1 bg-slate-50 text-[10px] font-bold text-slate-500 uppercase flex items-center justify-between">
+                      <span>Wilayah Desa (Kec. Lembeyan)</span>
+                      <span className="text-[9px] text-slate-400 font-normal">Lokal Cepat</span>
+                    </div>
+                    {localSearchResults.desaMatches.map((d) => (
+                      <button
+                        key={d.key}
+                        type="button"
+                        onClick={() => {
+                          setInternalFlyTo({
+                            lat: d.lat,
+                            lng: d.lng,
+                            zoom: d.zoom,
+                            label: d.label,
+                            keterangan: d.keterangan,
+                            timestamp: Date.now(),
+                          });
+                          setMapSearchText(d.key === 'SEMUA' ? '' : d.label);
+                          setSearchDropdownOpen(false);
+                          if (onSelectDesaFromMap) {
+                            onSelectDesaFromMap(d.key);
+                          }
+                        }}
+                        className="w-full text-left px-3.5 py-2 hover:bg-emerald-50 flex items-start justify-between gap-2 transition cursor-pointer"
+                      >
+                        <div>
+                          <div className="font-bold text-slate-800 flex items-center gap-1.5">
+                            <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                            {d.label}
+                          </div>
+                          <div className="text-[10px] text-slate-500 pl-5">{d.keterangan}</div>
+                        </div>
+                        <span className="text-[10px] font-mono text-emerald-700 bg-emerald-50 px-1.5 py-0.5 rounded border border-emerald-200 shrink-0">
+                          {d.lat.toFixed(3)}, {d.lng.toFixed(3)}
+                        </span>
+                      </button>
+                    ))}
+                  </>
+                )}
+
+                {/* 3. Hasil Pencarian Petak Lahan Sawah & Petani */}
                 {localSearchResults.lahanMatches.length > 0 && (
                   <>
                     <div className="px-3 py-1 bg-slate-50 text-[10px] font-bold text-slate-500 uppercase">
@@ -718,14 +905,14 @@ export default function LeafletMap({
                           setInternalFlyTo({
                             lat: l.centerLat,
                             lng: l.centerLng,
-                            zoom: 17,
+                            zoom: 18,
                             label: `${l.kodeLahan} - ${l.namaLahan}`,
                             keterangan: `Milik ${l.petani?.nama || '-'} (${l.luasHa} Ha - ${l.komoditas})`,
                             timestamp: Date.now(),
                           });
                           setSearchDropdownOpen(false);
                         }}
-                        className="w-full text-left px-3 py-2 hover:bg-amber-50 flex items-center justify-between gap-2 transition cursor-pointer"
+                        className="w-full text-left px-3.5 py-2 hover:bg-amber-50 flex items-center justify-between gap-2 transition cursor-pointer"
                       >
                         <div>
                           <div className="font-bold text-slate-800">
@@ -735,13 +922,76 @@ export default function LeafletMap({
                             Petani: {l.petani?.nama} ({l.luasHa} Ha - {l.komoditas})
                           </div>
                         </div>
-                        <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded">
+                        <span className="text-[10px] font-bold text-amber-800 bg-amber-100 px-2 py-0.5 rounded shrink-0">
                           Fokus Petak
                         </span>
                       </button>
                     ))}
                   </>
                 )}
+
+                {/* 4. Hasil Pencarian Global (OpenStreetMap Nominatim) */}
+                {globalSearchResults.length > 0 && (
+                  <>
+                    <div className="px-3 py-1 bg-blue-50/80 text-[10px] font-bold text-blue-800 uppercase flex items-center gap-1.5">
+                      <Globe className="w-3 h-3 text-blue-600" />
+                      <span>Pencarian Tempat, Jalan & Wilayah Global</span>
+                    </div>
+                    {globalSearchResults.map((hit, idx) => {
+                      const title = hit.name || hit.display_name.split(',')[0];
+                      const lat = parseFloat(hit.lat);
+                      const lon = parseFloat(hit.lon);
+                      return (
+                        <button
+                          key={idx}
+                          type="button"
+                          onClick={() => {
+                            applyGlobalHit(hit);
+                            setMapSearchText(title);
+                            setSearchDropdownOpen(false);
+                          }}
+                          className="w-full text-left px-3.5 py-2 hover:bg-blue-50 flex items-start justify-between gap-2 transition cursor-pointer"
+                        >
+                          <div className="min-w-0 flex-1">
+                            <div className="font-bold text-slate-900 flex items-center gap-1.5 truncate">
+                              <Globe className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                              <span className="truncate">{title}</span>
+                            </div>
+                            <div className="text-[10px] text-slate-500 pl-5 line-clamp-1">
+                              {hit.display_name}
+                            </div>
+                          </div>
+                          <span className="text-[10px] font-mono text-blue-700 bg-blue-50 px-1.5 py-0.5 rounded border border-blue-200 shrink-0">
+                            {lat.toFixed(3)}, {lon.toFixed(3)}
+                          </span>
+                        </button>
+                      );
+                    })}
+                  </>
+                )}
+
+                {/* 5. Placeholder jika belum ada hasil langsung */}
+                {!parsedCoordinate &&
+                  localSearchResults.desaMatches.length === 0 &&
+                  localSearchResults.lahanMatches.length === 0 &&
+                  globalSearchResults.length === 0 &&
+                  mapSearchText.trim().length >= 3 && (
+                    <div className="px-4 py-4 text-center text-xs text-slate-500">
+                      {isSearchingGlobal ? (
+                        <div className="flex items-center justify-center gap-2 text-slate-600">
+                          <Loader2 className="w-4 h-4 animate-spin text-emerald-600" />
+                          <span>Mencari di peta global...</span>
+                        </div>
+                      ) : (
+                        <div>
+                          <p className="font-semibold text-slate-700">Tidak ada saran instan untuk &quot;{mapSearchText}&quot;</p>
+                          <p className="text-[11px] text-slate-400 mt-1">
+                            Klik tombol <strong className="text-emerald-700">Pusatkan</strong> untuk mencari secara luas di seluruh dunia.
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
               </div>
             )}
           </div>
