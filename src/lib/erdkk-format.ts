@@ -115,6 +115,70 @@ export const DESA_COORDINATES_LEMBEYAN: Record<string, WilayahDesaCoord> = {
   },
 };
 
+export interface LembeyanPoi {
+  id: string;
+  name: string;
+  kategori: string;
+  alamat: string;
+  lat: number;
+  lng: number;
+  zoom?: number;
+  icon?: string;
+}
+
+export const LEMBEYAN_POI_LIST: LembeyanPoi[] = [
+  {
+    id: 'poi-fotocopy-abadi-jaya',
+    name: 'Fotocopy Abadi Jaya',
+    kategori: 'Percetakan, ATK & Jasa Fotokopi',
+    alamat: 'Jl. Lembeyan - Parang, Lembeyan Kulon, Kec. Lembeyan, Kab. Magetan',
+    lat: -7.753439,
+    lng: 111.38198,
+    zoom: 18,
+    icon: '🖨️',
+  },
+  {
+    id: 'poi-bpp-lembeyan',
+    name: 'Balai Penyuluhan Pertanian (BPP) Lembeyan',
+    kategori: 'Pusat Koordinasi Pertanian & e-RDKK',
+    alamat: 'Kediren, Kec. Lembeyan, Kab. Magetan',
+    lat: -7.7685,
+    lng: 111.4225,
+    zoom: 17,
+    icon: '🌾',
+  },
+  {
+    id: 'poi-kantor-camat-lembeyan',
+    name: 'Kantor Kecamatan Lembeyan',
+    kategori: 'Pusat Pemerintahan Kecamatan',
+    alamat: 'Jl. Raya Lembeyan, Lembeyan Kulon, Kec. Lembeyan',
+    lat: -7.7728,
+    lng: 111.4190,
+    zoom: 17,
+    icon: '🏛️',
+  },
+  {
+    id: 'poi-pasar-lembeyan',
+    name: 'Pasar Tradisional Lembeyan',
+    kategori: 'Pusat Perdagangan & Pasar',
+    alamat: 'Lembeyan Kulon, Kec. Lembeyan, Kab. Magetan',
+    lat: -7.7738,
+    lng: 111.4208,
+    zoom: 17,
+    icon: '🛒',
+  },
+  {
+    id: 'poi-puskesmas-lembeyan',
+    name: 'Puskesmas Lembeyan',
+    kategori: 'Fasilitas Kesehatan Masyarakat',
+    alamat: 'Lembeyan Kulon, Kec. Lembeyan, Kab. Magetan',
+    lat: -7.7712,
+    lng: 111.4182,
+    zoom: 17,
+    icon: '🏥',
+  },
+];
+
 export interface ErdkkRowData {
   no: number;
   kabupaten: string;
