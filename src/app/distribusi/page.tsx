@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/lib/auth-context';
 import {
@@ -18,6 +18,8 @@ import {
   Building2,
   UserCheck,
   ChevronDown,
+  ChevronLeft,
+  ChevronRight,
   FileCheck,
   ArrowRight,
   ShieldCheck,
@@ -83,6 +85,15 @@ export default function DistribusiKiosPage() {
   const [filterPoktan, setFilterPoktan] = useState<string>('SEMUA');
   const [filterStatus, setFilterStatus] = useState<string>('SEMUA');
   const [searchQuery, setSearchQuery] = useState('');
+
+  // Pagination
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [pageSize, setPageSize] = useState<number>(10);
+
+  // Reset page on filter/search change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchQuery, filterKios, filterPoktan, filterStatus]);
 
   // Live Warehouse Stock
   const [kiosStock, setKiosStock] = useState({ ureaKg: 0, npkKg: 0, organikKg: 0 });
@@ -410,55 +421,78 @@ export default function DistribusiKiosPage() {
   };
 
   // Filter Search
-  const filteredList = distribusiList.filter((item) => {
-    return (
-      item.nomorSuratJalan.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.namaPoktan.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.kloter.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.namaSopir.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      item.nomorPolisi.toLowerCase().includes(searchQuery.toLowerCase())
-    );
-  });
+  const filteredList = useMemo(() => {
+    return distribusiList.filter((item) => {
+      const q = searchQuery.toLowerCase().trim();
+      const matchSearch =
+        !q ||
+        (item.nomorSuratJalan && item.nomorSuratJalan.toLowerCase().includes(q)) ||
+        (item.namaPoktan && item.namaPoktan.toLowerCase().includes(q)) ||
+        (item.desa && item.desa.toLowerCase().includes(q)) ||
+        (item.kloter && item.kloter.toLowerCase().includes(q)) ||
+        (item.namaSopir && item.namaSopir.toLowerCase().includes(q)) ||
+        (item.nomorPolisi && item.nomorPolisi.toLowerCase().includes(q)) ||
+        (item.namaKios && item.namaKios.toLowerCase().includes(q));
+
+      const matchKios = filterKios === 'SEMUA' || item.namaKios === filterKios;
+      const matchPoktan = filterPoktan === 'SEMUA' || item.poktanId === filterPoktan;
+      const matchStatus = filterStatus === 'SEMUA' || item.status === filterStatus;
+
+      return matchSearch && matchKios && matchPoktan && matchStatus;
+    });
+  }, [distribusiList, searchQuery, filterKios, filterPoktan, filterStatus]);
+
+  // Pagination Calculations
+  const totalPages = Math.ceil(filteredList.length / pageSize) || 1;
+  const safeCurrentPage = Math.min(Math.max(currentPage, 1), totalPages);
+  const startIndex = (safeCurrentPage - 1) * pageSize;
+  const endIndex = Math.min(startIndex + pageSize, filteredList.length);
+  const paginatedList = useMemo(() => {
+    return filteredList.slice(startIndex, endIndex);
+  }, [filteredList, startIndex, endIndex]);
 
   return (
     <div className="max-w-7xl mx-auto px-4 sm:px-6 pt-6 pb-12 space-y-6">
       {/* Header Halaman */}
       <div className="bg-gradient-to-r from-blue-900 via-indigo-900 to-slate-900 rounded-3xl p-6 sm:p-8 text-white shadow-lg relative overflow-hidden no-print">
-        <div className="relative z-10 flex flex-col md:flex-row md:items-center justify-between gap-6">
-          <div>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-bold mb-3">
+        <div className="relative z-10 flex flex-col lg:flex-row lg:items-center justify-between gap-5">
+          <div className="space-y-1">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-blue-500/20 border border-blue-400/30 text-blue-300 text-xs font-bold">
               <Truck className="w-3.5 h-3.5" />
               Rantai Pasok Pupuk Bersubsidi Kecamatan Lembeyan
             </div>
             <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
               Distribusi Pupuk Kios ke Poktan
             </h1>
-            <p className="text-blue-100/80 text-xs sm:text-sm mt-1 max-w-2xl">
+            <p className="text-blue-100/80 text-xs sm:text-sm max-w-2xl">
               Pencatatan pengiriman pupuk dari gudang Kios Pengecer Lengkap (KPL) ke Kelompok Tani (Poktan) per kloter/tahap, rekap harian, pembuatan Surat Jalan, dan Surat Tanda Terima resmi.
             </p>
           </div>
 
-          <div className="flex flex-wrap items-center gap-3">
+          {/* Action Buttons Toolbar Rapi */}
+          <div className="flex flex-wrap items-center gap-2.5 shrink-0 self-start lg:self-center">
             <Link
               href="/cetak-f6"
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 font-bold text-xs border border-amber-400/40 transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-500/20 hover:bg-amber-500/30 text-amber-200 font-bold text-xs border border-amber-400/40 transition cursor-pointer backdrop-blur-xs shadow-2xs hover:shadow-xs active:scale-95"
             >
-              <FileText className="w-4 h-4 text-amber-300" />
-              Cetak SPJ Model F-6
+              <FileText className="w-3.5 h-3.5 text-amber-300" />
+              <span>Cetak SPJ F-6</span>
             </Link>
             <button
+              type="button"
               onClick={() => exportDistribusiKiosExcel(distribusiList)}
-              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/20 transition cursor-pointer"
+              className="inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/20 transition cursor-pointer backdrop-blur-xs shadow-2xs hover:shadow-xs active:scale-95"
             >
-              <Download className="w-4 h-4 text-emerald-300" />
-              Export Excel
+              <Download className="w-3.5 h-3.5 text-emerald-300" />
+              <span>Export Excel</span>
             </button>
             <button
+              type="button"
               onClick={handleOpenFormModal}
-              className="inline-flex items-center gap-2 px-5 py-2.5 rounded-2xl bg-emerald-500 hover:bg-emerald-600 text-white font-black text-xs transition shadow-md cursor-pointer"
+              className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-xs transition shadow-md hover:shadow-lg cursor-pointer active:scale-95"
             >
               <Plus className="w-4 h-4" />
-              Kirim Pupuk Baru (Kloter)
+              <span>Kirim Pupuk Baru</span>
             </button>
           </div>
         </div>
@@ -513,20 +547,30 @@ export default function DistribusiKiosPage() {
       {/* FILTER & PENCARIAN */}
       <div className="bg-white rounded-3xl border border-slate-200 p-4 shadow-xs flex flex-wrap items-center justify-between gap-3 no-print">
         <div className="flex flex-wrap items-center gap-3 flex-1 min-w-[280px]">
-          <div className="relative flex-1 min-w-[200px]">
+          <div className="relative flex-1 min-w-[220px]">
             <Search className="w-4 h-4 text-slate-400 absolute left-3 top-1/2 -translate-y-1/2" />
             <input
               type="text"
               placeholder="Cari No. Surat Jalan, Poktan, Sopir, Plat Nomor..."
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-3 py-2"
+              className="w-full text-xs bg-slate-50 border border-slate-200 rounded-xl pl-9 pr-8 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 focus:border-emerald-500 transition"
             />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-2.5 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600 p-0.5 cursor-pointer"
+                title="Hapus pencarian"
+              >
+                <X className="w-3.5 h-3.5" />
+              </button>
+            )}
           </div>
 
           {/* Kios Selector / Badge */}
           {currentUser?.role === 'KIOS' ? (
-            <div className="flex items-center gap-1.5 px-3 py-1.5 bg-emerald-50 border border-emerald-200 rounded-xl">
+            <div className="flex items-center gap-1.5 px-3 py-2 bg-emerald-50 border border-emerald-200 rounded-xl">
               <Store className="w-3.5 h-3.5 text-emerald-600" />
               <span className="text-xs font-bold text-emerald-800">
                 Gudang KPL: {currentUser.kiosName || 'BUMI SUBUR'}
@@ -534,11 +578,11 @@ export default function DistribusiKiosPage() {
             </div>
           ) : (
             <div className="flex items-center gap-1.5">
-              <span className="text-xs font-bold text-slate-500">Kios (KPL):</span>
+              <span className="text-xs font-bold text-slate-500 whitespace-nowrap">Kios (KPL):</span>
               <select
                 value={filterKios}
                 onChange={(e) => setFilterKios(e.target.value)}
-                className="text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2"
+                className="text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer"
               >
                 <option value="SEMUA">Semua KPL Gudang</option>
                 {kiosList.map((k) => (
@@ -551,11 +595,11 @@ export default function DistribusiKiosPage() {
           )}
 
           <div className="flex items-center gap-1.5">
-            <span className="text-xs font-bold text-slate-500">Poktan:</span>
+            <span className="text-xs font-bold text-slate-500 whitespace-nowrap">Poktan:</span>
             <select
               value={filterPoktan}
               onChange={(e) => setFilterPoktan(e.target.value)}
-              className="text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2"
+              className="text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 max-w-[200px] truncate cursor-pointer"
             >
               <option value="SEMUA">Semua Poktan</option>
               {poktanList.map((pok) => (
@@ -567,23 +611,40 @@ export default function DistribusiKiosPage() {
           </div>
 
           <div className="flex items-center gap-1.5">
-            <span className="text-xs font-bold text-slate-500">Status:</span>
+            <span className="text-xs font-bold text-slate-500 whitespace-nowrap">Status:</span>
             <select
               value={filterStatus}
               onChange={(e) => setFilterStatus(e.target.value)}
-              className="text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2"
+              className="text-xs font-semibold bg-slate-50 border border-slate-200 rounded-xl px-2.5 py-2.5 focus:outline-none focus:ring-2 focus:ring-emerald-500/20 cursor-pointer"
             >
               <option value="SEMUA">Semua Status</option>
               <option value="DIKIRIM">Dalam Perjalanan (DIKIRIM)</option>
               <option value="DITERIMA">Selesai Tiba (DITERIMA)</option>
             </select>
           </div>
+
+          {/* Tombol Reset jika filter aktif */}
+          {(searchQuery || (currentUser?.role !== 'KIOS' && filterKios !== 'SEMUA') || filterPoktan !== 'SEMUA' || filterStatus !== 'SEMUA') && (
+            <button
+              type="button"
+              onClick={() => {
+                setSearchQuery('');
+                if (currentUser?.role !== 'KIOS') setFilterKios('SEMUA');
+                setFilterPoktan('SEMUA');
+                setFilterStatus('SEMUA');
+              }}
+              className="text-xs font-bold text-rose-600 hover:text-rose-700 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2.5 py-2 rounded-xl transition cursor-pointer flex items-center gap-1 shadow-2xs"
+            >
+              <X className="w-3.5 h-3.5" />
+              <span>Reset Filter</span>
+            </button>
+          )}
         </div>
       </div>
 
       {/* TABEL REKAP DISTRIBUSI */}
       <div className="bg-white rounded-3xl border border-slate-200 p-6 shadow-xs space-y-4 no-print">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
             <FileText className="w-5 h-5 text-indigo-600" />
             Rekapitulasi Pengiriman Pupuk ke Poktan
@@ -602,7 +663,7 @@ export default function DistribusiKiosPage() {
               Belum ada riwayat pengiriman pupuk sesuai filter yang dipilih.
             </div>
           ) : (
-            filteredList.map((item, index) => {
+            paginatedList.map((item, index) => {
               const isDiterima = item.status === 'DITERIMA';
               return (
                 <div key={item.id} className="p-4 hover:bg-slate-50/80 transition space-y-3">
@@ -747,11 +808,11 @@ export default function DistribusiKiosPage() {
                   </td>
                 </tr>
               ) : (
-                filteredList.map((item, index) => {
+                paginatedList.map((item, index) => {
                   const isDiterima = item.status === 'DITERIMA';
                   return (
                     <tr key={item.id} className="hover:bg-slate-50 transition">
-                      <td className="py-2.5 px-3 border-r text-center font-mono whitespace-nowrap">{index + 1}</td>
+                      <td className="py-2.5 px-3 border-r text-center font-mono whitespace-nowrap">{startIndex + index + 1}</td>
                       <td className="py-2.5 px-3 border-r font-mono font-bold text-slate-900 whitespace-nowrap">
                         {item.nomorSuratJalan}
                       </td>
@@ -866,6 +927,103 @@ export default function DistribusiKiosPage() {
               )}
             </tbody>
           </table>
+        </div>
+
+        {/* Baris Navigasi Pagination */}
+        <div className="pt-4 border-t border-slate-200 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-3 text-slate-600 font-medium">
+            <span>
+              Menampilkan{' '}
+              <strong className="text-slate-900 font-bold">
+                {filteredList.length === 0 ? 0 : startIndex + 1}
+              </strong>{' '}
+              -{' '}
+              <strong className="text-slate-900 font-bold">
+                {endIndex}
+              </strong>{' '}
+              dari{' '}
+              <strong className="text-slate-900 font-bold">{filteredList.length}</strong> pengiriman kloter
+            </span>
+
+            <div className="flex items-center gap-1.5 ml-2">
+              <span className="text-slate-400">| Baris:</span>
+              <select
+                value={pageSize}
+                onChange={(e) => setPageSize(Number(e.target.value))}
+                className="bg-white border border-slate-300 rounded-lg px-2 py-1 text-xs font-semibold text-slate-700 focus:outline-none focus:ring-1 focus:ring-emerald-500 cursor-pointer shadow-2xs"
+              >
+                <option value={5}>5</option>
+                <option value={10}>10</option>
+                <option value={20}>20</option>
+                <option value={50}>50</option>
+              </select>
+            </div>
+          </div>
+
+          {totalPages > 1 && (
+            <div className="flex items-center gap-1">
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                disabled={safeCurrentPage <= 1}
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 font-bold hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer shadow-2xs"
+              >
+                <ChevronLeft className="w-3.5 h-3.5" />
+                <span className="hidden sm:inline">Sebelumnya</span>
+              </button>
+
+              <div className="flex items-center gap-1 px-1">
+                {Array.from({ length: totalPages }, (_, i) => i + 1)
+                  .filter((p) => {
+                    if (totalPages <= 7) return true;
+                    if (p === 1 || p === totalPages) return true;
+                    if (Math.abs(p - safeCurrentPage) <= 1) return true;
+                    return false;
+                  })
+                  .reduce<(number | string)[]>((acc, p, idx, arr) => {
+                    if (idx > 0 && (p as number) - (arr[idx - 1] as number) > 1) {
+                      acc.push('...');
+                    }
+                    acc.push(p);
+                    return acc;
+                  }, [])
+                  .map((p, idx) => {
+                    if (p === '...') {
+                      return (
+                        <span key={`ellipsis-${idx}`} className="px-2 text-slate-400 font-bold">
+                          ...
+                        </span>
+                      );
+                    }
+                    const isCur = p === safeCurrentPage;
+                    return (
+                      <button
+                        key={`page-${p}`}
+                        type="button"
+                        onClick={() => setCurrentPage(p as number)}
+                        className={`w-7 h-7 flex items-center justify-center rounded-lg font-bold text-xs transition cursor-pointer ${
+                          isCur
+                            ? 'bg-emerald-600 text-white shadow-2xs'
+                            : 'bg-white border border-slate-200 text-slate-700 hover:bg-slate-100'
+                        }`}
+                      >
+                        {p}
+                      </button>
+                    );
+                  })}
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                disabled={safeCurrentPage >= totalPages}
+                className="inline-flex items-center gap-1 px-3 py-1.5 rounded-lg border border-slate-200 bg-white text-slate-700 font-bold hover:bg-slate-100 disabled:opacity-40 disabled:cursor-not-allowed transition cursor-pointer shadow-2xs"
+              >
+                <span className="hidden sm:inline">Selanjutnya</span>
+                <ChevronRight className="w-3.5 h-3.5" />
+              </button>
+            </div>
+          )}
         </div>
       </div>
 
