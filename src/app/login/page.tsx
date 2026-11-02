@@ -64,7 +64,6 @@ function LoginFormContent() {
   const [nikInput, setNikInput] = useState('');
   const [nikLoading, setNikLoading] = useState(false);
   const [nikError, setNikError] = useState<string | null>(null);
-  const [samplePetaniList, setSamplePetaniList] = useState<any[]>([]);
 
   const isTimeout = searchParams?.get('timeout') === '1';
 
@@ -74,20 +73,6 @@ function LoginFormContent() {
       setShowNikModal(true);
     }
   }, [searchParams]);
-
-  // Muat sampel petani terdaftar saat modal NIK dibuka
-  useEffect(() => {
-    if (showNikModal && samplePetaniList.length === 0) {
-      fetch('/api/auth/login-petani')
-        .then((res) => res.json())
-        .then((json) => {
-          if (json.success && Array.isArray(json.data)) {
-            setSamplePetaniList(json.data);
-          }
-        })
-        .catch(() => {});
-    }
-  }, [showNikModal, samplePetaniList.length]);
 
   const handlePetaniNikSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -743,7 +728,7 @@ function LoginFormContent() {
                     maxLength={16}
                     required
                     autoFocus
-                    placeholder="Contoh: 3520033010900002"
+                    placeholder="Contoh: 35200XXXXXXXXXXX"
                     value={nikInput}
                     onChange={(e) => {
                       setNikInput(e.target.value.replace(/[^0-9]/g, ''));
@@ -769,36 +754,13 @@ function LoginFormContent() {
                 </div>
               </div>
 
-              {/* Quick Sample Chips dari Database e-RDKK */}
-              {samplePetaniList.length > 0 && (
-                <div className="space-y-1.5 pt-1">
-                  <p className="text-[11px] font-bold text-slate-600 flex items-center gap-1">
-                    <Sparkles className="w-3 h-3 text-amber-500" />
-                    <span>Contoh NIK Petani Terdaftar (Klik untuk Isi Cepat):</span>
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {samplePetaniList.map((p) => (
-                      <button
-                        key={p.id}
-                        type="button"
-                        onClick={() => {
-                          setNikInput(p.nik);
-                          setNikError(null);
-                        }}
-                        className={`text-[11px] px-2.5 py-1 rounded-lg border transition flex items-center gap-1.5 cursor-pointer ${
-                          nikInput === p.nik
-                            ? 'bg-emerald-600 text-white border-emerald-700 font-bold shadow-2xs'
-                            : 'bg-slate-100 hover:bg-emerald-50 text-slate-700 border-slate-200'
-                        }`}
-                      >
-                        <User className="w-3 h-3 text-emerald-600" />
-                        <span className="font-semibold">{p.nama}</span>
-                        <span className="font-mono text-[10px] text-slate-500">({p.nik})</span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              )}
+              {/* Jaminan Privasi Petani */}
+              <div className="p-3 bg-slate-50 border border-slate-200/80 rounded-xl text-[11px] text-slate-600 flex items-start gap-2">
+                <ShieldCheck className="w-4 h-4 text-emerald-600 shrink-0 mt-0.5" />
+                <p className="leading-relaxed">
+                  <strong>Jaminan Privasi:</strong> Nomor NIK e-KTP Anda bersifat pribadi. Data hanya digunakan untuk memverifikasi hak kuota pupuk bersubsidi milik Anda sendiri dan tidak dapat dilihat oleh petani lain.
+                </p>
+              </div>
 
               {/* Action Buttons */}
               <div className="pt-2 flex items-center justify-end gap-2 border-t border-slate-100">

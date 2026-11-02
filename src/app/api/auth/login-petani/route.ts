@@ -89,25 +89,3 @@ export async function POST(req: Request) {
     );
   }
 }
-
-// Endpoint GET untuk mengambil daftar sampel petani terdaftar untuk kemudahan demo/uji
-export async function GET() {
-  try {
-    const list = await prisma.petani.findMany({
-      take: 5,
-      select: {
-        id: true,
-        nama: true,
-        nik: true,
-        desa: true,
-        poktan: {
-          select: { nama: true },
-        },
-      },
-      orderBy: { nama: 'asc' },
-    });
-    return NextResponse.json({ success: true, data: list });
-  } catch (e: any) {
-    return NextResponse.json({ success: false, error: e.message }, { status: 500 });
-  }
-}
