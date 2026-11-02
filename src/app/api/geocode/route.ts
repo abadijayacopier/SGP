@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { LEMBEYAN_POI_LIST } from '@/lib/erdkk-format';
 
 export interface GeocodeItem {
   id: string;
@@ -42,9 +43,27 @@ export async function GET(request: Request) {
       }
     };
 
+    // 0. Cek POI / Tempat Lokal Unggulan Lembeyan (Termasuk Fotocopy Abadi Jaya)
+    const qLower = query.toLowerCase();
+    for (const poi of LEMBEYAN_POI_LIST) {
+      const nameMatch = poi.name.toLowerCase().includes(qLower) || qLower.includes(poi.name.toLowerCase());
+      const kwMatch = poi.keywords?.some((k) => qLower.includes(k) || k.includes(qLower));
+      const addrMatch = poi.alamat.toLowerCase().includes(qLower);
+
+      if (nameMatch || kwMatch || addrMatch) {
+        addResult({
+          name: poi.name,
+          address: `${poi.kategori} &bull; ${poi.alamat}`,
+          lat: poi.lat,
+          lng: poi.lng,
+          source: 'Tempat / Bisnis Terverifikasi Google',
+          category: poi.kategori,
+        });
+      }
+    }
+
     // Siapkan variasi query untuk tempat/bisnis lokal
     const variants = [query];
-    const qLower = query.toLowerCase();
     if (!qLower.includes('magetan') && !qLower.includes('lembeyan')) {
       variants.push(`${query} Magetan`);
       variants.push(`${query} Lembeyan`);

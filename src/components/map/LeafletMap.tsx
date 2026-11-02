@@ -383,15 +383,17 @@ export default function LeafletMap({
 
   // Pencarian cepat lokal (POI Lembeyan + 10 Desa Kec. Lembeyan + Petak Sawah Terdaftar)
   const localSearchResults = useMemo(() => {
-    const q = mapSearchText.trim().toLowerCase();
+    const q = mapSearchText.trim().toLowerCase().replace(/\s+/g, ' ');
     if (!q) {
       return { poiMatches: [], desaMatches: [], lahanMatches: [] };
     }
     const poiMatches = LEMBEYAN_POI_LIST.filter(
       (p) =>
         p.name.toLowerCase().includes(q) ||
+        q.includes(p.name.toLowerCase()) ||
         p.alamat.toLowerCase().includes(q) ||
-        p.kategori.toLowerCase().includes(q)
+        p.kategori.toLowerCase().includes(q) ||
+        p.keywords?.some((k) => q.includes(k) || k.includes(q))
     );
     const desaMatches = Object.values(DESA_COORDINATES_LEMBEYAN).filter((d) =>
       d.label.toLowerCase().includes(q) ||
@@ -495,11 +497,15 @@ export default function LeafletMap({
     }
 
     // 2. Cek apakah cocok dengan POI Lembeyan (Fotocopy Abadi Jaya, BPP, dll.)
-    const exactPoi = LEMBEYAN_POI_LIST.find(
-      (p) =>
-        p.name.toLowerCase().includes(q.toLowerCase()) ||
-        q.toLowerCase().includes(p.name.toLowerCase())
-    );
+    const exactPoi = LEMBEYAN_POI_LIST.find((p) => {
+      const qNorm = q.toLowerCase();
+      const pNorm = p.name.toLowerCase();
+      return (
+        pNorm.includes(qNorm) ||
+        qNorm.includes(pNorm) ||
+        p.keywords?.some((k) => qNorm.includes(k) || k.includes(qNorm))
+      );
+    });
     if (exactPoi) {
       setInternalFlyTo({
         lat: exactPoi.lat,

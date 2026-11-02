@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import MapWrapper, { type FlyToTarget } from '@/components/map/MapWrapper';
 import type { LahanItem } from '@/components/map/LeafletMap';
@@ -16,6 +16,7 @@ import {
   Sprout,
   FileText,
   Search,
+  MapPin,
   User,
   Users,
   Compass,
@@ -587,21 +588,65 @@ export default function PetaPage() {
     }
   };
 
-  // Filtered List
-  const filteredLahan = lahanList.filter((l: any) => {
-    if (desaFilter !== 'SEMUA') {
-      const lDesa = l.desa || l.petani?.desa || 'Kediren';
-      if (lDesa !== desaFilter) return false;
+  // Filtered List Petak Lahan
+  const filteredLahan: LahanItem[] = useMemo(() => {
+    return lahanList.filter((l: any): l is LahanItem => {
+      // 1. Filter Petani jika dipilih
+      if (selectedPetaniFilter !== 'SEMUA' && l.petani?.id !== selectedPetaniFilter) {
+        return false;
+      }
+      // 2. Filter Desa jika dipilih
+      if (desaFilter !== 'SEMUA') {
+        const lDesa = l.desa || l.petani?.desa || l.petani?.poktan?.desa;
+        if (lDesa !== desaFilter) return false;
+      }
+      // 3. Filter Pencarian Teks
+      if (!searchQuery.trim()) return true;
+      const q = searchQuery.toLowerCase().trim();
+      const namaMatch = (l.namaLahan || '').toLowerCase().includes(q);
+      const kodeMatch = (l.kodeLahan || '').toLowerCase().includes(q);
+      const petaniMatch = (l.petani?.nama || '').toLowerCase().includes(q);
+      const nikMatch = (l.petani?.nik || '').includes(q);
+      const poktanMatch = (l.petani?.poktan?.nama || '').toLowerCase().includes(q);
+      return namaMatch || kodeMatch || petaniMatch || nikMatch || poktanMatch;
+    });
+  }, [lahanList, selectedPetaniFilter, desaFilter, searchQuery]);
+
+  // Handler Submit Pencarian Petak Lahan (Otomatis seleksi dan terbangkan peta ke petak)
+  const handleSearchLahanSubmit = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    const q = searchQuery.trim().toLowerCase();
+    if (!q) return;
+
+    const match = lahanList.find((l: any) => {
+      const namaMatch = (l.namaLahan || '').toLowerCase().includes(q);
+      const kodeMatch = (l.kodeLahan || '').toLowerCase().includes(q);
+      const petaniMatch = (l.petani?.nama || '').toLowerCase().includes(q);
+      const nikMatch = (l.petani?.nik || '').includes(q);
+      return namaMatch || kodeMatch || petaniMatch || nikMatch;
+    });
+
+    if (match) {
+      if (desaFilter !== 'SEMUA') {
+        const lDesa = match.desa || match.petani?.desa;
+        if (lDesa !== desaFilter) {
+          setDesaFilter('SEMUA');
+        }
+      }
+      setSelectedLahanId(match.id);
+      setFlyToTarget({
+        lat: match.centerLat,
+        lng: match.centerLng,
+        zoom: 18,
+        label: `${match.kodeLahan} - ${match.namaLahan}`,
+        keterangan: `Milik ${match.petani?.nama || '-'} (${match.luasHa} Ha)`,
+        timestamp: Date.now(),
+      });
+      showToast(`Peta difokuskan ke petak sawah "${match.namaLahan}" (${match.kodeLahan})`, 'success');
+    } else {
+      showWarning('Petak Tidak Ditemukan', `Tidak ada petak sawah atau petani yang cocok dengan kata kunci "${searchQuery}".`);
     }
-    if (!searchQuery) return true;
-    const q = searchQuery.toLowerCase();
-    return (
-      l.namaLahan.toLowerCase().includes(q) ||
-      l.kodeLahan.toLowerCase().includes(q) ||
-      l.petani?.nama.toLowerCase().includes(q) ||
-      l.petani?.nik.includes(q)
-    );
-  });
+  };
 
   // Petani yang sedang difilter/dipilih
   const activePetaniObj = petaniList.find((p) => p.id === selectedPetaniFilter);
@@ -667,19 +712,20 @@ export default function PetaPage() {
         </div>
       )}
 
-      {/* Filter and stats row */}
-      <div className="bg-white p-3.5 sm:p-5 rounded-3xl border border-slate-200/80 shadow-xs space-y-3.5 max-w-full overflow-hidden">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 max-w-full">
-          {/* Filter Pilih Petani */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 flex-1 min-w-0 w-full">
-            <span className="text-xs font-bold text-slate-700 flex items-center gap-1.5 shrink-0">
-              <User className="w-4 h-4 text-emerald-600" /> Pilih Petani:
-            </span>
-            <div className="relative flex-1 min-w-0 w-full sm:max-w-md">
+      {/* Filter and Search Bar Row */}
+      <div className="bg-white p-3.5 sm:p-5 rounded-3xl border border-slate-200/80 shadow-xs max-w-full overflow-hidden">
+        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 max-w-full">
+          {/* Sisi Kiri: Filter Petani & Filter Desa */}
+          <div className="flex flex-col sm:flex-row sm:items-center gap-2 flex-1 min-w-0">
+            {/* Filter Pilih Petani */}
+            <div className="flex items-center gap-1.5 flex-1 min-w-0">
+              <span className="text-xs font-bold text-slate-700 flex items-center gap-1 shrink-0">
+                <User className="w-4 h-4 text-emerald-600" /> Petani:
+              </span>
               <select
                 value={selectedPetaniFilter}
                 onChange={(e) => setSelectedPetaniFilter(e.target.value)}
-                className="w-full max-w-full min-w-0 px-3 py-2 sm:py-1.5 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 bg-slate-50 truncate cursor-pointer"
+                className="w-full min-w-0 px-3 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 bg-slate-50 truncate cursor-pointer"
               >
                 <option value="SEMUA">Semua Petani ({petaniList.length} Orang)</option>
                 {petaniList.map((p) => {
@@ -692,56 +738,21 @@ export default function PetaPage() {
                 })}
               </select>
             </div>
-          </div>
 
-          {/* Search box */}
-          <div className="relative w-full sm:w-64 sm:flex-initial">
-            <Search className="w-4 h-4 absolute left-3 top-2.5 sm:top-2 text-slate-400" />
-            <input
-              type="text"
-              placeholder="Cari petak, NIK, petani..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="w-full pl-9 pr-3 py-2 sm:py-1.5 bg-slate-50 border border-slate-200 rounded-xl text-xs focus:outline-none focus:ring-2 focus:ring-emerald-500"
-            />
-          </div>
-        </div>
-
-        {/* Filter Komoditas & Filter 10 Desa Kecamatan Lembeyan */}
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 pt-2.5 border-t border-slate-100 max-w-full">
-          <div className="flex items-center gap-1.5 sm:gap-2 overflow-x-auto pb-1 lg:pb-0 scrollbar-none max-w-full">
-            <span className="text-xs font-semibold text-slate-500 flex items-center gap-1 shrink-0">
-              <Filter className="w-3.5 h-3.5" /> Komoditas:
-            </span>
-            {['SEMUA', 'Padi', 'Jagung', 'Kedelai', 'Bawang Merah', 'Tembakau', 'Tebu'].map((kom) => (
-              <button
-                key={kom}
-                onClick={() => setKomoditasFilter(kom)}
-                className={`px-3 py-1 rounded-lg text-xs font-semibold transition shrink-0 cursor-pointer ${
-                  komoditasFilter === kom
-                    ? 'bg-emerald-600 text-white shadow-xs'
-                    : 'bg-slate-100 text-slate-600 hover:bg-slate-200'
-                }`}
-              >
-                {kom}
-              </button>
-            ))}
-          </div>
-
-          <div className="flex flex-col sm:flex-row sm:items-center gap-1.5 sm:gap-2 w-full lg:w-auto min-w-0">
-            <span className="text-xs font-semibold text-slate-500 shrink-0">
-              Filter Desa:
-            </span>
-            <div className="relative w-full sm:w-auto min-w-0 flex-1">
+            {/* Filter Desa */}
+            <div className="flex items-center gap-1.5 flex-1 min-w-0 sm:max-w-xs">
+              <span className="text-xs font-bold text-slate-700 flex items-center gap-1 shrink-0">
+                <MapPin className="w-4 h-4 text-emerald-600" /> Desa:
+              </span>
               <select
                 value={desaFilter}
                 onChange={(e) => {
                   setDesaFilter(e.target.value);
                   setSelectedLahanId(null);
                 }}
-                className="w-full sm:w-auto max-w-full min-w-0 px-3 py-2 sm:py-1.5 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 bg-slate-50 focus:ring-2 focus:ring-emerald-500 cursor-pointer truncate"
+                className="w-full min-w-0 px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 bg-slate-50 focus:ring-2 focus:ring-emerald-500 cursor-pointer truncate"
               >
-                <option value="SEMUA">Semua Desa (Kecamatan Lembeyan)</option>
+                <option value="SEMUA">Semua Desa (Kec. Lembeyan)</option>
                 {DESA_LEMBEYAN_LIST.map((d) => (
                   <option key={d} value={d}>
                     Desa / Kel. {d}
@@ -750,6 +761,39 @@ export default function PetaPage() {
               </select>
             </div>
           </div>
+
+          {/* Sisi Kanan: Form Pencarian Petak & NIK Petani dengan Tombol Cari */}
+          <form
+            onSubmit={handleSearchLahanSubmit}
+            className="flex items-center gap-2 w-full lg:w-auto shrink-0"
+          >
+            <div className="relative flex-1 sm:w-72">
+              <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
+              <input
+                type="text"
+                placeholder="Cari petak, NIK, petani..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="w-full pl-9 pr-7 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+              />
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => setSearchQuery('')}
+                  className="absolute right-2.5 top-2.5 text-slate-400 hover:text-slate-600 cursor-pointer"
+                >
+                  <X className="w-3.5 h-3.5" />
+                </button>
+              )}
+            </div>
+            <button
+              type="submit"
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer shrink-0 flex items-center gap-1 active:scale-95"
+            >
+              <Search className="w-3.5 h-3.5" />
+              <span>Cari Petak</span>
+            </button>
+          </form>
         </div>
       </div>
 

@@ -124,18 +124,20 @@ export interface LembeyanPoi {
   lng: number;
   zoom?: number;
   icon?: string;
+  keywords?: string[];
 }
 
 export const LEMBEYAN_POI_LIST: LembeyanPoi[] = [
   {
     id: 'poi-fotocopy-abadi-jaya',
     name: 'Fotocopy Abadi Jaya',
-    kategori: 'Percetakan, ATK & Jasa Fotokopi',
+    kategori: 'Toko Fotokopi, Percetakan & ATK',
     alamat: 'Jl. Lembeyan - Parang, Lembeyan Kulon, Kec. Lembeyan, Kab. Magetan',
     lat: -7.753439,
     lng: 111.38198,
     zoom: 18,
     icon: '🖨️',
+    keywords: ['fotocopy', 'fotokopi', 'foto copy', 'foto kopi', 'abadi jaya', 'copier', 'print', 'percetakan', 'atk', 'toko fotokopi'],
   },
   {
     id: 'poi-bpp-lembeyan',
