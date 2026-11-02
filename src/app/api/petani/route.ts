@@ -8,22 +8,35 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const poktanId = searchParams.get('poktanId');
+    const desa = searchParams.get('desa');
     const petaniId = searchParams.get('petaniId') || searchParams.get('id');
     const search = searchParams.get('search');
 
-    const where: any = {};
+    const conditions: any[] = [];
     if (petaniId) {
-      where.id = petaniId;
+      conditions.push({ id: petaniId });
     }
     if (poktanId && poktanId !== 'SEMUA') {
-      where.poktanId = poktanId;
+      conditions.push({ poktanId });
+    }
+    if (desa && desa !== 'SEMUA') {
+      conditions.push({
+        OR: [
+          { desa: { contains: desa } },
+          { poktan: { desa: { contains: desa } } },
+        ],
+      });
     }
     if (search) {
-      where.OR = [
-        { nama: { contains: search } },
-        { nik: { contains: search } },
-      ];
+      conditions.push({
+        OR: [
+          { nama: { contains: search } },
+          { nik: { contains: search } },
+        ],
+      });
     }
+
+    const where = conditions.length > 0 ? { AND: conditions } : {};
 
     const petaniList = await prisma.petani.findMany({
       where,
