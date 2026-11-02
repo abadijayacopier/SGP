@@ -960,6 +960,8 @@ export default function PetaPage() {
         selectedLahanId={selectedLahanId}
         flyToTarget={flyToTarget}
         onSelectDesaFromMap={(desaKey) => setDesaFilter(desaKey)}
+        onToggleDrawingMode={() => setIsDrawingMode(!isDrawingMode)}
+        canDigitasiGis={permissions.canDigitasiGis}
       />
 
       {/* Table list of Lahan with Direct Print Card button */}

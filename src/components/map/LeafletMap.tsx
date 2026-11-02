@@ -46,6 +46,7 @@ import {
   Sparkles,
   Globe,
   Loader2,
+  Plus,
 } from 'lucide-react';
 import { DESA_COORDINATES_LEMBEYAN, DESA_LEMBEYAN_LIST } from '@/lib/erdkk-format';
 import { calculateDistanceMeters } from '@/lib/calculations';
@@ -125,6 +126,8 @@ interface LeafletMapProps {
   selectedLahanId?: string | null;
   flyToTarget?: FlyToTarget | null;
   onSelectDesaFromMap?: (desaKey: string) => void;
+  onToggleDrawingMode?: () => void;
+  canDigitasiGis?: boolean;
 }
 
 // Komponen untuk otomatis memusatkan dan zoom ke poligon atau wilayah desa yang dipilih
@@ -312,6 +315,8 @@ export default function LeafletMap({
   selectedLahanId,
   flyToTarget,
   onSelectDesaFromMap,
+  onToggleDrawingMode,
+  canDigitasiGis = true,
 }: LeafletMapProps) {
   const [drawingPoints, setDrawingPoints] = useState<[number, number][]>([]);
   const [selectedFotoPreview, setSelectedFotoPreview] = useState<string | null>(null);
@@ -1014,11 +1019,35 @@ export default function LeafletMap({
               if (onSelectDesaFromMap) onSelectDesaFromMap('SEMUA');
             }}
             title="Pusatkan Kembali ke Kecamatan Lembeyan"
-            className="px-3 py-2 rounded-2xl bg-white/95 hover:bg-emerald-50 text-slate-800 border border-slate-200 shadow-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer"
+            className="px-3 py-2 rounded-2xl bg-white/95 hover:bg-emerald-50 text-slate-800 border border-slate-200 shadow-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer shrink-0"
           >
             <Compass className="w-4 h-4 text-emerald-600" />
-            <span className="hidden sm:inline">Pusatkan Kec. Lembeyan</span>
+            <span className="hidden md:inline">Pusatkan Kec. Lembeyan</span>
           </button>
+
+          {/* Tombol Cepat Digitasi Lahan di Dalam Peta */}
+          {canDigitasiGis && onToggleDrawingMode && (
+            <button
+              type="button"
+              onClick={onToggleDrawingMode}
+              className="px-3.5 py-2 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white shadow-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer active:scale-95 shrink-0"
+              title="Mulai digitasi petak sawah baru langsung di dalam peta (Klik patok batas / GPS berjalan)"
+            >
+              <Plus className="w-4 h-4" />
+              <span>Digitasi Lahan</span>
+            </button>
+          )}
+
+          {/* Tombol Mode Field Maps Lapangan di Dalam Peta */}
+          <Link
+            href="/field-maps"
+            className="px-3.5 py-2 rounded-2xl bg-slate-900/95 hover:bg-slate-900 text-white shadow-lg text-xs font-bold flex items-center gap-1.5 transition cursor-pointer active:scale-95 border border-slate-700/60 shrink-0"
+            title="Buka Mode Field Maps khusus survei lapangan via smartphone"
+          >
+            <Smartphone className="w-4 h-4 text-amber-400" />
+            <span className="hidden sm:inline">Field Maps Lapangan</span>
+            <span className="sm:hidden">Field Maps</span>
+          </Link>
         </div>
       )}
 
@@ -1075,7 +1104,7 @@ export default function LeafletMap({
               <button
                 type="button"
                 onClick={handleAddCurrentGpsPoint}
-                className="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 transition flex items-center gap-1"
+                className="px-2.5 py-1.5 rounded-xl text-xs font-semibold bg-blue-50 hover:bg-blue-100 text-blue-800 border border-blue-200 transition flex items-center gap-1 cursor-pointer"
                 title="Ambil titik koordinat GPS saat ini sebagai patok"
               >
                 <Crosshair className="w-3 h-3 text-blue-600" />
@@ -1085,7 +1114,7 @@ export default function LeafletMap({
               <button
                 onClick={handleUndoLastPoint}
                 disabled={drawingPoints.length === 0}
-                className="px-2 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-40 transition flex items-center gap-1"
+                className="px-2 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-700 disabled:opacity-40 transition flex items-center gap-1 cursor-pointer"
                 title="Batal titik terakhir"
               >
                 <RotateCcw className="w-3 h-3" />
@@ -1094,7 +1123,7 @@ export default function LeafletMap({
               <button
                 onClick={handleResetDrawing}
                 disabled={drawingPoints.length === 0}
-                className="px-2 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-600 disabled:opacity-40 transition"
+                className="px-2 py-1.5 rounded-xl text-xs font-semibold bg-slate-100 hover:bg-slate-200 text-slate-600 disabled:opacity-40 transition cursor-pointer"
               >
                 Reset
               </button>
@@ -1112,6 +1141,19 @@ export default function LeafletMap({
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>Simpan Batas</span>
               </button>
+
+              {/* Tombol Batal Digitasi Langsung di Dalam Peta */}
+              {onToggleDrawingMode && (
+                <button
+                  type="button"
+                  onClick={onToggleDrawingMode}
+                  className="px-2.5 py-1.5 rounded-xl text-xs font-bold bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 transition flex items-center gap-1 cursor-pointer"
+                  title="Batalkan digitasi dan kembali ke navigasi biasa"
+                >
+                  <X className="w-3.5 h-3.5 text-rose-600" />
+                  <span>Batal</span>
+                </button>
+              )}
             </div>
           </div>
 

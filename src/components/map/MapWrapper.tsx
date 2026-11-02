@@ -26,6 +26,8 @@ interface MapWrapperProps {
   selectedLahanId?: string | null;
   flyToTarget?: FlyToTarget | null;
   onSelectDesaFromMap?: (desaKey: string) => void;
+  onToggleDrawingMode?: () => void;
+  canDigitasiGis?: boolean;
 }
 
 const DynamicLeafletMap = dynamic(() => import('./LeafletMap'), {
