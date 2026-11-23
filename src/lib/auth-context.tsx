@@ -43,7 +43,8 @@ export type RoleMenuIcon =
   | 'alokasi-poktan'
   | 'buku-kas'
   | 'kepala-desa'
-  | 'f6';
+  | 'f6'
+  | 'pengaturan';
 
 export interface RoleSubMenuItem {
   label: string;
@@ -209,6 +210,12 @@ export const ROLE_PERMISSIONS: Record<
             href: '/users',
             iconName: 'users',
             description: 'Kelola akun petugas BPP/Kios/Poktan & hak akses',
+          },
+          {
+            label: 'Pengaturan & Konfigurasi',
+            href: '/pengaturan',
+            iconName: 'pengaturan',
+            description: 'Parameter HET pupuk, instansi BPP & sistem',
           },
         ],
       },

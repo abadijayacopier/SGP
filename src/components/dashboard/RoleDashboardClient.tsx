@@ -755,54 +755,122 @@ export default function RoleDashboardClient({
         </>
       )}
 
-      {/* Bagian Bawah: Ringkasan Aktivitas Sesuai Kewenangan Jabatan */}
+      {/* Bagian Bawah: Grid Dua Kolom (Log Aktivitas & Transaksi Penebusan Card View) */}
       {(role === 'ADMIN_DINAS' || role === 'KIOS') && (
-        <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6">
-          <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
-            <div>
-              <h3 className="text-base font-black text-slate-800 flex items-center gap-2">
-                <ShieldCheck className="w-5 h-5 text-emerald-600" />
-                Riwayat Penebusan Pupuk Terverifikasi KTP & Wajah Penerima
-              </h3>
-              <p className="text-xs text-slate-500">
-                Data transaksi real-time dari Kios Pupuk Lengkap (KPL) Kecamatan Lembeyan
-              </p>
-            </div>
-            <Link
-              href="/penyaluran"
-              className="text-xs font-bold text-emerald-700 hover:underline flex items-center gap-1"
-            >
-              Buka Modul Penyaluran <ArrowRight className="w-3.5 h-3.5" />
-            </Link>
-          </div>
-
-          <div className="divide-y divide-slate-100">
-            {(role === 'KIOS' ? kiosPenyaluran : recentPenyaluran).map((item) => (
-              <div
-                key={item.id}
-                className="py-3.5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs"
+        <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+          {/* Kolom Kiri: Riwayat Penebusan Format Kartu Modern */}
+          <div className="lg:col-span-8 bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6">
+            <div className="flex items-center justify-between mb-5 border-b border-slate-100 pb-3">
+              <div>
+                <h3 className="text-base font-black text-slate-800 flex items-center gap-2">
+                  <ShieldCheck className="w-5 h-5 text-emerald-600" />
+                  Penebusan Pupuk Terverifikasi KTP &amp; Wajah
+                </h3>
+                <p className="text-xs text-slate-500">
+                  Data transaksi terverifikasi dari Kios Pupuk Lengkap (KPL)
+                </p>
+              </div>
+              <Link
+                href="/penyaluran"
+                className="text-xs font-bold text-emerald-700 hover:text-emerald-800 hover:underline flex items-center gap-1"
               >
-                <div className="flex items-center gap-3">
-                  <img
-                    src={item.fotoDiri || '/uploads/sample_petani_face.svg'}
-                    alt="Penerima"
-                    className="w-11 h-11 rounded-xl object-cover border border-emerald-200"
-                  />
-                  <div>
-                    <div className="font-bold text-slate-900 text-sm">{item.petani.nama}</div>
-                    <div className="text-slate-500 font-mono text-[11px]">
-                      {item.nomorNota} &bull; NIK: {item.petani.nik} &bull; {item.petani.poktan.nama}
+                Lihat Semua <ArrowRight className="w-3.5 h-3.5" />
+              </Link>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
+              {(role === 'KIOS' ? kiosPenyaluran : recentPenyaluran).map((item) => (
+                <div
+                  key={item.id}
+                  className="p-4 rounded-2xl border border-slate-100 bg-slate-50/70 hover:bg-white hover:border-emerald-200 hover:shadow-xs transition-all flex flex-col justify-between gap-3"
+                >
+                  <div className="flex items-start gap-3">
+                    <img
+                      src={item.fotoDiri || '/uploads/sample_petani_face.svg'}
+                      alt="Penerima"
+                      className="w-12 h-12 rounded-xl object-cover border border-emerald-200 shrink-0"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <div className="font-bold text-slate-900 text-sm truncate">{item.petani.nama}</div>
+                      <div className="text-slate-500 font-mono text-[11px] truncate">
+                        NIK: {item.petani.nik}
+                      </div>
+                      <div className="text-[10px] text-emerald-700 font-bold mt-0.5">
+                        {item.petani.poktan?.nama || 'Poktan'}
+                      </div>
                     </div>
                   </div>
+
+                  <div className="pt-2 border-t border-slate-200/60 flex items-center justify-between text-xs">
+                    <span className="text-[11px] font-bold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded-lg border border-emerald-200/60">
+                      U: {item.jumlahUreaKg} kg • N: {item.jumlahNpkKg} kg
+                    </span>
+                    <strong className="font-black text-slate-900 text-sm">
+                      {formatRupiah(item.totalBiayaRp)}
+                    </strong>
+                  </div>
                 </div>
-                <div className="text-right">
-                  <div className="font-black text-slate-900">{formatRupiah(item.totalBiayaRp)}</div>
-                  <div className="text-[11px] text-emerald-700 font-bold">
-                    Urea {item.jumlahUreaKg} Kg &bull; NPK {item.jumlahNpkKg} Kg
+              ))}
+            </div>
+          </div>
+
+          {/* Kolom Kanan: Log Aktivitas & Status Sistem Real-Time */}
+          <div className="lg:col-span-4 bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 flex flex-col justify-between">
+            <div>
+              <div className="flex items-center justify-between mb-4 border-b border-slate-100 pb-3">
+                <h3 className="text-sm font-black text-slate-800 flex items-center gap-2">
+                  <Clock className="w-4 h-4 text-blue-600" />
+                  Log Aktivitas &amp; Audit Trail
+                </h3>
+                <span className="text-[10px] font-bold px-2 py-0.5 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                  Live
+                </span>
+              </div>
+
+              <div className="space-y-3.5">
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex items-start gap-3 text-xs">
+                  <div className="w-8 h-8 rounded-xl bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0 font-bold">
+                    <CheckCircle2 className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-slate-900">Validasi e-RDKK MT-1</p>
+                    <p className="text-[11px] text-slate-500">Kuota telah diautentikasi oleh Admin Kecamatan.</p>
+                    <span className="text-[10px] text-slate-400 mt-1 block">Baru saja</span>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex items-start gap-3 text-xs">
+                  <div className="w-8 h-8 rounded-xl bg-blue-100 text-blue-800 flex items-center justify-center shrink-0 font-bold">
+                    <Map className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-slate-900">Pemetaan Poligon GIS</p>
+                    <p className="text-[11px] text-slate-500">{stats.totalLahanCount} petak poligon aktif terverifikasi.</p>
+                    <span className="text-[10px] text-slate-400 mt-1 block">Hari ini</span>
+                  </div>
+                </div>
+
+                <div className="p-3 rounded-2xl bg-slate-50 border border-slate-100 flex items-start gap-3 text-xs">
+                  <div className="w-8 h-8 rounded-xl bg-amber-100 text-amber-800 flex items-center justify-center shrink-0 font-bold">
+                    <TrendingUp className="w-4 h-4" />
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="font-bold text-slate-900">Distribusi Kios KPL</p>
+                    <p className="text-[11px] text-slate-500">Penyaluran pupuk bersubsidi berjalan normal.</p>
+                    <span className="text-[10px] text-slate-400 mt-1 block">Aktif</span>
                   </div>
                 </div>
               </div>
-            ))}
+            </div>
+
+            <div className="mt-5 pt-3 border-t border-slate-100">
+              <Link
+                href="/laporan"
+                className="w-full inline-flex items-center justify-center gap-1.5 py-2 px-3 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs transition"
+              >
+                Lihat Audit Lengkap &rarr;
+              </Link>
+            </div>
           </div>
         </div>
       )}

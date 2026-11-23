@@ -54,6 +54,7 @@ const ICON_MAP: Record<string, any> = {
   'buku-kas': Wallet,
   'kepala-desa': Building2,
   f6: FileText,
+  pengaturan: Settings,
 };
 
 export default function Navbar() {
@@ -646,20 +647,6 @@ export default function Navbar() {
                               ? 'Akses Superadmin: Dapat mencentang RBAC'
                               : 'Lihat wewenang jabatan (Hanya Admin dapat ubah)'}
                           </div>
-                        </div>
-                      </Link>
-
-                      <Link
-                        href="/pengaturan"
-                        onClick={() => setDropdownOpen(false)}
-                        className="flex items-center gap-2.5 px-3 py-2 rounded-xl text-xs font-bold text-slate-800 hover:bg-emerald-50 hover:text-emerald-800 transition group"
-                      >
-                        <div className="w-7 h-7 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center shrink-0 group-hover:bg-emerald-600 group-hover:text-white transition">
-                          <Sliders className="w-4 h-4" />
-                        </div>
-                        <div>
-                          <div className="leading-tight">Pengaturan & Parameter Sistem</div>
-                          <div className="text-[10px] text-slate-400 font-normal">HET pupuk, instansi BPP, GIS & backup</div>
                         </div>
                       </Link>
 
