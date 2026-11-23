@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { Printer, ArrowLeft, Check, Copy, Sprout, CreditCard } from 'lucide-react';
+import { Printer, ArrowLeft, Check, Copy, Sprout, CreditCard, Palette } from 'lucide-react';
 import { copyToClipboard } from '@/lib/clipboard';
 
 interface KartuTaniClientProps {
@@ -10,6 +10,8 @@ interface KartuTaniClientProps {
   namaPetani: string;
   nik: string;
   qrPayload: string;
+  currentTheme?: 'EMERALD' | 'KTA_POKTAN';
+  onThemeChange?: (theme: 'EMERALD' | 'KTA_POKTAN') => void;
 }
 
 export default function KartuTaniClient({
@@ -17,6 +19,8 @@ export default function KartuTaniClient({
   namaPetani,
   nik,
   qrPayload,
+  currentTheme = 'KTA_POKTAN',
+  onThemeChange,
 }: KartuTaniClientProps) {
   const [copied, setCopied] = useState(false);
 
@@ -46,6 +50,31 @@ export default function KartuTaniClient({
       </div>
 
       <div className="flex items-center gap-2">
+        {onThemeChange && (
+          <div className="flex items-center bg-white border border-slate-200 rounded-xl p-1 shadow-2xs text-xs font-bold">
+            <button
+              onClick={() => onThemeChange('KTA_POKTAN')}
+              className={`px-3 py-1.5 rounded-lg transition ${
+                currentTheme === 'KTA_POKTAN'
+                  ? 'bg-red-600 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Tema 2: KTA Nasional
+            </button>
+            <button
+              onClick={() => onThemeChange('EMERALD')}
+              className={`px-3 py-1.5 rounded-lg transition ${
+                currentTheme === 'EMERALD'
+                  ? 'bg-emerald-800 text-white shadow-xs'
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              Tema 1: Emerald
+            </button>
+          </div>
+        )}
+
         <button
           onClick={handleCopy}
           className="inline-flex items-center gap-1.5 bg-white hover:bg-slate-50 text-slate-700 border border-slate-200 font-bold text-xs px-3.5 py-2 rounded-xl shadow-2xs transition"

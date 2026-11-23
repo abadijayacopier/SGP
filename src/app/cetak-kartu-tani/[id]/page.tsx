@@ -5,6 +5,7 @@ import KartuTaniClient from './KartuTaniClient';
 import QrCodeView from '@/components/ui/QrCodeView';
 import { Sprout, ShieldCheck, Layers, MapPin, CreditCard } from 'lucide-react';
 import { formatAngka } from '@/lib/calculations';
+import { KartuTaniTemaNasional } from '@/components/ui/KartuTaniTemaNasional';
 import {
   getDefaultNipForRole,
   generateAutoSignatureSvg,
@@ -155,80 +156,22 @@ export default async function CetakKartuTaniPage({ params }: Props) {
             className="p-3 sm:p-4 border-2 border-dashed border-slate-400 rounded-2xl sm:rounded-3xl bg-slate-50/50 grid grid-cols-2 gap-3 sm:gap-5 items-stretch print:grid-cols-2 print:gap-3"
             style={{ display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0, 1fr))' }}
           >
-            {/* SISI DEPAN KARTU TANI */}
-            <div className="rounded-2xl bg-gradient-to-br from-emerald-900 via-emerald-800 to-green-950 text-white p-3.5 sm:p-5 shadow-md relative overflow-hidden flex flex-col justify-between min-h-[235px] border border-emerald-700 print:min-h-[220px] print:p-3.5">
-              <div className="absolute -right-8 -bottom-8 w-40 h-40 rounded-full bg-emerald-400/10 pointer-events-none" />
-
-              {/* Header Kartu Depan */}
-              <div className="flex items-start justify-between gap-2 border-b border-emerald-700/80 pb-2">
-                <div className="flex items-center gap-2">
-                  <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg bg-amber-400 text-slate-950 flex items-center justify-center font-black shadow-xs shrink-0">
-                    <Sprout className="w-4 h-4 sm:w-5 sm:h-5" />
-                  </div>
-                  <div>
-                    <div className="text-[10px] sm:text-[11px] font-black tracking-wider uppercase text-amber-300 leading-none">
-                      KARTU TANI DIGITAL
-                    </div>
-                    <div className="text-[8px] sm:text-[9px] text-emerald-200 font-medium mt-0.5">
-                      PEMERINTAH KECAMATAN LEMBEYAN &bull; e-ALOKASI
-                    </div>
-                  </div>
-                </div>
-                <span className="font-mono text-[9px] sm:text-[10px] font-bold bg-emerald-950/80 px-2 py-0.5 rounded border border-emerald-600/60 text-emerald-200">
-                  {nomorKartu}
-                </span>
-              </div>
-
-              {/* Body Kartu Depan: Foto, Chip, Biodata & QR */}
-              <div className="my-2 sm:my-3 flex items-center justify-between gap-2 sm:gap-3">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  {/* Foto Petani */}
-                  <div className="w-14 h-18 sm:w-16 sm:h-20 rounded-xl bg-white p-0.5 shadow-sm shrink-0 overflow-hidden border border-amber-300">
-                    <img
-                      src={fotoPetani}
-                      alt={petani.nama}
-                      className="w-full h-full object-cover rounded-lg bg-slate-100"
-                    />
-                  </div>
-
-                  {/* Identitas */}
-                  <div className="space-y-0.5">
-                    {/* Simulasi Smart Chip */}
-                    <div className="w-7 h-4 sm:w-8 sm:h-5 rounded bg-gradient-to-br from-amber-200 via-yellow-400 to-amber-600 border border-amber-700/40 mb-1 shadow-2xs" />
-                    <div className="text-xs sm:text-sm font-black tracking-tight text-white uppercase leading-tight line-clamp-1">
-                      {petani.nama}
-                    </div>
-                    <div className="text-[10px] sm:text-[11px] font-mono text-amber-300 font-bold">
-                      NIK: {petani.nik}
-                    </div>
-                    <div className="text-[9px] sm:text-[10px] text-emerald-100 font-semibold line-clamp-1">
-                      {petani.poktan?.nama}
-                    </div>
-                    <div className="text-[8px] sm:text-[9px] text-emerald-300/90 line-clamp-1">
-                      Desa {petani.desa}, Kec. {petani.kecamatan}
-                    </div>
-                  </div>
-                </div>
-
-                {/* QR Code Scan Cepat */}
-                <div className="shrink-0">
-                  <QrCodeView value={qrPayload} size={62} />
-                </div>
-              </div>
-
-              {/* Footer Kartu Depan */}
-              <div className="pt-2 border-t border-emerald-700/80 flex items-center justify-between text-[9px] sm:text-[10px]">
-                <div>
-                  <span className="text-emerald-300">Luas: </span>
-                  <strong className="text-amber-300 font-black">
-                    {Number(petani.totalLuasLahan || 0).toFixed(2)} Ha ({petani.lahan.length} Blok)
-                  </strong>
-                </div>
-                <span className="inline-flex items-center gap-1 text-[8px] sm:text-[9px] font-bold bg-emerald-500/20 text-emerald-200 px-2 py-0.5 rounded-full border border-emerald-400/30">
-                  <ShieldCheck className="w-3 h-3 text-amber-300" /> TERVERIFIKASI
-                </span>
-              </div>
-            </div>
+            {/* SISI DEPAN: TEMA 2 KTA NASIONAL KELOMPOK TANI */}
+            <KartuTaniTemaNasional
+              petani={{
+                nama: petani.nama,
+                nik: petani.nik,
+                desa: petani.desa,
+                kecamatan: petani.kecamatan || 'Lembeyan',
+                kabupaten: petani.kabupaten || 'Magetan',
+                totalLuasLahan: Number(petani.totalLuasLahan || 0),
+                lahanCount: petani.lahan.length,
+                poktanNama: petani.poktan?.nama || 'POKTAN KEC. LEMBEYAN',
+                fotoPetani: fotoPetani,
+                nomorKartu: nomorKartu,
+                qrPayload: qrPayload,
+              }}
+            />
 
             {/* SISI BELAKANG KARTU TANI */}
             <div className="rounded-2xl bg-white border-2 border-slate-300 p-3.5 sm:p-4 shadow-md flex flex-col justify-between min-h-[235px] text-slate-800 print:min-h-[220px] print:p-3.5 relative overflow-hidden">

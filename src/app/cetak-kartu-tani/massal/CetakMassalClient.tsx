@@ -12,8 +12,10 @@ import {
   Scissors,
   Layers,
   CheckCircle2,
+  Palette,
 } from 'lucide-react';
 import QrCodeView from '@/components/ui/QrCodeView';
+import { KartuTaniTemaNasional } from '@/components/ui/KartuTaniTemaNasional';
 
 interface PetaniItem {
   id: string;
@@ -44,6 +46,7 @@ export function CetakMassalClient({ petaniList, poktanList }: Props) {
   const [selectedPoktan, setSelectedPoktan] = useState<string>('SEMUA');
   const [selectedDesa, setSelectedDesa] = useState<string>('SEMUA');
   const [printSide, setPrintSide] = useState<'DEPAN' | 'BELAKANG' | 'SEMUA'>('DEPAN');
+  const [cardTheme, setCardTheme] = useState<'KTA_POKTAN' | 'EMERALD'>('KTA_POKTAN');
 
   // Daftar unik desa
   const daftarDesa = useMemo(() => {
@@ -117,19 +120,31 @@ export function CetakMassalClient({ petaniList, poktanList }: Props) {
           {/* OPSI FILTER & SISI CETAK */}
           <div className="pt-4 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3 text-xs">
             <div>
-              <label className="font-bold text-slate-700 block mb-1">Filter Desa:</label>
-              <select
-                value={selectedDesa}
-                onChange={(e) => setSelectedDesa(e.target.value)}
-                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none"
-              >
-                <option value="SEMUA">Semua Desa ({petaniList.length} Petani)</option>
-                {daftarDesa.map((d) => (
-                  <option key={d} value={d}>
-                    Desa {d}
-                  </option>
-                ))}
-              </select>
+              <label className="font-bold text-slate-700 block mb-1">Pilihan Desain Kartu:</label>
+              <div className="grid grid-cols-2 gap-1 bg-slate-100 p-1 rounded-xl">
+                <button
+                  type="button"
+                  onClick={() => setCardTheme('KTA_POKTAN')}
+                  className={`py-1.5 px-2 text-center font-bold text-[11px] rounded-lg transition ${
+                    cardTheme === 'KTA_POKTAN'
+                      ? 'bg-red-600 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Tema 2: KTA Poktan
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setCardTheme('EMERALD')}
+                  className={`py-1.5 px-2 text-center font-bold text-[11px] rounded-lg transition ${
+                    cardTheme === 'EMERALD'
+                      ? 'bg-emerald-800 text-white shadow-xs'
+                      : 'text-slate-600 hover:text-slate-900'
+                  }`}
+                >
+                  Tema 1: Emerald
+                </button>
+              </div>
             </div>
 
             <div>
@@ -187,10 +202,20 @@ export function CetakMassalClient({ petaniList, poktanList }: Props) {
               </div>
             </div>
 
-            <div className="flex flex-col justify-end">
-              <div className="bg-amber-50 border border-amber-200 rounded-xl p-2 text-[10px] text-amber-900 leading-tight">
-                <strong>Tips Cetak Plong:</strong> Atur skala print ke <strong>100% (Actual Size)</strong>, ukuran kertas A4, margin "None" atau "Custom 0".
-              </div>
+            <div>
+              <label className="font-bold text-slate-700 block mb-1">Filter Desa:</label>
+              <select
+                value={selectedDesa}
+                onChange={(e) => setSelectedDesa(e.target.value)}
+                className="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none"
+              >
+                <option value="SEMUA">Semua Desa ({petaniList.length} Petani)</option>
+                {daftarDesa.map((d) => (
+                  <option key={d} value={d}>
+                    Desa {d}
+                  </option>
+                ))}
+              </select>
             </div>
           </div>
         </div>
@@ -318,79 +343,100 @@ export function CetakMassalClient({ petaniList, poktanList }: Props) {
                             <div className="cut-guide" />
 
                             {/* Inner Box Kartu Sisi Depan */}
-                            <div className="card-inner-box bg-gradient-to-br from-emerald-900 via-emerald-800 to-green-950 text-white p-2.5 flex flex-col justify-between shadow-xs">
-                              {/* Background Accent */}
-                              <div className="absolute -right-6 -bottom-6 w-28 h-28 rounded-full bg-emerald-400/10 pointer-events-none" />
+                            <div className="card-inner-box">
+                              {cardTheme === 'KTA_POKTAN' ? (
+                                <KartuTaniTemaNasional
+                                  compact
+                                  petani={{
+                                    nama: p.nama,
+                                    nik: p.nik,
+                                    desa: p.desa,
+                                    kecamatan: p.kecamatan,
+                                    kabupaten: p.kabupaten,
+                                    totalLuasLahan: p.totalLuasLahan,
+                                    lahanCount: p.lahanCount,
+                                    poktanNama: p.poktanNama,
+                                    fotoPetani: fotoPetani,
+                                    nomorKartu: nomorKartu,
+                                    qrPayload: qrPayload,
+                                  }}
+                                />
+                              ) : (
+                                <div className="w-full h-full bg-gradient-to-br from-emerald-900 via-emerald-800 to-green-950 text-white p-2.5 flex flex-col justify-between shadow-xs">
+                                  {/* Background Accent */}
+                                  <div className="absolute -right-6 -bottom-6 w-28 h-28 rounded-full bg-emerald-400/10 pointer-events-none" />
 
-                              {/* Header Kartu */}
-                              <div className="flex items-start justify-between gap-1 border-b border-emerald-700/80 pb-1">
-                                <div className="flex items-center gap-1.5">
-                                  <div className="w-5 h-5 rounded-md bg-amber-400 text-slate-950 flex items-center justify-center font-black shrink-0">
-                                    <Sprout className="w-3.5 h-3.5" />
+                                  {/* Header Kartu */}
+                                  <div className="flex items-start justify-between gap-1 border-b border-emerald-700/80 pb-1">
+                                    <div className="flex items-center gap-1.5">
+                                      <div className="w-5 h-5 rounded-md bg-amber-400 text-slate-950 flex items-center justify-center font-black shrink-0">
+                                        <Sprout className="w-3.5 h-3.5" />
+                                      </div>
+                                      <div>
+                                        <div className="text-[8.5px] font-black tracking-wider uppercase text-amber-300 leading-none">
+                                          KARTU TANI DIGITAL
+                                        </div>
+                                        <div className="text-[6.5px] text-emerald-200 font-medium leading-none mt-0.5">
+                                          KEC. LEMBEYAN &bull; e-ALOKASI
+                                        </div>
+                                      </div>
+                                    </div>
+                                    <span className="font-mono text-[7px] font-bold bg-emerald-950/90 px-1 py-0.2 rounded border border-emerald-600/50 text-emerald-200">
+                                      {nomorKartu}
+                                    </span>
                                   </div>
-                                  <div>
-                                    <div className="text-[8.5px] font-black tracking-wider uppercase text-amber-300 leading-none">
-                                      KARTU TANI DIGITAL
+
+                                  {/* Konten Tengah: Foto, Chip & Info */}
+                                  <div className="flex items-center justify-between gap-1.5 my-auto">
+                                    <div className="flex items-center gap-2">
+                                      {/* Foto Petani */}
+                                      <div className="w-11 h-14 rounded-lg bg-white p-0.5 shadow-2xs shrink-0 overflow-hidden border border-amber-300">
+                                        <img
+                                          src={fotoPetani}
+                                          alt={p.nama}
+                                          className="w-full h-full object-cover rounded-md bg-slate-100"
+                                        />
+                                      </div>
+
+                                      {/* Teks Identitas */}
+                                      <div className="space-y-0.5">
+                                        {/* Chip Emas */}
+                                        <div className="w-5 h-3 rounded bg-gradient-to-br from-amber-200 via-yellow-400 to-amber-600 border border-amber-700/40" />
+                                        <div className="text-[10px] font-black tracking-tight text-white uppercase leading-tight line-clamp-1">
+                                          {p.nama}
+                                        </div>
+                                        <div className="text-[8px] font-mono text-amber-300 font-bold leading-none">
+                                          NIK: {p.nik}
+                                        </div>
+                                        <div className="text-[7.5px] text-emerald-100 font-semibold line-clamp-1 leading-none mt-0.5">
+                                          {p.poktanNama}
+                                        </div>
+                                        <div className="text-[7px] text-emerald-300/90 line-clamp-1 leading-none">
+                                          Desa {p.desa}, Kec. {p.kecamatan}
+                                        </div>
+                                      </div>
                                     </div>
-                                    <div className="text-[6.5px] text-emerald-200 font-medium leading-none mt-0.5">
-                                      KEC. LEMBEYAN &bull; e-ALOKASI
+
+                                    {/* QR Code Cepat */}
+                                    <div className="shrink-0 bg-white p-0.5 rounded-md shadow-2xs">
+                                      <QrCodeView value={qrPayload} size={46} />
                                     </div>
+                                  </div>
+
+                                  {/* Footer Kartu */}
+                                  <div className="pt-1 border-t border-emerald-700/80 flex items-center justify-between text-[7.5px]">
+                                    <div>
+                                      <span className="text-emerald-300">Luas: </span>
+                                      <strong className="text-amber-300 font-black">
+                                        {p.totalLuasLahan.toFixed(2)} Ha ({p.lahanCount} Blok)
+                                      </strong>
+                                    </div>
+                                    <span className="inline-flex items-center gap-0.5 text-[6.5px] font-bold bg-emerald-500/20 text-emerald-200 px-1 py-0.2 rounded-full border border-emerald-400/30">
+                                      <ShieldCheck className="w-2.5 h-2.5 text-amber-300" /> RESMI
+                                    </span>
                                   </div>
                                 </div>
-                                <span className="font-mono text-[7px] font-bold bg-emerald-950/90 px-1 py-0.2 rounded border border-emerald-600/50 text-emerald-200">
-                                  {nomorKartu}
-                                </span>
-                              </div>
-
-                              {/* Konten Tengah: Foto, Chip & Info */}
-                              <div className="flex items-center justify-between gap-1.5 my-auto">
-                                <div className="flex items-center gap-2">
-                                  {/* Foto Petani */}
-                                  <div className="w-11 h-14 rounded-lg bg-white p-0.5 shadow-2xs shrink-0 overflow-hidden border border-amber-300">
-                                    <img
-                                      src={fotoPetani}
-                                      alt={p.nama}
-                                      className="w-full h-full object-cover rounded-md bg-slate-100"
-                                    />
-                                  </div>
-
-                                  {/* Teks Identitas */}
-                                  <div className="space-y-0.5">
-                                    {/* Chip Emas */}
-                                    <div className="w-5 h-3 rounded bg-gradient-to-br from-amber-200 via-yellow-400 to-amber-600 border border-amber-700/40" />
-                                    <div className="text-[10px] font-black tracking-tight text-white uppercase leading-tight line-clamp-1">
-                                      {p.nama}
-                                    </div>
-                                    <div className="text-[8px] font-mono text-amber-300 font-bold leading-none">
-                                      NIK: {p.nik}
-                                    </div>
-                                    <div className="text-[7.5px] text-emerald-100 font-semibold line-clamp-1 leading-none mt-0.5">
-                                      {p.poktanNama}
-                                    </div>
-                                    <div className="text-[7px] text-emerald-300/90 line-clamp-1 leading-none">
-                                      Desa {p.desa}, Kec. {p.kecamatan}
-                                    </div>
-                                  </div>
-                                </div>
-
-                                {/* QR Code Cepat */}
-                                <div className="shrink-0 bg-white p-0.5 rounded-md shadow-2xs">
-                                  <QrCodeView value={qrPayload} size={46} />
-                                </div>
-                              </div>
-
-                              {/* Footer Kartu */}
-                              <div className="pt-1 border-t border-emerald-700/80 flex items-center justify-between text-[7.5px]">
-                                <div>
-                                  <span className="text-emerald-300">Luas: </span>
-                                  <strong className="text-amber-300 font-black">
-                                    {p.totalLuasLahan.toFixed(2)} Ha ({p.lahanCount} Blok)
-                                  </strong>
-                                </div>
-                                <span className="inline-flex items-center gap-0.5 text-[6.5px] font-bold bg-emerald-500/20 text-emerald-200 px-1 py-0.2 rounded-full border border-emerald-400/30">
-                                  <ShieldCheck className="w-2.5 h-2.5 text-amber-300" /> RESMI
-                                </span>
-                              </div>
+                              )}
                             </div>
                           </div>
                         );
