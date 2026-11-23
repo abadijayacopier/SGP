@@ -573,19 +573,25 @@ export default async function CetakKalenderTanamPage({ params, searchParams }: P
             </div>
 
             {/* Stempel & TTD Digital */}
-            <div className="relative my-0 flex items-center justify-center">
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={stampSvg}
-                alt="Stempel BPP"
-                className="w-20 h-20 print:w-16 print:h-16 absolute -top-3 opacity-80 pointer-events-none"
-              />
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img
-                src={signatureSvg}
-                alt="TTD PPL"
-                className="w-32 h-12 print:w-24 print:h-9 relative z-10 pointer-events-none"
-              />
+            <div className="relative my-0 flex items-center justify-center min-h-[48px]">
+              {stampSvg ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={stampSvg}
+                  alt="Stempel BPP"
+                  className="w-20 h-20 print:w-16 print:h-16 absolute -top-3 opacity-80 pointer-events-none"
+                />
+              ) : null}
+              {signatureSvg ? (
+                /* eslint-disable-next-line @next/next/no-img-element */
+                <img
+                  src={signatureSvg}
+                  alt="TTD PPL"
+                  className="w-32 h-12 print:w-24 print:h-9 relative z-10 pointer-events-none"
+                />
+              ) : (
+                <div className="h-12 w-full" />
+              )}
             </div>
 
             <div>

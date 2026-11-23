@@ -301,16 +301,22 @@ export default function ErdkkPrintClient({
               Penyuluh Pertanian Lapangan (PPL) BPP Lembeyan
             </p>
             <div className="relative h-24 flex items-center justify-center my-1">
-              <img
-                src={pplStampSrc}
-                alt="Stempel BPP"
-                className="w-24 h-24 object-contain absolute left-1/2 -translate-x-20 opacity-80 pointer-events-none"
-              />
-              <img
-                src={pplSigSrc}
-                alt="TTD PPL"
-                className="h-20 object-contain relative z-10"
-              />
+              {pplStampSrc ? (
+                <img
+                  src={pplStampSrc}
+                  alt="Stempel BPP"
+                  className="w-24 h-24 object-contain absolute left-1/2 -translate-x-20 opacity-80 pointer-events-none"
+                />
+              ) : null}
+              {pplSigSrc ? (
+                <img
+                  src={pplSigSrc}
+                  alt="TTD PPL"
+                  className="h-20 object-contain relative z-10"
+                />
+              ) : (
+                <div className="h-20 w-full" />
+              )}
             </div>
             <p className="font-black text-slate-900 underline decoration-slate-800">
               {pplPejabat.nama}
@@ -324,16 +330,22 @@ export default function ErdkkPrintClient({
               Mengesahkan: Koordinator / Admin Kecamatan Lembeyan
             </p>
             <div className="relative h-24 flex items-center justify-center my-1">
-              <img
-                src={adminStampSrc}
-                alt="Stempel Kecamatan"
-                className="w-24 h-24 object-contain absolute left-1/2 -translate-x-20 opacity-85 pointer-events-none"
-              />
-              <img
-                src={adminSigSrc}
-                alt="TTD Koordinator"
-                className="h-20 object-contain relative z-10"
-              />
+              {adminStampSrc ? (
+                <img
+                  src={adminStampSrc}
+                  alt="Stempel Kecamatan"
+                  className="w-24 h-24 object-contain absolute left-1/2 -translate-x-20 opacity-85 pointer-events-none"
+                />
+              ) : null}
+              {adminSigSrc ? (
+                <img
+                  src={adminSigSrc}
+                  alt="TTD Koordinator"
+                  className="h-20 object-contain relative z-10"
+                />
+              ) : (
+                <div className="h-20 w-full" />
+              )}
             </div>
             <p className="font-black text-slate-900 underline decoration-slate-800">
               {adminPejabat.nama}

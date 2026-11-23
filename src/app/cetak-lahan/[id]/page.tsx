@@ -581,12 +581,14 @@ export default async function CetakLahanPage({ params }: Props) {
             <div>
               <p className="font-semibold text-slate-600">Petani Pemilik / Penggarap,</p>
               <div className="h-20 flex items-center justify-center relative my-1">
-                {petaniSig && (
+                {petaniSig ? (
                   <img
                     src={petaniSig}
                     alt="TTD Petani"
                     className="h-14 object-contain relative z-10"
                   />
+                ) : (
+                  <div className="h-14 w-full" />
                 )}
               </div>
               <p className="font-bold text-slate-900 underline uppercase">{lahan.petani?.nama}</p>
@@ -598,19 +600,21 @@ export default async function CetakLahanPage({ params }: Props) {
             <div>
               <p className="font-semibold text-slate-600">Ketua Kelompok Tani,</p>
               <div className="h-20 flex items-center justify-center relative my-1">
-                {poktanStamp && (
+                {poktanStamp ? (
                   <img
                     src={poktanStamp}
                     alt="Stempel Poktan"
                     className="h-18 w-18 object-contain absolute left-1/2 -translate-x-14 opacity-80 pointer-events-none"
                   />
-                )}
-                {poktanSig && (
+                ) : null}
+                {poktanSig ? (
                   <img
                     src={poktanSig}
                     alt="TTD Poktan"
                     className="h-14 object-contain relative z-10"
                   />
+                ) : (
+                  <div className="h-14 w-full" />
                 )}
               </div>
               <p className="font-bold text-slate-900 underline uppercase">
@@ -623,19 +627,21 @@ export default async function CetakLahanPage({ params }: Props) {
             <div>
               <p className="font-semibold text-slate-600">Petugas Penyuluh Lapangan (PPL),</p>
               <div className="h-20 flex items-center justify-center relative my-1">
-                {pplStamp && (
+                {pplStamp ? (
                   <img
                     src={pplStamp}
                     alt="Stempel BPP"
                     className="h-18 w-18 object-contain absolute left-1/2 -translate-x-14 opacity-80 pointer-events-none"
                   />
-                )}
-                {pplSig && (
+                ) : null}
+                {pplSig ? (
                   <img
                     src={pplSig}
                     alt="TTD PPL"
                     className="h-14 object-contain relative z-10"
                   />
+                ) : (
+                  <div className="h-14 w-full" />
                 )}
               </div>
               <p className="font-bold text-slate-900 underline uppercase">

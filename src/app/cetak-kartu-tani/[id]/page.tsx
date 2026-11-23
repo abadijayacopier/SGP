@@ -231,70 +231,57 @@ export default async function CetakKartuTaniPage({ params }: Props) {
             </div>
 
             {/* SISI BELAKANG KARTU TANI */}
-            <div className="rounded-2xl bg-white border-2 border-slate-300 p-3.5 sm:p-5 shadow-md flex flex-col justify-between min-h-[235px] text-slate-800 print:min-h-[220px] print:p-3.5">
+            <div className="rounded-2xl bg-white border-2 border-slate-300 p-3.5 sm:p-4 shadow-md flex flex-col justify-between min-h-[235px] text-slate-800 print:min-h-[220px] print:p-3.5 relative overflow-hidden">
               <div>
-                <div className="flex items-center justify-between border-b border-slate-200 pb-2 mb-2">
-                  <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-emerald-800">
-                    RINCIAN KUOTA E-RDKK & BLOK SAWAH GIS
-                  </span>
-                  <span className="text-[8px] sm:text-[9px] font-mono font-bold text-slate-500">
-                    TAHUN ANGGARAN 2026
-                  </span>
-                </div>
-
-                {/* Tabel Mini Kuota pada Belakang Kartu */}
-                {alokasiAktif ? (
-                  <div className="grid grid-cols-3 gap-1.5 text-center mb-2.5 print:gap-1 print:mb-2">
-                    <div className="bg-green-50 border border-green-200 rounded-lg p-1 sm:p-1.5">
-                      <span className="text-[8px] sm:text-[9px] font-bold text-green-700 block uppercase">Jatah Urea</span>
-                      <strong className="text-[11px] sm:text-xs font-black text-green-900">{alokasiAktif.jatahUreaKg} Kg</strong>
-                      <span className="text-[7px] sm:text-[8px] text-green-600 block">Sisa: {alokasiAktif.sisaUreaKg} Kg</span>
+                <div className="flex items-center justify-between border-b border-emerald-700/30 pb-1.5 mb-2">
+                  <div className="flex items-center gap-1.5">
+                    <div className="w-5 h-5 rounded-md bg-emerald-700 text-white flex items-center justify-center">
+                      <Sprout className="w-3 h-3" />
                     </div>
-                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-1 sm:p-1.5">
-                      <span className="text-[8px] sm:text-[9px] font-bold text-amber-700 block uppercase">Jatah NPK</span>
-                      <strong className="text-[11px] sm:text-xs font-black text-amber-900">{alokasiAktif.jatahNpkKg} Kg</strong>
-                      <span className="text-[7px] sm:text-[8px] text-amber-600 block">Sisa: {alokasiAktif.sisaNpkKg} Kg</span>
-                    </div>
-                    <div className="bg-slate-50 border border-slate-200 rounded-lg p-1 sm:p-1.5">
-                      <span className="text-[8px] sm:text-[9px] font-bold text-slate-600 block uppercase">Organik</span>
-                      <strong className="text-[11px] sm:text-xs font-black text-slate-800">{alokasiAktif.jatahOrganikKg} Kg</strong>
-                      <span className="text-[7px] sm:text-[8px] text-slate-500 block">Sisa: {alokasiAktif.sisaOrganikKg} Kg</span>
-                    </div>
-                  </div>
-                ) : (
-                  <div className="p-2 bg-slate-50 rounded-lg text-[9px] sm:text-[10px] text-slate-400 mb-2.5 text-center">
-                    Belum ada alokasi musim tanam aktif
-                  </div>
-                )}
-
-                {/* Daftar Kode Blok Sawah */}
-                <div className="mb-2">
-                  <span className="text-[8px] sm:text-[9px] font-bold text-slate-500 uppercase block mb-1">
-                    Daftar Blok Sawah Terdaftar ({petani.lahan.length} Petak):
-                  </span>
-                  <div className="flex flex-wrap gap-1">
-                    {petani.lahan.map((l: any) => (
-                      <span
-                        key={l.id}
-                        className="text-[8px] sm:text-[9px] font-mono font-bold bg-slate-100 border border-slate-200 px-1.5 py-0.5 rounded text-slate-700"
-                      >
-                        {l.kodeLahan} ({l.luasHa} Ha - {l.komoditas})
+                    <div>
+                      <span className="text-[9px] sm:text-[10px] font-black uppercase tracking-wider text-emerald-900 block leading-tight">
+                        TATA TERTIB & KETENTUAN KARTU TANI
                       </span>
-                    ))}
+                      <span className="text-[7px] sm:text-[8px] text-slate-500 block leading-none">
+                        KEMENTERIAN PERTANIAN REPUBLIK INDONESIA
+                      </span>
+                    </div>
                   </div>
+                  <span className="text-[8px] sm:text-[9px] font-mono font-bold bg-emerald-50 text-emerald-800 border border-emerald-200 px-1.5 py-0.5 rounded">
+                    PERMENTAN RI
+                  </span>
                 </div>
+
+                {/* Aturan Standar Kementerian Pertanian & Kelompok Tani */}
+                <ol className="list-decimal list-outside pl-3.5 space-y-1 text-[8px] sm:text-[8.5px] leading-tight text-slate-700">
+                  <li>
+                    <strong className="text-slate-900">Hak Pemegang:</strong> Kartu ini identitas resmi penerima pupuk bersubsidi dan bantuan saprodi e-RDKK yang sah.
+                  </li>
+                  <li>
+                    <strong className="text-slate-900">Penebusan Resmi:</strong> Wajib membawa kartu ini beserta <strong>e-KTP asli</strong> saat bertransaksi di Kios Pupuk Lengkap (KPL) / Poktan resmi terdaftar.
+                  </li>
+                  <li>
+                    <strong className="text-slate-900">Larangan Keras:</strong> Kartu ini <strong>dilarang dipindahtangankan</strong>, dipinjamkan, digadaikan, atau diperjualbelikan kepada pihak lain.
+                  </li>
+                  <li>
+                    <strong className="text-slate-900">Sesuai Alokasi:</strong> Volume penebusan pupuk bersubsidi dibatasi secara ketat berdasarkan kuota e-RDKK dan jadwal musim tanam aktif.
+                  </li>
+                  <li>
+                    <strong className="text-slate-900">Kehilangan / Kerusakan:</strong> Apabila kartu hilang, rusak, atau terjadi mutasi lahan, segera melapor ke Pengurus Poktan atau Balai Penyuluhan Pertanian (BPP).
+                  </li>
+                </ol>
               </div>
 
-              {/* Ketentuan & Pengesahan Belakang Kartu */}
-              <div className="pt-2 border-t border-slate-200 flex items-end justify-between text-[8px] sm:text-[9px] text-slate-500">
-                <ul className="list-disc list-inside space-y-0.5 max-w-[210px] sm:max-w-[230px] leading-tight">
-                  <li>Wajib ditunjukkan beserta KTP asli saat penebusan.</li>
-                  <li>Pindai QR Code pada petugas Kios untuk validasi kuota.</li>
-                </ul>
+              {/* Legalitas & Kontak Pengaduan Belakang Kartu */}
+              <div className="pt-1.5 border-t border-slate-200 flex items-end justify-between text-[7.5px] sm:text-[8px] text-slate-500">
+                <div>
+                  <span className="block font-medium text-slate-600">Layanan & Pengaduan e-RDKK:</span>
+                  <span className="font-mono text-emerald-800 font-bold block">BPP Kec. Lembeyan &bull; 0812-3456-7890</span>
+                </div>
                 <div className="text-right shrink-0">
-                  <span className="block text-[7px] sm:text-[8px] text-slate-400">Disahkan elektronik:</span>
-                  <strong className="text-slate-800 font-bold block text-[8px] sm:text-[9px]">Koordinator BPP Kec.</strong>
-                  <span className="font-mono text-[7px] sm:text-[8px]">Lembeyan</span>
+                  <span className="block text-slate-400">Diterbitkan oleh:</span>
+                  <strong className="text-slate-800 font-bold block text-[8px] sm:text-[9px]">BPP Kec. Lembeyan</strong>
+                  <span className="font-mono text-slate-500">Kabupaten Magetan</span>
                 </div>
               </div>
             </div>
@@ -409,11 +396,15 @@ export default async function CetakKartuTaniPage({ params }: Props) {
           <div>
             <p className="text-slate-600 font-semibold print:text-[10px]">Pemegang Kartu Tani,</p>
             <div className="h-16 sm:h-20 flex items-center justify-center relative my-0.5 sm:my-1">
-              <img
-                src={petaniSig}
-                alt="TTD Petani"
-                className="h-12 sm:h-14 object-contain relative z-10"
-              />
+              {petaniSig ? (
+                <img
+                  src={petaniSig}
+                  alt="TTD Petani"
+                  className="h-12 sm:h-14 object-contain relative z-10"
+                />
+              ) : (
+                <div className="h-12 sm:h-14 w-full" />
+              )}
             </div>
             <p className="font-bold text-slate-900 underline uppercase print:text-[11px]">{petani.nama}</p>
             <p className="text-[9px] sm:text-[10px] font-mono text-slate-500">
@@ -423,18 +414,22 @@ export default async function CetakKartuTaniPage({ params }: Props) {
           <div>
             <p className="text-slate-600 font-semibold print:text-[10px]">Ketua {petani.poktan?.nama},</p>
             <div className="h-16 sm:h-20 flex items-center justify-center relative my-0.5 sm:my-1">
-              {poktanStamp && (
+              {poktanStamp ? (
                 <img
                   src={poktanStamp}
                   alt="Stempel Poktan"
                   className="h-16 w-16 sm:h-18 sm:w-18 object-contain absolute left-1/2 -translate-x-12 sm:-translate-x-14 opacity-80 pointer-events-none"
                 />
+              ) : null}
+              {poktanSig ? (
+                <img
+                  src={poktanSig}
+                  alt="TTD Poktan"
+                  className="h-12 sm:h-14 object-contain relative z-10"
+                />
+              ) : (
+                <div className="h-12 sm:h-14 w-full" />
               )}
-              <img
-                src={poktanSig}
-                alt="TTD Poktan"
-                className="h-12 sm:h-14 object-contain relative z-10"
-              />
             </div>
             <p className="font-bold text-slate-900 underline uppercase print:text-[11px]">{poktanName}</p>
             <p className="text-[9px] sm:text-[10px] font-mono text-slate-600">{poktanNip}</p>
@@ -443,18 +438,22 @@ export default async function CetakKartuTaniPage({ params }: Props) {
           <div>
             <p className="text-slate-600 font-semibold print:text-[10px]">Penyuluh Pertanian Lapangan (PPL),</p>
             <div className="h-16 sm:h-20 flex items-center justify-center relative my-0.5 sm:my-1">
-              {pplStamp && (
+              {pplStamp ? (
                 <img
                   src={pplStamp}
                   alt="Stempel BPP"
                   className="h-16 w-16 sm:h-18 sm:w-18 object-contain absolute left-1/2 -translate-x-12 sm:-translate-x-14 opacity-80 pointer-events-none"
                 />
+              ) : null}
+              {pplSig ? (
+                <img
+                  src={pplSig}
+                  alt="TTD PPL"
+                  className="h-12 sm:h-14 object-contain relative z-10"
+                />
+              ) : (
+                <div className="h-12 sm:h-14 w-full" />
               )}
-              <img
-                src={pplSig}
-                alt="TTD PPL"
-                className="h-12 sm:h-14 object-contain relative z-10"
-              />
             </div>
             <p className="font-bold text-slate-900 underline uppercase print:text-[11px]">
               {pplName}

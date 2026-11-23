@@ -18,6 +18,7 @@ import {
   Layers,
   Search,
   Building2,
+  CreditCard,
 } from 'lucide-react';
 import * as XLSX from 'xlsx';
 import {
@@ -446,33 +447,65 @@ export default function LaporanPage() {
         </button>
       </div>
 
-      {/* BANNER KHUSUS: DOKUMEN SPJ MODEL F-6 PUPUK INDONESIA HOLDING */}
-      <div className="no-print bg-gradient-to-r from-amber-500 via-amber-600 to-emerald-700 text-white p-5 rounded-3xl shadow-md border border-amber-400/40 flex flex-col sm:flex-row items-center justify-between gap-4">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center shrink-0 border border-white/30">
-            <FileText className="w-6 h-6 text-white" />
-          </div>
-          <div className="space-y-0.5">
-            <div className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider bg-black/20 px-2.5 py-0.5 rounded-full text-amber-100">
-              <CheckCircle2 className="w-3 h-3 text-emerald-300" />
-              Format Resmi Pupuk Indonesia Holding Company (PIHC)
+      {/* BANNER KHUSUS: DOKUMEN SPJ MODEL F-6 & CETAK MASSAL KARTU TANI */}
+      <div className="no-print grid grid-cols-1 md:grid-cols-2 gap-4">
+        {/* Banner 1: Model F-6 */}
+        <div className="bg-gradient-to-r from-amber-500 via-amber-600 to-emerald-700 text-white p-5 rounded-3xl shadow-md border border-amber-400/40 flex flex-col justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center shrink-0 border border-white/30">
+              <FileText className="w-6 h-6 text-white" />
             </div>
-            <h3 className="text-base sm:text-lg font-black text-white">
-              Cetak Dokumen SPJ Model F-6 (Laporan Penyaluran & Stok Pengecer Lengkap)
-            </h3>
-            <p className="text-xs text-amber-100 max-w-2xl leading-relaxed">
-              Laporan resmi bulanan Kios Pupuk Lengkap (KPL) ke seluruh Poktan se-Kecamatan Lembeyan dilengkapi rincian stok awal, penerimaan DO, penyaluran HET, dan pengesahan Tripartit resmi dengan QR Code.
-            </p>
+            <div className="space-y-0.5">
+              <div className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider bg-black/20 px-2.5 py-0.5 rounded-full text-amber-100">
+                <CheckCircle2 className="w-3 h-3 text-emerald-300" />
+                Format Resmi PIHC (SPJ)
+              </div>
+              <h3 className="text-base sm:text-lg font-black text-white">
+                Cetak Dokumen SPJ Model F-6
+              </h3>
+              <p className="text-xs text-amber-100 leading-relaxed">
+                Laporan bulanan Kios Pupuk Lengkap (KPL) ke seluruh Poktan se-Kecamatan Lembeyan dilengkapi stok awal, penerimaan DO, dan penyaluran HET.
+              </p>
+            </div>
           </div>
+
+          <Link
+            href="/cetak-f6"
+            className="self-start inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-900 font-black text-xs shadow-md transition"
+          >
+            <Printer className="w-4 h-4 text-amber-600" />
+            Buka & Cetak Model F-6
+          </Link>
         </div>
 
-        <Link
-          href="/cetak-f6"
-          className="shrink-0 inline-flex items-center gap-2 px-5 py-3 rounded-2xl bg-white hover:bg-slate-50 text-slate-900 font-black text-xs sm:text-sm shadow-lg transition transform hover:-translate-y-0.5"
-        >
-          <Printer className="w-4 h-4 text-amber-600" />
-          Buka & Cetak Model F-6
-        </Link>
+        {/* Banner 2: Cetak Massal Kartu Tani A4 */}
+        <div className="bg-gradient-to-r from-emerald-600 via-teal-700 to-slate-800 text-white p-5 rounded-3xl shadow-md border border-emerald-400/40 flex flex-col justify-between gap-4">
+          <div className="flex items-start gap-3">
+            <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center shrink-0 border border-white/30">
+              <CreditCard className="w-6 h-6 text-emerald-200" />
+            </div>
+            <div className="space-y-0.5">
+              <div className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider bg-black/20 px-2.5 py-0.5 rounded-full text-emerald-200">
+                <CheckCircle2 className="w-3 h-3 text-emerald-300" />
+                Standar CR-80 (86 x 54 mm)
+              </div>
+              <h3 className="text-base sm:text-lg font-black text-white">
+                Cetak Massal Kartu Tani (10 Kartu per A4)
+              </h3>
+              <p className="text-xs text-emerald-100 leading-relaxed">
+                Cetak kartu tanda pengenal petani digital 2 kolom &times; 5 baris pada lembar A4 lengkap dengan garis potong plong kartu dan aturan Permentan RI di sisi belakang.
+              </p>
+            </div>
+          </div>
+
+          <Link
+            href="/cetak-kartu-tani/massal"
+            className="self-start inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs shadow-md transition"
+          >
+            <Printer className="w-4 h-4 text-slate-950" />
+            Buka Cetak Massal 10 Kartu / A4
+          </Link>
+        </div>
       </div>
 
       {/* SECTION 1: KARTU EKSPOR EXCEL (.XLSX) */}
