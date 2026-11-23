@@ -1,0 +1,126 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1579.4065416666665 816.5" width="1579.4065416666665" height="816.5" style="--bg:#18181B;--fg:#F4F4F5;--line:#71717A;--muted:#A1A1AA;--surface:#27272A;--border:#3F3F46;background:var(--bg)">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+  text { font-family: 'Inter', system-ui, sans-serif; }
+  svg {
+    /* Derived from --bg and --fg (overridable via --line, --accent, etc.) */
+    --_text:          var(--fg);
+    --_text-sec:      var(--muted, color-mix(in srgb, var(--fg) 60%, var(--bg)));
+    --_text-muted:    var(--muted, color-mix(in srgb, var(--fg) 40%, var(--bg)));
+    --_text-faint:    color-mix(in srgb, var(--fg) 25%, var(--bg));
+    --_line:          var(--line, color-mix(in srgb, var(--fg) 50%, var(--bg)));
+    --_arrow:         var(--accent, color-mix(in srgb, var(--fg) 85%, var(--bg)));
+    --_node-fill:     var(--surface, color-mix(in srgb, var(--fg) 3%, var(--bg)));
+    --_node-stroke:   var(--border, color-mix(in srgb, var(--fg) 20%, var(--bg)));
+    --_group-fill:    var(--bg);
+    --_group-hdr:     color-mix(in srgb, var(--fg) 5%, var(--bg));
+    --_inner-stroke:  color-mix(in srgb, var(--fg) 12%, var(--bg));
+    --_key-badge:     color-mix(in srgb, var(--fg) 10%, var(--bg));
+  }
+</style>
+<defs>
+  <marker id="arrowhead" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto">
+    <polygon points="0 0, 8 2.5, 0 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+  <marker id="arrowhead-start" markerWidth="8" markerHeight="5" refX="1" refY="2.5" orient="auto-start-reverse">
+    <polygon points="8 0, 0 2.5, 8 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+</defs>
+<g class="subgraph" data-id="ADMIN" data-label="1. ADMIN KECAMATAN / DINAS (SUPERADMIN)">
+  <rect x="282.6735416666668" y="40" width="1256.7329999999997" height="96.9" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="282.6735416666668" y="40" width="1256.7329999999997" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="294.6735416666668" y="54" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">1. ADMIN KECAMATAN / DINAS (SUPERADMIN)</text>
+</g>
+<g class="subgraph" data-id="KIOS" data-label="2. KIOS RESMI / PENGECER (KPL)">
+  <rect x="40" y="253.20000000000002" width="1243.395" height="96.9" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="40" y="253.20000000000002" width="1243.395" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="52" y="267.20000000000005" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">2. KIOS RESMI / PENGECER (KPL)</text>
+</g>
+<g class="subgraph" data-id="POKTAN" data-label="3. KELOMPOK TANI (POKTAN)">
+  <rect x="552.0512916666669" y="466.40000000000003" width="925.2099999999998" height="96.9" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="552.0512916666669" y="466.40000000000003" width="925.2099999999998" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="564.0512916666669" y="480.40000000000003" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">3. KELOMPOK TANI (POKTAN)</text>
+</g>
+<g class="subgraph" data-id="PETANI" data-label="4. PETANI &amp; PENYULUH (PPL)">
+  <rect x="652.2342916666669" y="679.5999999999999" width="724.8439999999998" height="96.9" rx="0" ry="0" fill="var(--_group-fill)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <rect x="652.2342916666669" y="679.5999999999999" width="724.8439999999998" height="28" rx="0" ry="0" fill="var(--_group-hdr)" stroke="var(--_node-stroke)" stroke-width="1" />
+  <text x="664.2342916666669" y="693.5999999999999" font-size="12" font-weight="600" fill="var(--_text-sec)" dy="4.199999999999999">4. PETANI &amp; PENYULUH (PPL)</text>
+</g>
+<polyline class="edge" data-from="ADMIN" data-to="KIOS" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Terbitkan Akun Petugas" points="596.8567916666668,136.9 596.8567916666668,172.9 577.8176666666666,172.9 577.8176666666666,241.20000000000002 454.465,241.20000000000002 454.465,253.20000000000002" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="ADMIN" data-to="POKTAN" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Terbitkan Akun Petugas" points="1225.2232916666667,136.9 1225.2232916666667,241.20000000000002 1373.395,241.20000000000002 1373.395,454.40000000000003 1168.8579583333333,454.40000000000003 1168.8579583333333,466.40000000000003" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="ADMIN" data-to="KIOS" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Daftarkan KPL Berizin" points="911.0400416666666,136.9 911.0400416666666,172.9 818.789125,172.9 818.789125,241.20000000000002 868.9300000000001,241.20000000000002 868.9300000000001,253.20000000000002" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="KIOS" data-to="POKTAN" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Kirim Pupuk DO" points="661.6975,350.1 661.6975,454.40000000000003 860.4546250000001,454.40000000000003 860.4546250000001,466.40000000000003" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="POKTAN" data-to="PETANI" data-style="solid" data-arrow-start="false" data-arrow-end="true" data-label="Salurkan Pupuk" points="1014.6562916666667,563.3 1014.6562916666667,679.5999999999999" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<g class="edge-label" data-from="ADMIN" data-to="KIOS" data-label="Terbitkan Akun Petugas">
+  <rect x="511.8176666666666" y="179.9" width="131.69800000000004" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="577.6666666666666" y="195.05" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Terbitkan Akun Petugas</text>
+</g>
+<g class="edge-label" data-from="ADMIN" data-to="POKTAN" data-label="Terbitkan Akun Petugas">
+  <rect x="1307.395" y="393.1" width="131.69800000000004" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="1373.244" y="408.25" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Terbitkan Akun Petugas</text>
+</g>
+<g class="edge-label" data-from="ADMIN" data-to="KIOS" data-label="Daftarkan KPL Berizin">
+  <rect x="756.789125" y="179.9" width="123.38199999999999" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="818.480125" y="195.05" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Daftarkan KPL Berizin</text>
+</g>
+<g class="edge-label" data-from="KIOS" data-to="POKTAN" data-label="Kirim Pupuk DO">
+  <rect x="616.1975" y="393.1" width="90.11800000000001" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="661.2565" y="408.25" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Kirim Pupuk DO</text>
+</g>
+<g class="edge-label" data-from="POKTAN" data-to="PETANI" data-label="Salurkan Pupuk">
+  <rect x="967.1562916666667" y="606.3" width="94.27600000000001" height="30.3" rx="2" ry="2" fill="var(--bg)" stroke="var(--_inner-stroke)" stroke-width="1" />
+  <text x="1014.2942916666667" y="621.4499999999999" text-anchor="middle" font-size="11" font-weight="400" fill="var(--_text-sec)" dy="3.8499999999999996">Salurkan Pupuk</text>
+</g>
+<g class="node" data-id="A1" data-label="Kelola Pengguna Sistem &amp; Hak Akses (User &amp; RBAC)" data-shape="rectangle">
+  <rect x="594.6285416666667" y="84" width="345.76" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="767.5085416666667" y="102.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Kelola Pengguna Sistem &amp; Hak Akses (User &amp; RBAC)</text>
+</g>
+<g class="node" data-id="A2" data-label="Registrasi Kios Resmi (KPL) Baru" data-shape="rectangle">
+  <rect x="968.3885416666667" y="84" width="237.57399999999996" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1087.1755416666667" y="102.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Registrasi Kios Resmi (KPL) Baru</text>
+</g>
+<g class="node" data-id="A3" data-label="Otorisasi &amp; Pengesahan Kuota e-RDKK" data-shape="rectangle">
+  <rect x="298.6735416666668" y="84" width="267.9549999999999" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="432.65104166666674" y="102.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Otorisasi &amp; Pengesahan Kuota e-RDKK</text>
+</g>
+<g class="node" data-id="A4" data-label="Monitoring Lintas Gudang Kios &amp; Distribusi" data-shape="rectangle">
+  <rect x="1233.9625416666665" y="84" width="289.44399999999996" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1378.6845416666665" y="102.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Monitoring Lintas Gudang Kios &amp; Distribusi</text>
+</g>
+<g class="node" data-id="K1" data-label="Catat DO Pasokan Masuk dari Distributor Petrokimia" data-shape="rectangle">
+  <rect x="308.977" y="297.20000000000005" width="345.01899999999995" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="481.4865" y="315.65000000000003" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Catat DO Pasokan Masuk dari Distributor Petrokimia</text>
+</g>
+<g class="node" data-id="K2" data-label="Kirim Pasokan ke Poktan (Surat Jalan DO)" data-shape="rectangle">
+  <rect x="681.9959999999999" y="297.20000000000005" width="286.47999999999996" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="825.2359999999999" y="315.65000000000003" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Kirim Pasokan ke Poktan (Surat Jalan DO)</text>
+</g>
+<g class="node" data-id="K3" data-label="Kasir Penebusan Pupuk Petani" data-shape="rectangle">
+  <rect x="56" y="297.20000000000005" width="224.97699999999995" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="168.4885" y="315.65000000000003" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Kasir Penebusan Pupuk Petani</text>
+</g>
+<g class="node" data-id="K4" data-label="Cetak Laporan Bulanan SPJ Model F-6" data-shape="rectangle">
+  <rect x="996.4759999999999" y="297.20000000000005" width="270.919" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1131.9354999999998" y="315.65000000000003" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Cetak Laporan Bulanan SPJ Model F-6</text>
+</g>
+<g class="node" data-id="P1" data-label="Terima Alokasi Pupuk Droping dari Kios" data-shape="rectangle">
+  <rect x="883.2722916666668" y="510.40000000000003" width="275.3649999999999" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1020.9547916666668" y="528.85" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Terima Alokasi Pupuk Droping dari Kios</text>
+</g>
+<g class="node" data-id="P2" data-label="Kasir Tebus Internal Poktan &amp; Buku Kas" data-shape="rectangle">
+  <rect x="1186.6372916666667" y="510.40000000000003" width="274.624" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1323.9492916666668" y="528.85" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Kasir Tebus Internal Poktan &amp; Buku Kas</text>
+</g>
+<g class="node" data-id="P3" data-label="Verifikasi Anggota &amp; Ajukan Usulan Lahan" data-shape="rectangle">
+  <rect x="568.0512916666669" y="510.40000000000003" width="287.22099999999995" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="711.6617916666669" y="528.85" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Verifikasi Anggota &amp; Ajukan Usulan Lahan</text>
+</g>
+<g class="node" data-id="T1" data-label="Petani: Cek Kuota Mandiri via NIK &amp; Cetak Kartu Tani" data-shape="rectangle">
+  <rect x="668.2342916666669" y="723.5999999999999" width="344.2779999999999" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="840.3732916666668" y="742.05" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">Petani: Cek Kuota Mandiri via NIK &amp; Cetak Kartu Tani</text>
+</g>
+<g class="node" data-id="T2" data-label="PPL: Digitasi Peta Spasial Sawah GIS Lapangan" data-shape="rectangle">
+  <rect x="1040.512291666667" y="723.5999999999999" width="320.5659999999999" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1200.7952916666668" y="742.05" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">PPL: Digitasi Peta Spasial Sawah GIS Lapangan</text>
+</g>
+</svg>

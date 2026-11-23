@@ -3,6 +3,7 @@ import Link from 'next/link';
 import { prisma } from '@/lib/prisma';
 import { notFound } from 'next/navigation';
 import PrintButton from './PrintButton';
+import LahanPrintHeader from './LahanPrintHeader';
 import QrCodeView from '@/components/ui/QrCodeView';
 import { MapPin, Sprout, ShieldCheck, Layers } from 'lucide-react';
 import {
@@ -212,42 +213,13 @@ export default async function CetakLahanPage({ params }: Props) {
 
   return (
     <div className="min-h-screen bg-slate-100 py-6 sm:py-10 text-slate-900 print:bg-white print:py-0">
-      {/* Action Bar & Navigasi Cepat Antar Petak Lahan (Hanya tampil di layar) */}
-      <div className="max-w-4xl mx-auto px-4 mb-6 space-y-3 no-print">
-        <div className="flex items-center justify-between">
-          <a
-            href="/peta"
-            className="text-xs font-bold text-slate-600 hover:text-emerald-700 transition"
-          >
-            &larr; Kembali ke Peta GIS Kecamatan Lembeyan
-          </a>
-          <PrintButton />
-        </div>
-
-        {/* Bar Pemilih Cepat Petak Lahan Petani untuk Membandingkan Poligon & Koordinat */}
-        <div className="bg-white border border-slate-200 rounded-2xl p-3 shadow-xs flex flex-wrap items-center gap-2">
-          <span className="text-[11px] font-bold text-slate-500 flex items-center gap-1 mr-1">
-            <Layers className="w-3.5 h-3.5 text-emerald-600" />
-            Pilih Petak Lahan:
-          </span>
-          {allLahanList.map((item) => {
-            const isCurrent = item.id === lahan.id;
-            return (
-              <Link
-                key={item.id}
-                href={`/cetak-lahan/${item.id}`}
-                className={`px-2.5 py-1 rounded-xl text-[11px] font-bold transition border ${
-                  isCurrent
-                    ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
-                    : 'bg-slate-50 hover:bg-emerald-50 text-slate-700 border-slate-200'
-                }`}
-              >
-                {item.kodeLahan} &bull; {item.petani?.nama} ({item.komoditas} - {item.luasHa} Ha)
-              </Link>
-            );
-          })}
-        </div>
-      </div>
+      {/* Header Terpadu Navigasi, Dropdown Ganti Lahan & Aksi Cetak */}
+      <LahanPrintHeader
+        currentLahanId={lahan.id}
+        allLahanList={allLahanList}
+        lahanPetaniList={lahan.petani?.lahan || []}
+        namaPetani={lahan.petani?.nama || ''}
+      />
 
       {/* Lembar Dokumen Resmi Format A4 */}
       <div className="max-w-4xl mx-auto bg-white border border-slate-300 shadow-xl rounded-2xl p-8 sm:p-12 print-page print:border-none print:shadow-none print:p-0">
@@ -609,11 +581,13 @@ export default async function CetakLahanPage({ params }: Props) {
             <div>
               <p className="font-semibold text-slate-600">Petani Pemilik / Penggarap,</p>
               <div className="h-20 flex items-center justify-center relative my-1">
-                <img
-                  src={petaniSig}
-                  alt="TTD Petani"
-                  className="h-14 object-contain relative z-10"
-                />
+                {petaniSig && (
+                  <img
+                    src={petaniSig}
+                    alt="TTD Petani"
+                    className="h-14 object-contain relative z-10"
+                  />
+                )}
               </div>
               <p className="font-bold text-slate-900 underline uppercase">{lahan.petani?.nama}</p>
               <p className="text-[10px] text-slate-500 font-mono">
@@ -631,11 +605,13 @@ export default async function CetakLahanPage({ params }: Props) {
                     className="h-18 w-18 object-contain absolute left-1/2 -translate-x-14 opacity-80 pointer-events-none"
                   />
                 )}
-                <img
-                  src={poktanSig}
-                  alt="TTD Poktan"
-                  className="h-14 object-contain relative z-10"
-                />
+                {poktanSig && (
+                  <img
+                    src={poktanSig}
+                    alt="TTD Poktan"
+                    className="h-14 object-contain relative z-10"
+                  />
+                )}
               </div>
               <p className="font-bold text-slate-900 underline uppercase">
                 {poktanName}
@@ -654,11 +630,13 @@ export default async function CetakLahanPage({ params }: Props) {
                     className="h-18 w-18 object-contain absolute left-1/2 -translate-x-14 opacity-80 pointer-events-none"
                   />
                 )}
-                <img
-                  src={pplSig}
-                  alt="TTD PPL"
-                  className="h-14 object-contain relative z-10"
-                />
+                {pplSig && (
+                  <img
+                    src={pplSig}
+                    alt="TTD PPL"
+                    className="h-14 object-contain relative z-10"
+                  />
+                )}
               </div>
               <p className="font-bold text-slate-900 underline uppercase">
                 {pplName}

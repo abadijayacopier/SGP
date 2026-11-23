@@ -1678,6 +1678,18 @@ export default function PetaPage() {
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
                       <div>
                         <label className="block font-bold text-slate-700 mb-0.5 text-[11px]">
+                          Nomor Telepon / WhatsApp
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="08xxxxxxxxxx"
+                          value={quickPetaniData.telepon}
+                          onChange={(e) => setQuickPetaniData({ ...quickPetaniData, telepon: e.target.value })}
+                          className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-0.5 text-[11px]">
                           Tempat Lahir
                         </label>
                         <input
@@ -1699,6 +1711,9 @@ export default function PetaPage() {
                           className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs"
                         />
                       </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       <div>
                         <label className="block font-bold text-slate-700 mb-0.5 text-[11px]">
                           Nama Ibu Kandung
@@ -1711,12 +1726,24 @@ export default function PetaPage() {
                           className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs"
                         />
                       </div>
-                    </div>
-
-                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       <div>
                         <label className="block font-bold text-slate-700 mb-0.5 text-[11px]">
-                          Desa / Kelurahan (Kec. Lembeyan)
+                          Alamat Dusun / RT / RW
+                        </label>
+                        <input
+                          type="text"
+                          placeholder="Dusun Krajan RT 01 / RW 01"
+                          value={quickPetaniData.alamat}
+                          onChange={(e) => setQuickPetaniData({ ...quickPetaniData, alamat: e.target.value })}
+                          className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-0.5 text-[11px]">
+                          Desa / Kelurahan
                         </label>
                         <select
                           value={quickPetaniData.desa}
@@ -1732,14 +1759,24 @@ export default function PetaPage() {
                       </div>
                       <div>
                         <label className="block font-bold text-slate-700 mb-0.5 text-[11px]">
-                          Alamat Dusun / RT / RW
+                          Kecamatan
                         </label>
                         <input
                           type="text"
-                          placeholder="Dusun Krajan RT 01 / RW 01"
-                          value={quickPetaniData.alamat}
-                          onChange={(e) => setQuickPetaniData({ ...quickPetaniData, alamat: e.target.value })}
-                          className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs"
+                          value={quickPetaniData.kecamatan}
+                          onChange={(e) => setQuickPetaniData({ ...quickPetaniData, kecamatan: e.target.value })}
+                          className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-medium"
+                        />
+                      </div>
+                      <div>
+                        <label className="block font-bold text-slate-700 mb-0.5 text-[11px]">
+                          Kabupaten / Kota
+                        </label>
+                        <input
+                          type="text"
+                          value={quickPetaniData.kabupaten}
+                          onChange={(e) => setQuickPetaniData({ ...quickPetaniData, kabupaten: e.target.value })}
+                          className="w-full px-2.5 py-1.5 bg-white border border-slate-300 rounded-lg text-xs font-medium"
                         />
                       </div>
                     </div>

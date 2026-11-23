@@ -23,6 +23,17 @@
     },
     "mutasi": [
       {
+        "id": "MUT-BATAL-1793599814255",
+        "tanggal": "2026-11-02T06:10:14.255Z",
+        "tipe": "BATAL_TEBUS",
+        "nomorNota": "NT-POK/2026/001",
+        "keterangan": "Pembatalan Transaksi Kasir NT-POK/2026/001 (Kasdi Mulyono): Stok dikembalikan",
+        "ureaKg": 100,
+        "npkKg": 100,
+        "organikKg": 40,
+        "petugas": "Kasir Poktan (Pembatalan)"
+      },
+      {
         "id": "MUT-BATAL-1793444375298",
         "tanggal": "2026-10-31T10:59:35.298Z",
         "tipe": "BATAL_TEBUS",

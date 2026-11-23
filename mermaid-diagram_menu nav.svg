@@ -1,0 +1,113 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 3502.388 286.70000000000005" width="3502.388" height="286.70000000000005" style="--bg:#18181B;--fg:#F4F4F5;--line:#71717A;--muted:#A1A1AA;--surface:#27272A;--border:#3F3F46;background:var(--bg)">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&amp;display=swap');
+  text { font-family: 'Inter', system-ui, sans-serif; }
+  svg {
+    /* Derived from --bg and --fg (overridable via --line, --accent, etc.) */
+    --_text:          var(--fg);
+    --_text-sec:      var(--muted, color-mix(in srgb, var(--fg) 60%, var(--bg)));
+    --_text-muted:    var(--muted, color-mix(in srgb, var(--fg) 40%, var(--bg)));
+    --_text-faint:    color-mix(in srgb, var(--fg) 25%, var(--bg));
+    --_line:          var(--line, color-mix(in srgb, var(--fg) 50%, var(--bg)));
+    --_arrow:         var(--accent, color-mix(in srgb, var(--fg) 85%, var(--bg)));
+    --_node-fill:     var(--surface, color-mix(in srgb, var(--fg) 3%, var(--bg)));
+    --_node-stroke:   var(--border, color-mix(in srgb, var(--fg) 20%, var(--bg)));
+    --_group-fill:    var(--bg);
+    --_group-hdr:     color-mix(in srgb, var(--fg) 5%, var(--bg));
+    --_inner-stroke:  color-mix(in srgb, var(--fg) 12%, var(--bg));
+    --_key-badge:     color-mix(in srgb, var(--fg) 10%, var(--bg));
+  }
+</style>
+<defs>
+  <marker id="arrowhead" markerWidth="8" markerHeight="5" refX="7" refY="2.5" orient="auto">
+    <polygon points="0 0, 8 2.5, 0 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+  <marker id="arrowhead-start" markerWidth="8" markerHeight="5" refX="1" refY="2.5" orient="auto-start-reverse">
+    <polygon points="8 0, 0 2.5, 8 5" fill="var(--_arrow)" stroke="var(--_arrow)" stroke-width="0.75" stroke-linejoin="round" />
+  </marker>
+</defs>
+<polyline class="edge" data-from="NAV" data-to="M1" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1400.7754999999997,76.9 1400.7754999999997,94.9 241.03799999999973,94.9 241.03799999999973,112.9" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="NAV" data-to="M2" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1400.7754999999997,76.9 1400.7754999999997,94.9 459.5584999999998,94.9 459.5584999999998,112.9" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="NAV" data-to="M3" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1400.7754999999997,76.9 1400.7754999999997,94.9 1400.7754999999997,94.9 1400.7754999999997,112.9" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="NAV" data-to="M4" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1400.7754999999997,76.9 1400.7754999999997,94.9 2229.6742499999996,94.9 2229.6742499999996,112.9" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="NAV" data-to="M5" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1400.7754999999997,76.9 1400.7754999999997,94.9 2972.805,94.9 2972.805,112.9" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="M2" data-to="S2A" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="459.5584999999998,149.8 459.5584999999998,167.8 176.57099999999997,167.8 176.57099999999997,185.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="M2" data-to="S2B" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="459.5584999999998,149.8 459.5584999999998,167.8 459.5584999999998,167.8 459.5584999999998,185.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="M2" data-to="S2C" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="459.5584999999998,149.8 459.5584999999998,167.8 758.4774999999998,167.8 758.4774999999998,185.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="M3" data-to="S3A" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1400.7754999999997,149.8 1400.7754999999997,167.8 1086.6659999999995,167.8 1086.6659999999995,185.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="M3" data-to="S3B" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1400.7754999999997,149.8 1400.7754999999997,167.8 1400.7754999999997,167.8 1400.7754999999997,185.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="M3" data-to="S3C" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="1400.7754999999997,149.8 1400.7754999999997,167.8 1710.4389999999996,167.8 1710.4389999999996,185.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="M4" data-to="S4A" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="2229.6742499999996,149.8 2229.6742499999996,167.8 2006.3939999999996,167.8 2006.3939999999996,185.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="M4" data-to="S4B" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="2229.6742499999996,149.8 2229.6742499999996,167.8 2323.0969999999998,167.8 2323.0969999999998,185.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="M5" data-to="S5A" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="2972.805,149.8 2972.805,167.8 2656.843,167.8 2656.843,185.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="M5" data-to="S5B" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="2972.805,149.8 2972.805,167.8 2972.805,167.8 2972.805,185.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<polyline class="edge" data-from="M5" data-to="S5C" data-style="solid" data-arrow-start="false" data-arrow-end="true" points="2972.805,149.8 2972.805,167.8 3304.6984999999995,167.8 3304.6984999999995,185.8" fill="none" stroke="var(--_line)" stroke-width="1" marker-end="url(#arrowhead)" />
+<g class="node" data-id="NAV" data-label="NAVBAR UTAMA ADMIN (5 Tombol Ringkas Tanpa Geser)" data-shape="rectangle">
+  <rect x="1210.4819999999997" y="40" width="380.58699999999993" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1400.7754999999997" y="58.45" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">NAVBAR UTAMA ADMIN (5 Tombol Ringkas Tanpa Geser)</text>
+</g>
+<g class="node" data-id="M1" data-label="1. Dashboard (Direct Link)" data-shape="rectangle">
+  <rect x="145.59249999999975" y="112.9" width="190.891" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="241.03799999999973" y="131.35000000000002" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">1. Dashboard (Direct Link)</text>
+</g>
+<g class="node" data-id="M2" data-label="2. e-RDKK &amp; Spasial GIS ▾" data-shape="rectangle">
+  <rect x="364.4834999999998" y="112.9" width="190.14999999999998" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="459.5584999999998" y="131.35000000000002" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">2. e-RDKK &amp; Spasial GIS ▾</text>
+</g>
+<g class="node" data-id="M3" data-label="3. Rantai Pasok &amp; Distribusi ▾" data-shape="rectangle">
+  <rect x="1295.6969999999997" y="112.9" width="210.15699999999995" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1400.7754999999997" y="131.35000000000002" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">3. Rantai Pasok &amp; Distribusi ▾</text>
+</g>
+<g class="node" data-id="M4" data-label="4. Kelembagaan Petani ▾" data-shape="rectangle">
+  <rect x="2137.9337499999997" y="112.9" width="183.48099999999997" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="2229.6742499999996" y="131.35000000000002" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">4. Kelembagaan Petani ▾</text>
+</g>
+<g class="node" data-id="M5" data-label="5. Laporan &amp; Sistem ▾" data-shape="rectangle">
+  <rect x="2889.586" y="112.9" width="166.438" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="2972.805" y="131.35000000000002" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">5. Laporan &amp; Sistem ▾</text>
+</g>
+<g class="node" data-id="S2A" data-label="• Otorisasi Usulan e-RDKK (/pengajuan)" data-shape="rectangle">
+  <rect x="40" y="185.8" width="273.14199999999994" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="176.57099999999997" y="204.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">• Otorisasi Usulan e-RDKK (/pengajuan)</text>
+</g>
+<g class="node" data-id="S2B" data-label="• Peta GIS &amp; Poligon Lahan (/peta)" data-shape="rectangle">
+  <rect x="341.1419999999998" y="185.8" width="236.833" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="459.5584999999998" y="204.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">• Peta GIS &amp; Poligon Lahan (/peta)</text>
+</g>
+<g class="node" data-id="S2C" data-label="• Alokasi &amp; Dosis Pupuk MT (/alokasi-poktan)" data-shape="rectangle">
+  <rect x="605.9749999999999" y="185.8" width="305.0049999999999" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="758.4774999999998" y="204.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">• Alokasi &amp; Dosis Pupuk MT (/alokasi-poktan)</text>
+</g>
+<g class="node" data-id="S3A" data-label="• Gudang Stok KPL &amp; Registrasi Kios (/kios)" data-shape="rectangle">
+  <rect x="938.9799999999996" y="185.8" width="295.37199999999996" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1086.6659999999995" y="204.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">• Gudang Stok KPL &amp; Registrasi Kios (/kios)</text>
+</g>
+<g class="node" data-id="S3B" data-label="• Surat Jalan &amp; Distribusi DO (/distribusi)" data-shape="rectangle">
+  <rect x="1262.3519999999999" y="185.8" width="276.8469999999999" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1400.7754999999997" y="204.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">• Surat Jalan &amp; Distribusi DO (/distribusi)</text>
+</g>
+<g class="node" data-id="S3C" data-label="• Kasir Penebusan Poktan (/kasir-poktan)" data-shape="rectangle">
+  <rect x="1567.1989999999996" y="185.8" width="286.47999999999996" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="1710.4389999999996" y="204.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">• Kasir Penebusan Poktan (/kasir-poktan)</text>
+</g>
+<g class="node" data-id="S4A" data-label="• Database Petani &amp; Poktan (/petani)" data-shape="rectangle">
+  <rect x="1881.6789999999996" y="185.8" width="249.42999999999998" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="2006.3939999999996" y="204.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">• Database Petani &amp; Poktan (/petani)</text>
+</g>
+<g class="node" data-id="S4B" data-label="• Buku Kas Keuangan Poktan (/buku-kas-poktan)" data-shape="rectangle">
+  <rect x="2159.109" y="185.8" width="327.97599999999994" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="2323.0969999999998" y="204.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">• Buku Kas Keuangan Poktan (/buku-kas-poktan)</text>
+</g>
+<g class="node" data-id="S5A" data-label="• Pusat Laporan &amp; Rekapitulasi (/laporan)" data-shape="rectangle">
+  <rect x="2515.085" y="185.8" width="283.51599999999996" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="2656.843" y="204.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">• Pusat Laporan &amp; Rekapitulasi (/laporan)</text>
+</g>
+<g class="node" data-id="S5B" data-label="• Cetak Dokumen SPJ Model F-6 (/cetak-f6)" data-shape="rectangle">
+  <rect x="2826.6009999999997" y="185.8" width="292.40799999999996" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="2972.805" y="204.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">• Cetak Dokumen SPJ Model F-6 (/cetak-f6)</text>
+</g>
+<g class="node" data-id="S5C" data-label="• Manajemen Akun &amp; Hak Akses RBAC (/users)" data-shape="rectangle">
+  <rect x="3147.0089999999996" y="185.8" width="315.37899999999996" height="36.900000000000006" rx="0" ry="0" fill="var(--_node-fill)" stroke="var(--_node-stroke)" stroke-width="0.75" />
+  <text x="3304.6984999999995" y="204.25" text-anchor="middle" font-size="13" font-weight="500" fill="var(--_text)" dy="4.55">• Manajemen Akun &amp; Hak Akses RBAC (/users)</text>
+</g>
+</svg>
