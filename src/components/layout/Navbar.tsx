@@ -698,16 +698,6 @@ export default function Navbar() {
                   )}
 
                   <div className="pt-1.5 px-2 flex flex-col gap-1">
-                    {permissions.canManageUsers && (
-                      <Link
-                        href="/users"
-                        onClick={() => setDropdownOpen(false)}
-                        className="flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold text-purple-800 bg-purple-50 hover:bg-purple-100 border border-purple-200 transition"
-                      >
-                        <UserCog className="w-4 h-4 text-purple-600" />
-                        Manajemen User & Centang Matriks RBAC
-                      </Link>
-                    )}
                     <button
                       type="button"
                       onClick={handleLogout}
