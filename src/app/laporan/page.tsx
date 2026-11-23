@@ -447,63 +447,92 @@ export default function LaporanPage() {
         </button>
       </div>
 
-      {/* BANNER KHUSUS: DOKUMEN SPJ MODEL F-6 & CETAK MASSAL KARTU TANI */}
-      <div className="no-print grid grid-cols-1 md:grid-cols-2 gap-4">
+      {/* BANNER KHUSUS: DOKUMEN SPJ MODEL F-6 & CETAK MASSAL KARTU TANI & EDITOR KTA */}
+      <div className="no-print grid grid-cols-1 md:grid-cols-3 gap-4">
         {/* Banner 1: Model F-6 */}
-        <div className="bg-gradient-to-r from-amber-500 via-amber-600 to-emerald-700 text-white p-5 rounded-3xl shadow-md border border-amber-400/40 flex flex-col justify-between gap-4">
+        <div className="bg-gradient-to-r from-amber-500 via-amber-600 to-emerald-700 text-white p-5 rounded-3xl shadow-md border border-amber-400/40 flex flex-col justify-between gap-3">
           <div className="flex items-start gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center shrink-0 border border-white/30">
-              <FileText className="w-6 h-6 text-white" />
+            <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center shrink-0 border border-white/30">
+              <FileText className="w-5 h-5 text-white" />
             </div>
             <div className="space-y-0.5">
-              <div className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider bg-black/20 px-2.5 py-0.5 rounded-full text-amber-100">
-                <CheckCircle2 className="w-3 h-3 text-emerald-300" />
-                Format Resmi PIHC (SPJ)
+              <div className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider bg-black/20 px-2 py-0.5 rounded-full text-amber-100">
+                <CheckCircle2 className="w-2.5 h-2.5 text-emerald-300" />
+                Format Resmi PIHC
               </div>
-              <h3 className="text-base sm:text-lg font-black text-white">
+              <h3 className="text-sm sm:text-base font-black text-white leading-tight">
                 Cetak Dokumen SPJ Model F-6
               </h3>
-              <p className="text-xs text-amber-100 leading-relaxed">
-                Laporan bulanan Kios Pupuk Lengkap (KPL) ke seluruh Poktan se-Kecamatan Lembeyan dilengkapi stok awal, penerimaan DO, dan penyaluran HET.
+              <p className="text-[11px] text-amber-100 leading-snug line-clamp-2">
+                Laporan bulanan KPL se-Kecamatan Lembeyan dilengkapi stok awal dan penyaluran HET.
               </p>
             </div>
           </div>
 
           <Link
             href="/cetak-f6"
-            className="self-start inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-white hover:bg-slate-50 text-slate-900 font-black text-xs shadow-md transition"
+            className="self-start inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-white hover:bg-slate-50 text-slate-900 font-black text-xs shadow-md transition"
           >
-            <Printer className="w-4 h-4 text-amber-600" />
-            Buka & Cetak Model F-6
+            <Printer className="w-3.5 h-3.5 text-amber-600" />
+            Buka Model F-6
           </Link>
         </div>
 
         {/* Banner 2: Cetak Massal Kartu Tani A4 */}
-        <div className="bg-gradient-to-r from-emerald-600 via-teal-700 to-slate-800 text-white p-5 rounded-3xl shadow-md border border-emerald-400/40 flex flex-col justify-between gap-4">
+        <div className="bg-gradient-to-r from-emerald-600 via-teal-700 to-slate-800 text-white p-5 rounded-3xl shadow-md border border-emerald-400/40 flex flex-col justify-between gap-3">
           <div className="flex items-start gap-3">
-            <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center shrink-0 border border-white/30">
-              <CreditCard className="w-6 h-6 text-emerald-200" />
+            <div className="w-10 h-10 rounded-2xl bg-white/20 backdrop-blur-xs flex items-center justify-center shrink-0 border border-white/30">
+              <CreditCard className="w-5 h-5 text-emerald-200" />
             </div>
             <div className="space-y-0.5">
-              <div className="inline-flex items-center gap-1.5 text-[10px] font-black uppercase tracking-wider bg-black/20 px-2.5 py-0.5 rounded-full text-emerald-200">
-                <CheckCircle2 className="w-3 h-3 text-emerald-300" />
-                Standar CR-80 (86 x 54 mm)
+              <div className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider bg-black/20 px-2 py-0.5 rounded-full text-emerald-200">
+                <CheckCircle2 className="w-2.5 h-2.5 text-emerald-300" />
+                Standar CR-80 (A4)
               </div>
-              <h3 className="text-base sm:text-lg font-black text-white">
-                Cetak Massal Kartu Tani (10 Kartu per A4)
+              <h3 className="text-sm sm:text-base font-black text-white leading-tight">
+                Cetak Massal 10 Kartu per A4
               </h3>
-              <p className="text-xs text-emerald-100 leading-relaxed">
-                Cetak kartu tanda pengenal petani digital 2 kolom &times; 5 baris pada lembar A4 lengkap dengan garis potong plong kartu dan aturan Permentan RI di sisi belakang.
+              <p className="text-[11px] text-emerald-100 leading-snug line-clamp-2">
+                Format 2&times;5 pas plong kartu dengan bleed dan aturan nasional Permentan RI.
               </p>
             </div>
           </div>
 
           <Link
             href="/cetak-kartu-tani/massal"
-            className="self-start inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs shadow-md transition"
+            className="self-start inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs shadow-md transition"
           >
-            <Printer className="w-4 h-4 text-slate-950" />
-            Buka Cetak Massal 10 Kartu / A4
+            <Printer className="w-3.5 h-3.5 text-slate-950" />
+            Buka Cetak 10 Kartu
+          </Link>
+        </div>
+
+        {/* Banner 3: Desain KTA Kelompok Tani (Sawah & Petani Caping) */}
+        <div className="bg-gradient-to-r from-[#0B5D3B] via-[#137A4E] to-emerald-950 text-white p-5 rounded-3xl shadow-md border border-amber-400/60 flex flex-col justify-between gap-3">
+          <div className="flex items-start gap-3">
+            <div className="w-10 h-10 rounded-2xl bg-amber-400 text-slate-950 flex items-center justify-center shrink-0 font-black shadow-xs">
+              <CreditCard className="w-5 h-5" />
+            </div>
+            <div className="space-y-0.5">
+              <div className="inline-flex items-center gap-1 text-[9px] font-black uppercase tracking-wider bg-black/20 px-2 py-0.5 rounded-full text-amber-200">
+                <CheckCircle2 className="w-2.5 h-2.5 text-amber-300" />
+                Desain Sawah & Padi
+              </div>
+              <h3 className="text-sm sm:text-base font-black text-white leading-tight">
+                Editor KTA Kelompok Tani
+              </h3>
+              <p className="text-[11px] text-emerald-100 leading-snug line-clamp-2">
+                Desain eksklusif gelombang emas & sawah terasering tanpa elemen bank. Sesuaikan data & cetak ID Card.
+              </p>
+            </div>
+          </div>
+
+          <Link
+            href="/editor-kartu-tani"
+            className="self-start inline-flex items-center gap-1.5 px-3.5 py-2 rounded-xl bg-amber-400 hover:bg-amber-300 text-slate-950 font-black text-xs shadow-md transition"
+          >
+            <Printer className="w-3.5 h-3.5 text-slate-950" />
+            Buka Editor KTA
           </Link>
         </div>
       </div>
