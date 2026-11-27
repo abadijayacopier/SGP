@@ -4,6 +4,7 @@ import React from 'react';
 import QrCodeView from '@/components/ui/QrCodeView';
 
 export interface KartuAnggotaData {
+  id?: string;
   nama: string;
   nomorAnggota: string;
   nik?: string;
@@ -12,6 +13,7 @@ export interface KartuAnggotaData {
   desaKecamatan: string;
   fotoUrl?: string;
   qrPayload?: string;
+  poktanId?: string;
 }
 
 interface Props {
@@ -133,12 +135,9 @@ export function KartuAnggotaPoktanPreview({
         <QrCodeView
           value={
             data.qrPayload ||
-            JSON.stringify({
-              kta: data.nomorAnggota,
-              nama: data.nama,
-              poktan: data.kelompokTani,
-              desa: data.desaKecamatan,
-            })
+            (typeof window !== 'undefined'
+              ? `${window.location.origin}/verifikasi?q=KARTUTANI:${data.nik || data.nomorAnggota}`
+              : `/verifikasi?q=KARTUTANI:${data.nik || data.nomorAnggota}`)
           }
           size={38}
         />

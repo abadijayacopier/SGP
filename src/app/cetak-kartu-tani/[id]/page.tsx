@@ -100,10 +100,11 @@ export default async function CetakKartuTaniPage({ params }: Props) {
       : generateOfficialStampSvg('PPL', pplUser?.wilayah || 'BPP Kec. Lembeyan');
   const pplNip = pplUser?.nip || getDefaultNipForRole('PPL');
 
-  const nomorKartu = `KT-3509-2026-${petani.nik.slice(-6)}`;
-  const qrPayload = `/verifikasi?code=${petani.nik}`;
+  const nomorKartu = petani.nomorKta || `KT-3509-${petani.nik.slice(-4)}`;
+  const qrPayload = `/verifikasi?q=KARTUTANI:${petani.nik}`;
   const alokasiAktif = petani.alokasiPupuk?.[0];
   const fotoPetani =
+    petani.fotoUrl ||
     petaniUser?.avatarUrl ||
     petani.penyaluranPupuk?.[0]?.fotoDiri ||
     '/uploads/sample_petani_face.svg';

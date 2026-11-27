@@ -26,6 +26,8 @@ interface PetaniItem {
   kabupaten: string;
   totalLuasLahan: number;
   fotoUrl: string | null;
+  nomorKta?: string | null;
+  jabatan?: string | null;
   poktanNama: string;
   poktanId: string | null;
   lahanCount: number;
@@ -323,14 +325,11 @@ export function CetakMassalClient({ petaniList, poktanList }: Props) {
 
                     <div className="card-grid">
                       {pagePetani.map((p, idx) => {
-                        const nomorKartu = `KT-3509-${p.nik.slice(-6)}`;
-                        const qrPayload = JSON.stringify({
-                          nik: p.nik,
-                          nama: p.nama,
-                          desa: p.desa,
-                          luas: p.totalLuasLahan,
-                          poktan: p.poktanNama,
-                        });
+                        const nomorKartu = p.nomorKta || `KT-3509-${p.nik.slice(-4)}`;
+                        const qrPayload =
+                          typeof window !== 'undefined'
+                            ? `${window.location.origin}/verifikasi?q=KARTUTANI:${p.nik}`
+                            : `/verifikasi?q=KARTUTANI:${p.nik}`;
                         const fotoPetani =
                           p.fotoUrl ||
                           `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(

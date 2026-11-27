@@ -99,6 +99,9 @@ export async function POST(request: Request) {
       kecamatan,
       kabupaten,
       poktanId,
+      nomorKta,
+      jabatan,
+      fotoUrl,
     } = body;
 
     if (!nik || !nama || !poktanId) {
@@ -163,6 +166,9 @@ export async function POST(request: Request) {
         kecamatan: kecamatan || 'Lembeyan',
         kabupaten: kabupaten || 'Magetan',
         poktanId,
+        nomorKta: nomorKta ? String(nomorKta).trim() : `KT-3509-${cleanNik.slice(-4)}`,
+        jabatan: jabatan ? String(jabatan).trim() : 'Anggota Aktif',
+        fotoUrl: fotoUrl || null,
         statusVerifikasi: 'TERVERIFIKASI',
         totalLuasLahan: 0,
       },
@@ -203,6 +209,9 @@ export async function PATCH(request: Request) {
       kecamatan,
       kabupaten,
       poktanId,
+      nomorKta,
+      jabatan,
+      fotoUrl,
     } = body;
 
     const cleanNik = nik ? String(nik).trim().replace(/\D/g, '') : undefined;
@@ -233,6 +242,9 @@ export async function PATCH(request: Request) {
           kecamatan: kecamatan || targetPetani.kecamatan || 'Lembeyan',
           kabupaten: kabupaten || targetPetani.kabupaten || 'Magetan',
           poktanId: poktanId || targetPetani.poktanId,
+          nomorKta: nomorKta !== undefined ? (nomorKta ? String(nomorKta).trim() : null) : targetPetani.nomorKta,
+          jabatan: jabatan !== undefined ? (jabatan ? String(jabatan).trim() : 'Anggota Aktif') : targetPetani.jabatan,
+          fotoUrl: fotoUrl !== undefined ? fotoUrl : targetPetani.fotoUrl,
         },
         include: {
           poktan: true,

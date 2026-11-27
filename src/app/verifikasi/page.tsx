@@ -23,6 +23,7 @@ import {
   Layers,
   Receipt,
   RotateCcw,
+  CreditCard,
 } from 'lucide-react';
 import { formatRupiah } from '@/lib/calculations';
 
@@ -184,7 +185,16 @@ function VerifikasiContent() {
                   {result.nomorDokumen}
                 </div>
               </div>
-              <div className="no-print">
+              <div className="no-print flex items-center gap-2">
+                {result.docType === 'KARTU_TANI' && result.pihakTerkait?.id && (
+                  <Link
+                    href={`/editor-kartu-tani?petaniId=${result.pihakTerkait.id}`}
+                    className="px-3.5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition"
+                  >
+                    <CreditCard className="w-4 h-4" />
+                    <span>Buka Editor KTA</span>
+                  </Link>
+                )}
                 <button
                   type="button"
                   onClick={() => window.print()}
@@ -198,18 +208,44 @@ function VerifikasiContent() {
 
             {/* Rincian Pihak Terkait */}
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 bg-slate-50 p-4 rounded-2xl border border-slate-200 text-xs">
-              <div>
-                <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                  Pihak Penerima / Pemilik:
-                </span>
-                <div className="text-sm font-black text-slate-900">
-                  {result.pihakTerkait.nama || result.pihakTerkait.namaPemilik || result.pihakTerkait.namaPemohon}
-                </div>
-                <div className="text-slate-600 font-mono mt-0.5">
-                  NIK: <span className="font-bold text-slate-800">{result.pihakTerkait.identitasMasked}</span>
-                </div>
-                <div className="text-slate-500 mt-0.5">
-                  Kelompok Tani: <strong className="text-slate-700">{result.pihakTerkait.poktan}</strong>
+              <div className="flex items-start gap-3">
+                {result.docType === 'KARTU_TANI' && (
+                  <div className="w-14 h-18 rounded-lg overflow-hidden border border-amber-300 bg-white shadow-xs shrink-0 flex items-center justify-center">
+                    {result.pihakTerkait.fotoUrl ? (
+                      // eslint-disable-next-line @next/next/no-img-element
+                      <img
+                        src={result.pihakTerkait.fotoUrl}
+                        alt="Foto Petani"
+                        className="w-full h-full object-cover"
+                      />
+                    ) : (
+                      <User className="w-6 h-6 text-slate-300" />
+                    )}
+                  </div>
+                )}
+                <div>
+                  <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
+                    Pihak Penerima / Pemilik:
+                  </span>
+                  <div className="text-sm font-black text-slate-900">
+                    {result.pihakTerkait.nama || result.pihakTerkait.namaPemilik || result.pihakTerkait.namaPemohon}
+                  </div>
+                  {result.pihakTerkait.nomorKta && (
+                    <div className="text-amber-700 font-mono font-bold text-[11px] mt-0.5">
+                      No. KTA: {result.pihakTerkait.nomorKta}
+                    </div>
+                  )}
+                  {result.pihakTerkait.jabatan && (
+                    <div className="text-slate-600 font-semibold text-[10.5px]">
+                      Jabatan: <span className="text-emerald-700 font-bold">{result.pihakTerkait.jabatan}</span>
+                    </div>
+                  )}
+                  <div className="text-slate-600 font-mono mt-0.5">
+                    NIK: <span className="font-bold text-slate-800">{result.pihakTerkait.identitasMasked}</span>
+                  </div>
+                  <div className="text-slate-500 mt-0.5">
+                    Kelompok Tani: <strong className="text-slate-700">{result.pihakTerkait.poktan}</strong>
+                  </div>
                 </div>
               </div>
 

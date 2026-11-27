@@ -1024,12 +1024,20 @@ export default function PetaniPage() {
                       onClick={(e) => e.stopPropagation()}
                     >
                       <Link
-                        href={`/cetak-kartu-tani/${item.id}`}
-                        target="_blank"
-                        className="flex-1 min-w-[110px] inline-flex items-center justify-center gap-1 bg-amber-400 hover:bg-amber-500 active:scale-95 text-slate-950 font-black text-xs py-2 px-2.5 rounded-xl shadow-xs transition"
+                        href={`/editor-kartu-tani?petaniId=${item.id}`}
+                        className="flex-1 min-w-[90px] inline-flex items-center justify-center gap-1 bg-emerald-600 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs py-2 px-2 rounded-xl shadow-xs transition"
                       >
                         <CreditCard className="w-3.5 h-3.5" />
-                        <span>Kartu Tani</span>
+                        <span>Edit KTA</span>
+                      </Link>
+
+                      <Link
+                        href={`/cetak-kartu-tani/${item.id}`}
+                        target="_blank"
+                        className="flex-1 min-w-[90px] inline-flex items-center justify-center gap-1 bg-amber-400 hover:bg-amber-500 active:scale-95 text-slate-950 font-black text-xs py-2 px-2 rounded-xl shadow-xs transition"
+                      >
+                        <Printer className="w-3.5 h-3.5" />
+                        <span>Cetak</span>
                       </Link>
 
                       <button
@@ -1135,13 +1143,21 @@ export default function PetaniPage() {
                         <td className="py-3.5 px-4 text-right">
                           <div className="flex items-center justify-end gap-1.5">
                             <Link
+                              href={`/editor-kartu-tani?petaniId=${item.id}`}
+                              onClick={(e) => e.stopPropagation()}
+                              className="inline-flex items-center gap-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-2.5 py-1.5 rounded-lg shadow-2xs transition whitespace-nowrap"
+                            >
+                              <CreditCard className="w-3.5 h-3.5" />
+                              Edit KTA
+                            </Link>
+                            <Link
                               href={`/cetak-kartu-tani/${item.id}`}
                               target="_blank"
                               onClick={(e) => e.stopPropagation()}
                               className="inline-flex items-center gap-1 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black text-xs px-2.5 py-1.5 rounded-lg shadow-2xs transition whitespace-nowrap"
                             >
-                              <CreditCard className="w-3.5 h-3.5" />
-                              Kartu Tani
+                              <Printer className="w-3.5 h-3.5" />
+                              Cetak
                             </Link>
                             <button
                               type="button"

@@ -64,7 +64,12 @@ export async function GET(request: Request) {
     // -------------------------------------------------------------
     const petani = await prisma.petani.findFirst({
       where: {
-        OR: [{ nik: query }, { id: query }, { nama: { equals: query } }],
+        OR: [
+          { nik: query },
+          { id: query },
+          { nomorKta: query },
+          { nama: { equals: query } },
+        ],
       },
       include: {
         poktan: true,
@@ -79,14 +84,19 @@ export async function GET(request: Request) {
         success: true,
         found: true,
         docType: 'KARTU_TANI',
-        docTypeLabel: 'Kartu Tani Digital & Hak Alokasi Pupuk e-RDKK',
-        nomorDokumen: `KT-3509-2026-${petani.nik.slice(-6)}`,
-        statusBadge: 'TERVERIFIKASI & AKTIF',
+        docTypeLabel: 'Kartu Tanda Anggota (KTA) & Hak Alokasi Pupuk e-RDKK',
+        nomorDokumen: petani.nomorKta || `KT-3509-${petani.nik.slice(-4)}`,
+        statusBadge: 'KTA SAH & TERVERIFIKASI',
         statusColor: 'emerald',
         verifiedAt: timestamp,
         pihakTerkait: {
+          id: petani.id,
           nama: petani.nama,
           identitasMasked: maskNik(petani.nik),
+          nik: petani.nik,
+          nomorKta: petani.nomorKta || `KT-3509-${petani.nik.slice(-4)}`,
+          jabatan: petani.jabatan || 'Anggota Aktif',
+          fotoUrl: petani.fotoUrl || null,
           poktan: petani.poktan?.nama || 'Kelompok Tani Desa',
           desa: `Desa ${petani.desa}, Kec. ${petani.kecamatan}, Kab. ${petani.kabupaten}`,
           statusVerifikasi: petani.statusVerifikasi || 'TERVERIFIKASI',

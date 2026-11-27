@@ -13,43 +13,50 @@ export default async function EditorKartuTaniPage({
 }) {
   const { petaniId } = await searchParams;
 
-  let initialPetaniData: any = null;
-
-  const [petani, poktanList] = await Promise.all([
-    petaniId
-      ? prisma.petani.findUnique({
-          where: { id: petaniId },
-          include: { poktan: true },
-        })
-      : prisma.petani.findFirst({
-          include: { poktan: true },
-          orderBy: { nama: 'asc' },
-        }),
+  const [petaniList, poktanList] = await Promise.all([
+    prisma.petani.findMany({
+      include: { poktan: true },
+      orderBy: { nama: 'asc' },
+    }),
     prisma.poktan.findMany({
       orderBy: { nama: 'asc' },
     }),
   ]);
 
-  if (petani) {
-    const pAny = petani as any;
-    initialPetaniData = {
-      nama: pAny.nama,
-      nomorAnggota: `KT-3509-${pAny.nik.slice(-4)}`,
-      nik: pAny.nik,
-      jabatan: 'Anggota Aktif',
-      kelompokTani: pAny.poktan?.nama || 'POKTAN SRI MULYO',
-      desaKecamatan: `Desa ${pAny.desa}, Kec. ${pAny.kecamatan || 'Lembeyan'}`,
-      fotoUrl:
-        pAny.fotoUrl ||
-        `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(pAny.nama)}`,
-      qrPayload: JSON.stringify({
-        kta: `KT-3509-${pAny.nik.slice(-4)}`,
-        nama: pAny.nama,
-        poktan: pAny.poktan?.nama,
-        desa: pAny.desa,
-      }),
-    };
-  }
+  const selectedPetani = (petaniId
+    ? petaniList.find((p) => p.id === petaniId) || petaniList[0]
+    : petaniList[0]) as any;
+
+  const serializedPetaniList = petaniList.map((p: any) => ({
+    id: p.id,
+    nik: p.nik,
+    nama: p.nama,
+    nomorKta: p.nomorKta || `KT-3509-${p.nik.slice(-4)}`,
+    jabatan: p.jabatan || 'Anggota Aktif',
+    kelompokTani: p.poktan?.nama || 'POKTAN',
+    poktanId: p.poktanId,
+    desaKecamatan: `Desa ${p.desa}, Kec. ${p.kecamatan || 'Lembeyan'}`,
+    fotoUrl:
+      p.fotoUrl ||
+      `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(p.nama)}`,
+  }));
+
+  const initialPetaniData = selectedPetani
+    ? {
+        id: selectedPetani.id,
+        nama: selectedPetani.nama,
+        nomorAnggota: selectedPetani.nomorKta || `KT-3509-${selectedPetani.nik.slice(-4)}`,
+        nik: selectedPetani.nik,
+        jabatan: selectedPetani.jabatan || 'Anggota Aktif',
+        kelompokTani: selectedPetani.poktan?.nama || 'POKTAN SRI MULYO',
+        poktanId: selectedPetani.poktanId,
+        desaKecamatan: `Desa ${selectedPetani.desa}, Kec. ${selectedPetani.kecamatan || 'Lembeyan'}`,
+        fotoUrl:
+          selectedPetani.fotoUrl ||
+          `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(selectedPetani.nama)}`,
+        qrPayload: `/verifikasi?q=KARTUTANI:${selectedPetani.nik}`,
+      }
+    : null;
 
   const serializedPoktan = (poktanList as any[]).map((pok: any) => ({
     id: pok.id,
@@ -59,7 +66,8 @@ export default async function EditorKartuTaniPage({
 
   return (
     <EditorKartuTaniClient
-      initialData={initialPetaniData}
+      initialData={initialPetaniData || undefined}
+      petaniOptions={serializedPetaniList}
       poktanOptions={serializedPoktan}
     />
   );

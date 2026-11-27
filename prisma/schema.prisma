@@ -56,6 +56,9 @@ model Petani {
   kabupaten        String            @default("Magetan")
   poktanId         String
   poktan           Poktan            @relation(fields: [poktanId], references: [id])
+  nomorKta         String?
+  jabatan          String?           @default("Anggota Aktif")
+  fotoUrl          String?
   statusVerifikasi String            @default("TERVERIFIKASI")
   totalLuasLahan   Float             @default(0)
   lahan            Lahan[]

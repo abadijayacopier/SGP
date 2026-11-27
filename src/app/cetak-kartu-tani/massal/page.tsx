@@ -36,6 +36,8 @@ export default async function CetakMassalKartuPage() {
     kabupaten: p.kabupaten || 'Magetan',
     totalLuasLahan: Number(p.totalLuasLahan || 0),
     fotoUrl: p.fotoUrl || null,
+    nomorKta: p.nomorKta || null,
+    jabatan: p.jabatan || 'Anggota Aktif',
     poktanNama: p.poktan?.nama || 'Non-Poktan',
     poktanId: p.poktanId,
     lahanCount: p.lahan.length,
