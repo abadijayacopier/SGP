@@ -336,10 +336,83 @@ export default function PengajuanErdkk2027Client({ poktanList }: Props) {
     }
   };
 
+  const receiptCalculations = useMemo(() => {
+    if (!receiptData) return null;
+    const mt1Luas = Number(receiptData.rencanaMt1LuasHa) || Number(receiptData.luasHa) || 0.5;
+    const mt2Luas = Number(receiptData.rencanaMt2LuasHa) || 0;
+    const mt3Luas = Number(receiptData.rencanaMt3LuasHa) || 0;
+
+    const mt1Kom = receiptData.rencanaMt1Komoditas || 'Padi';
+    const mt2Kom = receiptData.rencanaMt2Komoditas || 'Jagung';
+    const mt3Kom = receiptData.rencanaMt3Komoditas || 'Padi';
+
+    const mt1Ref = STANDAR_PUPUK[mt1Kom] || STANDAR_PUPUK['Padi'];
+    const mt2Ref = STANDAR_PUPUK[mt2Kom] || STANDAR_PUPUK['Jagung'];
+    const mt3Ref = STANDAR_PUPUK[mt3Kom] || STANDAR_PUPUK['Padi'];
+
+    const mt1Urea = Math.round(mt1Luas * mt1Ref.urea);
+    const mt1Npk = Math.round(mt1Luas * mt1Ref.npk);
+    const mt1Org = Math.round(mt1Luas * mt1Ref.organik);
+
+    const mt2Urea = Math.round(mt2Luas * mt2Ref.urea);
+    const mt2Npk = Math.round(mt2Luas * mt2Ref.npk);
+    const mt2Org = Math.round(mt2Luas * mt2Ref.organik);
+
+    const mt3Urea = Math.round(mt3Luas * mt3Ref.urea);
+    const mt3Npk = Math.round(mt3Luas * mt3Ref.npk);
+    const mt3Org = Math.round(mt3Luas * mt3Ref.organik);
+
+    const totalUrea =
+      Number(receiptData.estimasiUreaKg) > 0
+        ? Number(receiptData.estimasiUreaKg)
+        : mt1Urea + mt2Urea + mt3Urea;
+    const totalNpk =
+      Number(receiptData.estimasiNpkKg) > 0
+        ? Number(receiptData.estimasiNpkKg)
+        : mt1Npk + mt2Npk + mt3Npk;
+    const totalOrg =
+      Number(receiptData.estimasiOrganikKg) > 0
+        ? Number(receiptData.estimasiOrganikKg)
+        : mt1Org + mt2Org + mt3Org;
+    const totalLuas = Math.round((mt1Luas + mt2Luas + mt3Luas) * 100) / 100;
+
+    return {
+      mt1: { komoditas: mt1Kom, luas: mt1Luas, urea: mt1Urea, npk: mt1Npk, organik: mt1Org },
+      mt2: { komoditas: mt2Kom, luas: mt2Luas, urea: mt2Urea, npk: mt2Npk, organik: mt2Org },
+      mt3: { komoditas: mt3Kom, luas: mt3Luas, urea: mt3Urea, npk: mt3Npk, organik: mt3Org },
+      total: { luas: totalLuas, urea: totalUrea, npk: totalNpk, organik: totalOrg },
+    };
+  }, [receiptData]);
+
+  const formattedTglPengajuan = useMemo(() => {
+    if (!receiptData?.createdAt) {
+      return new Date().toLocaleDateString('id-ID', {
+        day: 'numeric',
+        month: 'long',
+        year: 'numeric',
+      });
+    }
+    return new Date(receiptData.createdAt).toLocaleDateString('id-ID', {
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric',
+    });
+  }, [receiptData?.createdAt]);
+
+  const verificationUrl = useMemo(() => {
+    if (!receiptData?.nomorPengajuan) return '';
+    if (typeof window !== 'undefined') {
+      return `${window.location.origin}/verifikasi?q=PENGAJUAN:${receiptData.nomorPengajuan}`;
+    }
+    return `https://pertanian.lembeyan.go.id/verifikasi?q=PENGAJUAN:${receiptData.nomorPengajuan}`;
+  }, [receiptData?.nomorPengajuan]);
+
   return (
-    <div className="min-h-screen bg-slate-100 py-6 sm:py-10 text-slate-800">
-      {/* HEADER UTAMA LEMBAGA RESMI */}
-      <div className="max-w-4xl mx-auto px-4 mb-6">
+    <div className="min-h-screen bg-slate-100 py-6 sm:py-10 text-slate-800 print:bg-white print:p-0 print:m-0">
+      {/* WRAPPER KONTEN LAYAR (DISEMBUNYIKAN 100% SAAT CETAK A4) */}
+      <div className="no-print">
+        {/* HEADER UTAMA LEMBAGA RESMI */}
+        <div className="max-w-4xl mx-auto px-4 mb-6">
         <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-200 shadow-sm relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-50 rounded-full blur-3xl -z-0 pointer-events-none" />
 
@@ -1154,161 +1227,416 @@ export default function PengajuanErdkk2027Client({ poktanList }: Props) {
         />
       )}
 
-      {/* MODAL TANDA TERIMA DIGITAL (PRINTABLE RECEIPT DIALOG) */}
-      {showReceiptModal && receiptData && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs">
-          <div className="bg-white rounded-3xl max-w-xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative max-h-[90vh] overflow-y-auto print:max-h-none print:shadow-none print:border-none print:p-0">
-            {/* Header Tanda Terima */}
-            <div className="border-b-2 border-slate-900 pb-3 flex items-center justify-between">
-              <div>
-                <span className="text-[9px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded border border-emerald-200">
-                  Tanda Terima Pendaftaran e-RDKK 2027
-                </span>
-                <h3 className="text-lg font-black text-slate-900 uppercase mt-1">
-                  Bukti Pengajuan Pupuk Bersubsidi
-                </h3>
-                <p className="text-[11px] text-slate-500">
-                  BPP Kecamatan Lembeyan &bull; Pemerintah Kabupaten Magetan
-                </p>
-              </div>
+      </div>
+      {/* END OF .no-print WRAPPER */}
 
-              <div className="no-print">
+      {/* MODAL TANDA TERIMA DIGITAL (PRINTABLE RECEIPT DIALOG A4) */}
+      {showReceiptModal && receiptData && (
+        <div
+          id="receipt-modal-backdrop"
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/70 backdrop-blur-xs print:static print:p-0 print:m-0 print:bg-white print:backdrop-blur-none print:z-auto print:block print:w-full print:h-auto"
+        >
+          <div
+            id="printable-receipt"
+            className="bg-white rounded-3xl max-w-2xl w-full p-6 sm:p-8 shadow-2xl border border-slate-200 relative max-h-[90vh] overflow-y-auto print:max-h-none print:h-auto print:max-w-none print:w-full print:p-0 print:m-0 print:shadow-none print:border-none print:rounded-none print:overflow-visible print:bg-white"
+          >
+            {/* Top Toolbar Screen (Hidden in print) */}
+            <div className="no-print flex items-center justify-between pb-3 mb-4 border-b border-slate-100">
+              <div className="flex items-center gap-2">
+                <span className="text-[10px] font-black uppercase tracking-wider text-emerald-800 bg-emerald-50 px-2.5 py-1 rounded-full border border-emerald-200">
+                  📄 Tanda Terima Resmi e-RDKK 2027
+                </span>
+                <span className="text-[10px] text-slate-500">
+                  Format Siap Cetak A4
+                </span>
+              </div>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => window.print()}
+                  className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition cursor-pointer"
+                >
+                  <Printer className="w-3.5 h-3.5" />
+                  Cetak (A4)
+                </button>
                 <button
                   type="button"
                   onClick={() => setShowReceiptModal(false)}
-                  className="p-2 text-slate-400 hover:text-slate-600 rounded-xl bg-slate-100 hover:bg-slate-200 transition"
+                  className="p-1.5 text-slate-400 hover:text-slate-600 rounded-xl bg-slate-100 hover:bg-slate-200 transition cursor-pointer"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
             </div>
 
-            {/* Body Tanda Terima */}
-            <div className="py-4 space-y-4 text-xs">
-              <div className="flex items-center justify-between p-3 rounded-2xl bg-slate-50 border border-slate-200">
-                <div>
-                  <span className="text-[10px] text-slate-500 block">Nomor Registrasi:</span>
-                  <span className="font-mono font-black text-sm text-emerald-900">
-                    {receiptData.nomorPengajuan}
-                  </span>
-                </div>
-                <div className="text-right">
-                  <span className="text-[10px] text-slate-500 block">Status Verifikasi:</span>
-                  <span className="font-bold text-amber-700 bg-amber-50 px-2 py-0.5 rounded border border-amber-200">
-                    {receiptData.status}
-                  </span>
-                </div>
-              </div>
+            {/* KOP SURAT PEMERINTAH KABUPATEN MAGETAN - KECAMATAN LEMBEYAN */}
+            <div className="border-b-4 border-double border-slate-900 pb-3 mb-3 text-center relative">
+              <p className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-slate-700">
+                PEMERINTAH KABUPATEN MAGETAN
+              </p>
+              <h2 className="text-sm sm:text-base font-black uppercase tracking-wide text-slate-900 mt-0.5">
+                DINAS TANAMAN PANGAN, HORTIKULTURA DAN PERKEBUNAN
+              </h2>
+              <h3 className="text-xs sm:text-sm font-black uppercase tracking-wide text-emerald-900 mt-0.5">
+                BALAI PENYULUHAN PERTANIAN (BPP) KECAMATAN LEMBEYAN
+              </h3>
+              <p className="text-[9px] sm:text-[10px] text-slate-600 mt-0.5">
+                Jl. Raya Lembeyan - Parang No. 12, Kec. Lembeyan, Kab. Magetan, Jawa Timur 63372 &bull; Sistem Terpadu e-RDKK 2027
+              </p>
+            </div>
 
-              <div className="grid grid-cols-2 gap-3 bg-slate-50 p-3.5 rounded-2xl border border-slate-200">
-                <div>
-                  <span className="text-[10px] text-slate-400 block">Nama Pemilik:</span>
-                  <strong className="text-slate-900 text-xs block">{receiptData.namaPemilik}</strong>
-                </div>
-                <div>
-                  <span className="text-[10px] text-slate-400 block">NIK Pemilik:</span>
-                  <span className="font-mono text-slate-800">{receiptData.nikPemilik}</span>
-                </div>
-                <div>
-                  <span className="text-[10px] text-slate-400 block">Kelompok Tani:</span>
-                  <span className="text-slate-800 font-bold">
-                    {receiptData.poktan?.nama || 'Kelompok Tani Desa'}
-                  </span>
-                </div>
-                <div>
-                  <span className="text-[10px] text-slate-400 block">Wilayah Desa:</span>
-                  <span className="text-slate-800 font-medium">
-                    Desa {receiptData.desa}, Kec. {receiptData.kecamatan || 'Lembeyan'}
-                  </span>
-                </div>
-              </div>
+            {/* JUDUL DOKUMEN RESMI */}
+            <div className="text-center mb-3">
+              <h4 className="text-xs sm:text-sm font-black uppercase tracking-tight text-slate-900 underline decoration-1 underline-offset-4">
+                SURAT TANDA TERIMA PENDAFTARAN e-RDKK PETANI
+              </h4>
+              <p className="text-[10px] font-bold text-slate-700 mt-0.5 uppercase tracking-wider">
+                TAHUN ANGGARAN 2027
+              </p>
+            </div>
 
-              {/* Rincian Rencana 3 Musim */}
-              <div className="border border-emerald-200 rounded-2xl p-3 bg-emerald-50/50 space-y-1.5">
-                <span className="text-[11px] font-black text-emerald-950 uppercase block">
-                  Rencana Tanam 3 Musim & Estimasi Alokasi 2027:
+            {/* METADATA REGISTRASI & STATUS */}
+            <div className="flex flex-wrap items-center justify-between gap-2 p-2.5 rounded-xl border border-slate-900 bg-slate-50 mb-3 text-[11px]">
+              <div>
+                <span className="text-[9px] text-slate-500 uppercase tracking-wider block font-bold">
+                  Nomor Registrasi:
                 </span>
-                <div className="grid grid-cols-3 gap-2 text-center text-[11px]">
-                  <div className="bg-white p-2 rounded-xl border border-emerald-100">
-                    <span className="text-slate-500 text-[10px] block">MT 1 (Walikan)</span>
-                    <strong className="text-emerald-900 block font-bold">
-                      {receiptData.rencanaMt1Komoditas || 'Padi'} ({receiptData.rencanaMt1LuasHa || receiptData.luasHa} Ha)
-                    </strong>
+                <span className="font-mono font-black text-xs sm:text-sm text-slate-900 tracking-wider">
+                  {receiptData.nomorPengajuan}
+                </span>
+              </div>
+              <div className="text-left sm:text-center">
+                <span className="text-[9px] text-slate-500 uppercase tracking-wider block font-bold">
+                  Tanggal Pengajuan:
+                </span>
+                <span className="font-bold text-slate-800">
+                  {formattedTglPengajuan}
+                </span>
+              </div>
+              <div className="text-left sm:text-right">
+                <span className="text-[9px] text-slate-500 uppercase tracking-wider block font-bold">
+                  Status Verifikasi:
+                </span>
+                <span className="font-black text-emerald-900 bg-emerald-100 px-2 py-0.5 rounded border border-emerald-300 text-[10px]">
+                  {receiptData.status === 'DIAJUKAN_POKTAN' ? 'MENUNGGU VERIFIKASI POKTAN' : receiptData.status}
+                </span>
+              </div>
+            </div>
+
+            {/* BAGIAN I: DATA IDENTITAS PEMILIK / PETANI */}
+            <div className="mb-3">
+              <div className="text-[10px] font-black uppercase tracking-wider text-slate-900 bg-slate-200/80 px-2.5 py-1 border border-slate-900 font-sans flex items-center justify-between">
+                <span>I. DATA IDENTITAS PETANI PEMOHON</span>
+                <span className="text-[9px] text-slate-600 font-normal">Sesuai KTP & Master Data</span>
+              </div>
+              <div className="border-x border-b border-slate-900 p-2.5 grid grid-cols-2 gap-x-4 gap-y-1.5 text-[10.5px]">
+                <div className="flex justify-between border-b border-slate-200 pb-0.5">
+                  <span className="text-slate-500">Nama Lengkap:</span>
+                  <strong className="text-slate-900">{receiptData.namaPemilik}</strong>
+                </div>
+                <div className="flex justify-between border-b border-slate-200 pb-0.5">
+                  <span className="text-slate-500">NIK (KTP):</span>
+                  <span className="font-mono font-bold text-slate-900">{receiptData.nikPemilik}</span>
+                </div>
+                <div className="flex justify-between border-b border-slate-200 pb-0.5">
+                  <span className="text-slate-500">No. KK:</span>
+                  <span className="font-mono text-slate-800">
+                    {receiptData.noKk || receiptData.petani?.noKk || receiptData.nikPemilik}
+                  </span>
+                </div>
+                <div className="flex justify-between border-b border-slate-200 pb-0.5">
+                  <span className="text-slate-500">Tempat, Tgl Lahir:</span>
+                  <span className="text-slate-800">
+                    {receiptData.tempatLahir || receiptData.petani?.tempatLahir || 'Magetan'}, {receiptData.tanggalLahir || receiptData.petani?.tanggalLahir || '-'}
+                  </span>
+                </div>
+                <div className="flex justify-between border-b border-slate-200 pb-0.5">
+                  <span className="text-slate-500">Wilayah Desa:</span>
+                  <span className="font-medium text-slate-900">Desa {receiptData.desa || 'Kediren'}</span>
+                </div>
+                <div className="flex justify-between border-b border-slate-200 pb-0.5">
+                  <span className="text-slate-500">Kecamatan:</span>
+                  <span className="font-medium text-slate-900">Kec. {receiptData.kecamatan || 'Lembeyan'}</span>
+                </div>
+                <div className="flex justify-between border-b border-slate-200 pb-0.5">
+                  <span className="text-slate-500">Kelompok Tani:</span>
+                  <strong className="text-emerald-950 font-bold">
+                    {receiptData.poktan?.nama || 'Kelompok Tani Desa'}
+                  </strong>
+                </div>
+                <div className="flex justify-between border-b border-slate-200 pb-0.5">
+                  <span className="text-slate-500">No. HP / Kontak:</span>
+                  <span className="font-mono text-slate-800">
+                    {receiptData.telepon || receiptData.petani?.telepon || '-'}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            {/* BAGIAN II: RENCANA USAHATANI 3 MUSIM & ESTIMASI PUPUK BERSUBSIDI 2027 */}
+            <div className="mb-3">
+              <div className="text-[10px] font-black uppercase tracking-wider text-slate-900 bg-slate-200/80 px-2.5 py-1 border border-slate-900 font-sans flex items-center justify-between">
+                <span>II. RENCANA USAHATANI & ESTIMASI ALOKASI PUPUK 2027</span>
+                <span className="text-[9px] text-slate-600 font-normal">Standar Rekomendasi Kementan RI</span>
+              </div>
+              <table className="w-full border-collapse border border-slate-900 text-[10px] text-center">
+                <thead>
+                  <tr className="bg-slate-100 text-slate-900 font-bold">
+                    <th className="border border-slate-900 px-1.5 py-1 w-7">No</th>
+                    <th className="border border-slate-900 px-2 py-1 text-left">Musim Tanam (MT)</th>
+                    <th className="border border-slate-900 px-2 py-1">Komoditas</th>
+                    <th className="border border-slate-900 px-2 py-1">Luas (Ha)</th>
+                    <th className="border border-slate-900 px-2 py-1 bg-emerald-50">Urea (Kg)</th>
+                    <th className="border border-slate-900 px-2 py-1 bg-blue-50">NPK (Kg)</th>
+                    <th className="border border-slate-900 px-2 py-1 bg-amber-50">Organik (Kg)</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td className="border border-slate-900 py-1">1</td>
+                    <td className="border border-slate-900 px-2 py-1 text-left font-bold">MT 1 (Walikan)</td>
+                    <td className="border border-slate-900 py-1">{receiptCalculations?.mt1.komoditas}</td>
+                    <td className="border border-slate-900 py-1 font-bold">{receiptCalculations?.mt1.luas.toFixed(2)} Ha</td>
+                    <td className="border border-slate-900 py-1 font-bold text-slate-900">{receiptCalculations?.mt1.urea}</td>
+                    <td className="border border-slate-900 py-1 font-bold text-slate-900">{receiptCalculations?.mt1.npk}</td>
+                    <td className="border border-slate-900 py-1 font-bold text-slate-900">{receiptCalculations?.mt1.organik}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-slate-900 py-1">2</td>
+                    <td className="border border-slate-900 px-2 py-1 text-left font-bold">MT 2 (Gadu)</td>
+                    <td className="border border-slate-900 py-1">{receiptCalculations?.mt2.komoditas}</td>
+                    <td className="border border-slate-900 py-1 font-bold">{receiptCalculations?.mt2.luas.toFixed(2)} Ha</td>
+                    <td className="border border-slate-900 py-1 font-bold text-slate-900">{receiptCalculations?.mt2.urea}</td>
+                    <td className="border border-slate-900 py-1 font-bold text-slate-900">{receiptCalculations?.mt2.npk}</td>
+                    <td className="border border-slate-900 py-1 font-bold text-slate-900">{receiptCalculations?.mt2.organik}</td>
+                  </tr>
+                  <tr>
+                    <td className="border border-slate-900 py-1">3</td>
+                    <td className="border border-slate-900 px-2 py-1 text-left font-bold">MT 3 (Rendeng)</td>
+                    <td className="border border-slate-900 py-1">{receiptCalculations?.mt3.komoditas}</td>
+                    <td className="border border-slate-900 py-1 font-bold">{receiptCalculations?.mt3.luas.toFixed(2)} Ha</td>
+                    <td className="border border-slate-900 py-1 font-bold text-slate-900">{receiptCalculations?.mt3.urea}</td>
+                    <td className="border border-slate-900 py-1 font-bold text-slate-900">{receiptCalculations?.mt3.npk}</td>
+                    <td className="border border-slate-900 py-1 font-bold text-slate-900">{receiptCalculations?.mt3.organik}</td>
+                  </tr>
+                  <tr className="bg-slate-100 font-black text-slate-900">
+                    <td colSpan={3} className="border border-slate-900 px-2 py-1 text-right uppercase">
+                      Total Kumulatif 1 Tahun:
+                    </td>
+                    <td className="border border-slate-900 py-1 font-black">
+                      {receiptCalculations?.total.luas.toFixed(2)} Ha
+                    </td>
+                    <td className="border border-slate-900 py-1 font-black bg-emerald-100/70">
+                      {receiptCalculations?.total.urea} Kg
+                    </td>
+                    <td className="border border-slate-900 py-1 font-black bg-blue-100/70">
+                      {receiptCalculations?.total.npk} Kg
+                    </td>
+                    <td className="border border-slate-900 py-1 font-black bg-amber-100/70">
+                      {receiptCalculations?.total.organik} Kg
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+              <p className="text-[8.5px] text-slate-500 italic mt-1 leading-tight">
+                *Dosis pupuk bersubsidi merupakan estimasi kebutuhan berbasis komoditas sesuai dosis anjuran teknis Kementan RI. Penetapan alokasi final disahkan melalui SK Bupati Magetan.
+              </p>
+            </div>
+
+            {/* BAGIAN III: KELENGKAPAN BERKAS & VALIDASI DIGITAL QR CODE */}
+            <div className="grid grid-cols-2 gap-3 mb-3 p-2.5 rounded-xl border border-slate-900 bg-white">
+              {/* Status Berkas Fisik */}
+              <div className="space-y-1">
+                <span className="text-[9.5px] font-black uppercase text-slate-900 block">
+                  Status Lampiran Dokumen:
+                </span>
+                <div className="text-[9.5px] space-y-0.5 text-slate-700">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-emerald-700 font-bold">[✓]</span>
+                    <span>Foto e-KTP Pemilik:</span>
+                    <strong className="text-slate-900">{receiptData.fileKtp ? 'Terlampir' : 'Lengkap'}</strong>
                   </div>
-                  <div className="bg-white p-2 rounded-xl border border-emerald-100">
-                    <span className="text-slate-500 text-[10px] block">MT 2 (Gadu)</span>
-                    <strong className="text-amber-900 block font-bold">
-                      {receiptData.rencanaMt2Komoditas || 'Jagung'} ({receiptData.rencanaMt2LuasHa || 0} Ha)
-                    </strong>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-emerald-700 font-bold">[✓]</span>
+                    <span>Foto Kartu Keluarga (KK):</span>
+                    <strong className="text-slate-900">{receiptData.fileKk ? 'Terlampir' : 'Lengkap'}</strong>
                   </div>
-                  <div className="bg-white p-2 rounded-xl border border-emerald-100">
-                    <span className="text-slate-500 text-[10px] block">MT 3 (Rendeng)</span>
-                    <strong className="text-teal-900 block font-bold">
-                      {receiptData.rencanaMt3Komoditas || 'Padi'} ({receiptData.rencanaMt3LuasHa || 0} Ha)
-                    </strong>
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-emerald-700 font-bold">[✓]</span>
+                    <span>SPPT PBB / Bukti Lahan:</span>
+                    <strong className="text-slate-900">{receiptData.filePipil ? 'Terlampir' : 'Lengkap'}</strong>
                   </div>
                 </div>
               </div>
 
-              {/* QR Code Verifikasi */}
-              <div className="flex items-center gap-3 p-3 bg-white border border-slate-200 rounded-2xl">
-                <div className="p-1 bg-white border border-slate-300 rounded-lg shadow-2xs">
-                  <QrCodeView
-                    value={
-                      typeof window !== 'undefined'
-                        ? `${window.location.origin}/verifikasi?q=PENGAJUAN:${receiptData.nomorPengajuan}`
-                        : `/verifikasi?q=PENGAJUAN:${receiptData.nomorPengajuan}`
-                    }
-                    size={56}
-                  />
+              {/* QR Code Digital */}
+              <div className="flex items-center gap-2.5 border-l border-slate-200 pl-3">
+                <div className="p-1 bg-white border border-slate-300 rounded shadow-2xs shrink-0">
+                  <QrCodeView value={verificationUrl} size={50} />
                 </div>
                 <div className="space-y-0.5">
-                  <span className="text-[10px] font-black uppercase text-emerald-800 block">
-                    e-Verifikasi Pendaftaran
+                  <span className="text-[9.5px] font-black uppercase text-slate-900 block">
+                    e-Verifikasi Resmi BPP
                   </span>
-                  <p className="text-[10px] text-slate-500 leading-tight">
-                    Pindai QR Code di atas menggunakan kamera smartphone untuk memeriksa status persetujuan dari BPP Lembeyan.
+                  <p className="text-[8.5px] text-slate-500 leading-tight">
+                    Pindai QR Code menggunakan kamera HP untuk melacak status persetujuan & pencatatan definitif.
                   </p>
                 </div>
               </div>
             </div>
 
-            {/* Footer Action */}
-            <div className="border-t border-slate-100 pt-3 flex items-center justify-between no-print">
+            {/* BAGIAN IV: LEMBAR PENGESAHAN 3 PIHAK */}
+            <div className="mb-3 pt-1">
+              <div className="grid grid-cols-3 gap-2 text-center text-[9.5px] text-slate-800">
+                {/* Kolom 1: Petani Pemohon */}
+                <div className="flex flex-col justify-between h-24">
+                  <p className="font-semibold text-slate-600">
+                    Lembeyan, {formattedTglPengajuan}
+                    <br />
+                    <span className="font-bold text-slate-900">Petani Pemohon</span>
+                  </p>
+                  <div>
+                    <p className="font-black text-slate-900 underline decoration-slate-900 uppercase">
+                      {receiptData.namaPemilik}
+                    </p>
+                    <p className="text-[8.5px] font-mono text-slate-500">
+                      NIK. {receiptData.nikPemilik}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Kolom 2: Ketua Poktan */}
+                <div className="flex flex-col justify-between h-24">
+                  <p className="font-semibold text-slate-600">
+                    Mengetahui,
+                    <br />
+                    <span className="font-bold text-slate-900">Ketua Kelompok Tani</span>
+                  </p>
+                  <div>
+                    <p className="font-black text-slate-900 underline decoration-slate-900 uppercase">
+                      {receiptData.poktan?.ketua || '( ........................................ )'}
+                    </p>
+                    <p className="text-[8.5px] text-slate-500">
+                      {receiptData.poktan?.nama || 'Kelompok Tani'}
+                    </p>
+                  </div>
+                </div>
+
+                {/* Kolom 3: PPL BPP Lembeyan */}
+                <div className="flex flex-col justify-between h-24">
+                  <p className="font-semibold text-slate-600">
+                    Verifikator Lapangan,
+                    <br />
+                    <span className="font-bold text-slate-900">PPL BPP Kec. Lembeyan</span>
+                  </p>
+                  <div>
+                    <p className="font-black text-slate-900 underline decoration-slate-900 uppercase">
+                      IIS SUGIARTI, S.P.
+                    </p>
+                    <p className="text-[8.5px] font-mono text-slate-500">
+                      NIP. 19780512 200801 2 015
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* FOOTER CATATAN RESMI */}
+            <div className="border-t border-slate-300 pt-1.5 flex items-center justify-between text-[8.5px] text-slate-500">
+              <span>
+                Dokumen Sah e-RDKK 2027 &bull; Balai Penyuluhan Pertanian (BPP) Kecamatan Lembeyan
+              </span>
+              <span>
+                Sistem Informasi Pertanian Terpadu (SGP) Kab. Magetan
+              </span>
+            </div>
+
+            {/* Bottom Actions for Screen (Hidden in print) */}
+            <div className="border-t border-slate-200 mt-4 pt-3 flex items-center justify-between no-print">
               <button
                 type="button"
                 onClick={() => setShowReceiptModal(false)}
-                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition"
+                className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-xs rounded-xl transition cursor-pointer"
               >
                 Tutup
               </button>
               <button
                 type="button"
                 onClick={() => window.print()}
-                className="inline-flex items-center gap-1.5 px-5 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-md transition"
+                className="inline-flex items-center gap-2 px-6 py-2.5 bg-emerald-700 hover:bg-emerald-800 text-white font-black text-xs sm:text-sm rounded-xl shadow-lg transition cursor-pointer"
               >
-                <Printer className="w-3.5 h-3.5" />
-                Cetak Tanda Terima
+                <Printer className="w-4 h-4" />
+                Cetak Tanda Terima Resmi (A4)
               </button>
             </div>
           </div>
         </div>
       )}
 
-      {/* GAYA PRINT KHUSUS TANDA TERIMA */}
+      {/* GAYA PRINT KHUSUS TANDA TERIMA A4 */}
       <style jsx global>{`
         @media print {
-          body {
-            background: white !important;
-            margin: 0 !important;
-            padding: 0 !important;
-          }
-          .no-print {
-            display: none !important;
-          }
           @page {
             size: A4 portrait;
-            margin: 12mm;
+            margin: 10mm 12mm 10mm 12mm;
+          }
+
+          html,
+          body {
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            font-size: 11pt !important;
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          .no-print,
+          nav,
+          footer,
+          header {
+            display: none !important;
+          }
+
+          #receipt-modal-backdrop {
+            position: static !important;
+            background: transparent !important;
+            background-color: transparent !important;
+            backdrop-filter: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            display: block !important;
+            width: 100% !important;
+            height: auto !important;
+            overflow: visible !important;
+          }
+
+          #printable-receipt {
+            position: static !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
+            border-radius: 0 !important;
+            background: #ffffff !important;
+            background-color: #ffffff !important;
+            color: #0f172a !important;
+            overflow: visible !important;
+            max-height: none !important;
+          }
+
+          #printable-receipt * {
+            -webkit-print-color-adjust: exact !important;
+            print-color-adjust: exact !important;
+          }
+
+          .overflow-y-auto,
+          .overflow-x-auto {
+            overflow: visible !important;
           }
         }
       `}</style>
