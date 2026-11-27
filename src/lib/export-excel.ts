@@ -421,4 +421,64 @@ export function exportModelF6Excel(
   downloadWorkbook(workbook, filename);
 }
 
+/**
+ * Ekspor Data Pengajuan / Usulan e-RDKK ke File Asli Microsoft Excel (.xlsx)
+ * Kolom terpisah rapi dengan lebar otomatis dan NIK terformat string
+ */
+export function exportUsulanErdkkExcel(
+  rows: any[],
+  filename = `Data-Usulan-eRDKK-Kec-Lembeyan-${new Date().getFullYear()}.xlsx`
+) {
+  const excelData = rows.map((r, index) => ({
+    'No': r.no || index + 1,
+    'Kabupaten': r.kabupaten || 'Magetan',
+    'Kecamatan': r.kecamatan || 'Lembeyan',
+    'Desa': r.desa || '-',
+    'Nama Poktan': r.namaPoktan || '-',
+    'Kode Kios': r.kodeKios || 'KPL-LBY-001',
+    'Nama Kios Pengecer': r.namaKios || 'UD. Tani Subur',
+    'Penyuluh (PPL)': r.namaPpl || '-',
+    'NIK Petani': r.nik ? `'${String(r.nik).replace(/^'/, '')}` : '-',
+    'Nama Petani': r.namaPetani || '-',
+    'Tempat Lahir': r.tempatLahir || '-',
+    'Tanggal Lahir': r.tanggalLahir || '-',
+    'Nama Ibu Kandung': r.namaIbuKandung || '-',
+    'Alamat': r.alamat || '-',
+    'Subsektor': r.subsektor || 'TANAMAN PANGAN',
+    'Komoditas': r.komoditas || 'Padi',
+    'Luas Lahan (Ha)': Number(r.luasHa) || 0,
+    'Urea MT1 (Kg)': Number(r.ureaMt1) || 0,
+    'NPK MT1 (Kg)': Number(r.npkMt1) || 0,
+    'Organik MT1 (Kg)': Number(r.organikMt1) || 0,
+    'Urea MT2 (Kg)': Number(r.ureaMt2) || 0,
+    'NPK MT2 (Kg)': Number(r.npkMt2) || 0,
+    'Organik MT2 (Kg)': Number(r.organikMt2) || 0,
+    'Urea MT3 (Kg)': Number(r.ureaMt3) || 0,
+    'NPK MT3 (Kg)': Number(r.npkMt3) || 0,
+    'Organik MT3 (Kg)': Number(r.organikMt3) || 0,
+    'Total Urea (Kg)': Number(r.totalUrea) || 0,
+    'Total NPK (Kg)': Number(r.totalNpk) || 0,
+    'Total Organik (Kg)': Number(r.totalOrganik) || 0,
+    'Status e-RDKK': r.status || 'DIAJUKAN_POKTAN',
+  }));
+
+  const worksheet = XLSX.utils.json_to_sheet(excelData);
+
+  // Atur lebar kolom otomatis agar teks tidak terpotong
+  const colKeys = Object.keys(excelData[0] || {});
+  const colWidths = colKeys.map((key) => {
+    const maxContentLen = Math.max(
+      key.length,
+      ...excelData.map((row: any) => String(row[key] ?? '').length)
+    );
+    return { wch: Math.min(Math.max(maxContentLen + 2, 10), 38) };
+  });
+  worksheet['!cols'] = colWidths;
+
+  const workbook = XLSX.utils.book_new();
+  XLSX.utils.book_append_sheet(workbook, worksheet, 'Usulan e-RDKK');
+  downloadWorkbook(workbook, filename);
+}
+
+
 

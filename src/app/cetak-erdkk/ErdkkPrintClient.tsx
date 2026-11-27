@@ -7,6 +7,7 @@ import {
   mapPengajuanToErdkkRows,
   generateErdkkCsvContent,
 } from '@/lib/erdkk-format';
+import { exportUsulanErdkkExcel } from '@/lib/export-excel';
 import {
   getDefaultNipForRole,
   generateAutoSignatureSvg,
@@ -78,6 +79,13 @@ export default function ErdkkPrintClient({
   const pplNip =
     pplPejabat.nip || getDefaultNipForRole('PPL', 'ppl_iissugiarti');
 
+  const handleDownloadExcel = () => {
+    exportUsulanErdkkExcel(
+      rows,
+      `Lampiran-Resmi-eRDKK-Kec-Lembeyan-${new Date().getFullYear()}.xlsx`
+    );
+  };
+
   const handleDownloadCsv = () => {
     const csv = generateErdkkCsvContent(rows);
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
@@ -148,11 +156,12 @@ export default function ErdkkPrintClient({
           </div>
 
           <button
-            onClick={handleDownloadCsv}
+            onClick={handleDownloadExcel}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold shadow-xs transition cursor-pointer"
+            title="Download Format Asli Excel (.xlsx) Lengkap Berkolom Rapi"
           >
             <FileSpreadsheet className="w-4 h-4" />
-            Export CSV/Excel Kementan
+            Export Excel (.xlsx)
           </button>
 
           <button

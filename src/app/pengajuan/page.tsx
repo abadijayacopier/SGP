@@ -12,6 +12,7 @@ import {
   generateErdkkImportTemplateCsv,
   parseErdkkImportCsv,
 } from '@/lib/erdkk-format';
+import { exportUsulanErdkkExcel } from '@/lib/export-excel';
 import {
   FileText,
   Upload,
@@ -222,6 +223,21 @@ export default function PengajuanPage() {
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [scopePoktanId]);
+
+  const handleExportExcel = () => {
+    const rows = mapPengajuanToErdkkRows(
+      pengajuanList.map((item) => ({
+        ...item,
+        nik: item.nikPemilik,
+        namaPetani: item.namaPemilik,
+        komoditas: item.komoditasRencana,
+      }))
+    );
+    exportUsulanErdkkExcel(
+      rows,
+      `Data-Usulan-eRDKK-Kec-Lembeyan-${new Date().getFullYear()}.xlsx`
+    );
+  };
 
   const handleExportCsv = () => {
     const rows = mapPengajuanToErdkkRows(
@@ -605,12 +621,12 @@ export default function PengajuanPage() {
 
             <button
               type="button"
-              onClick={handleExportCsv}
+              onClick={handleExportExcel}
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-white hover:bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold transition cursor-pointer shadow-2xs"
-              title="Export Format Excel / CSV Kementan"
+              title="Export File Asli Excel (.xlsx) Lengkap Berkolom Rapi"
             >
               <FileSpreadsheet className="w-3.5 h-3.5 text-emerald-600" />
-              <span className="hidden sm:inline">Export Excel</span>
+              <span className="hidden sm:inline">Export Excel (.xlsx)</span>
             </button>
 
             {(permissions.canSubmitPengajuan || currentUser.role === 'ADMIN_DINAS') && (

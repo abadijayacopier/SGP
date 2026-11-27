@@ -359,7 +359,7 @@ export function generateErdkkCsvContent(rows: ErdkkRowData[]): string {
     ),
   ];
 
-  return '\uFEFF' + lines.join('\r\n');
+  return '\uFEFFsep=,\r\n' + lines.join('\r\n');
 }
 
 /**
@@ -438,14 +438,17 @@ export function generateErdkkImportTemplateCsv(): string {
     ...sampleRows.map((row) => row.map((cell) => `"${cell}"`).join(',')),
   ];
 
-  return '\uFEFF' + lines.join('\r\n');
+  return '\uFEFFsep=,\r\n' + lines.join('\r\n');
 }
 
 /**
  * Mem-parsing isi CSV menjadi array objek untuk Import Massal e-RDKK
  */
 export function parseErdkkImportCsv(csvText: string): Array<Record<string, string>> {
-  const cleanText = csvText.replace(/^\uFEFF/, '').trim();
+  let cleanText = csvText.replace(/^\uFEFF/, '').trim();
+  if (/^sep=.*?\r?\n/i.test(cleanText)) {
+    cleanText = cleanText.replace(/^sep=.*?\r?\n/i, '').trim();
+  }
   const lines = cleanText.split(/\r?\n/).filter((l) => l.trim().length > 0);
   if (lines.length < 2) return [];
 
