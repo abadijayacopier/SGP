@@ -110,6 +110,17 @@ model PengajuanLahan {
   namaIbuKandung     String?
   komoditasRencana   String
   luasHa             Float
+  tahunPengajuan     Int       @default(2027)
+  telepon            String?
+  rencanaMt1Komoditas String?  @default("Padi")
+  rencanaMt1LuasHa   Float?    @default(0)
+  rencanaMt2Komoditas String?  @default("Jagung")
+  rencanaMt2LuasHa   Float?    @default(0)
+  rencanaMt3Komoditas String?  @default("Padi")
+  rencanaMt3LuasHa   Float?    @default(0)
+  estimasiUreaKg     Float?    @default(0)
+  estimasiNpkKg      Float?    @default(0)
+  estimasiOrganikKg  Float?    @default(0)
   desa               String
   kecamatan          String
   kabupaten          String    @default("Magetan")

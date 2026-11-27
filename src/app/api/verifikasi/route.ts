@@ -52,6 +52,8 @@ export async function GET(request: Request) {
       query = query.replace('NOTA:', '').trim();
     } else if (query.startsWith('LAHAN:')) {
       query = query.replace('LAHAN:', '').trim();
+    } else if (query.startsWith('PENGAJUAN:')) {
+      query = query.replace('PENGAJUAN:', '').trim();
     }
 
     const timestamp = new Date().toISOString();
@@ -288,9 +290,10 @@ export async function GET(request: Request) {
     // -------------------------------------------------------------
     const pengajuan = await prisma.pengajuanLahan.findFirst({
       where: {
-        OR: [{ nomorPengajuan: query }, { id: query }, { nomorPipil: query }],
+        OR: [{ nomorPengajuan: query }, { id: query }, { nikPemilik: query }, { nomorPipil: query }],
       },
       include: { petani: true, poktan: true },
+      orderBy: { createdAt: 'desc' },
     });
 
     if (pengajuan) {
@@ -298,7 +301,7 @@ export async function GET(request: Request) {
         success: true,
         found: true,
         docType: 'SK_ERDKK',
-        docTypeLabel: 'Surat Keputusan Pengesahan Alokasi e-RDKK Kecamatan Lembeyan',
+        docTypeLabel: `Pengajuan e-RDKK & Alokasi Pupuk T.A ${pengajuan.tahunPengajuan || 2027}`,
         nomorDokumen: pengajuan.nomorPengajuan,
         statusBadge: pengajuan.status === 'DISETUJUI_DINAS' ? 'DISETUJUI & DISAHKAN' : pengajuan.status,
         statusColor: pengajuan.status === 'DISETUJUI_DINAS' ? 'emerald' : 'amber',
@@ -308,22 +311,31 @@ export async function GET(request: Request) {
           identitasMasked: maskNik(pengajuan.nikPemilik),
           poktan: pengajuan.poktan.nama,
           desa: `Desa ${pengajuan.desa}, Kec. ${pengajuan.kecamatan}`,
+          telepon: pengajuan.telepon || '-',
+          tahunPengajuan: pengajuan.tahunPengajuan || 2027,
         },
         rincianPengesahan: {
+          tahunPengajuan: pengajuan.tahunPengajuan || 2027,
           komoditasRencana: pengajuan.komoditasRencana,
           luasHa: Number(pengajuan.luasHa).toFixed(2),
+          rencanaMt1: `${pengajuan.rencanaMt1Komoditas || 'Padi'} (${pengajuan.rencanaMt1LuasHa || pengajuan.luasHa} Ha)`,
+          rencanaMt2: `${pengajuan.rencanaMt2Komoditas || 'Jagung'} (${pengajuan.rencanaMt2LuasHa || 0} Ha)`,
+          rencanaMt3: `${pengajuan.rencanaMt3Komoditas || 'Padi'} (${pengajuan.rencanaMt3LuasHa || 0} Ha)`,
+          estimasiUreaKg: pengajuan.estimasiUreaKg || 0,
+          estimasiNpkKg: pengajuan.estimasiNpkKg || 0,
+          estimasiOrganikKg: pengajuan.estimasiOrganikKg || 0,
           nomorPipil: pengajuan.nomorPipil,
-          diverifikasiOleh: pengajuan.diverifikasiOleh || 'PPL Wilayah Lembeyan',
-          disetujuiOleh: pengajuan.disetujuiOleh || 'Admin Kecamatan Lembeyan',
+          diverifikasiOleh: pengajuan.diverifikasiOleh || 'Pengurus Kelompok Tani',
+          disetujuiOleh: pengajuan.disetujuiOleh || 'BPP Kecamatan Lembeyan',
         },
         pejabatPengesah: {
           instansi: 'Pemerintah Kecamatan Lembeyan',
-          koordinator: 'Supriyanti',
+          koordinator: 'Supriyanto',
           nip: getDefaultNipForRole('ADMIN_DINAS'),
-          signatureUrl: generateAutoSignatureSvg('Supriyanti'),
+          signatureUrl: generateAutoSignatureSvg('Supriyanto'),
           stampUrl: dinasStamp,
         },
-        keterangan: 'Dokumen pengusulan dan pengesahan kuota pupuk bersubsidi berjenjang tingkat Kecamatan Lembeyan.',
+        keterangan: `Dokumen pengusulan rencana tanam dan alokasi pupuk bersubsidi (e-RDKK) Tahun Anggaran ${pengajuan.tahunPengajuan || 2027} Kecamatan Lembeyan.`,
       });
     }
 

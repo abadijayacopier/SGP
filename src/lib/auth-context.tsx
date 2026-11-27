@@ -92,6 +92,7 @@ export const ROLE_PERMISSIONS: Record<
     allowedPaths: [
       '/dashboard',
       '/pengajuan',
+      '/pengajuan-erdkk-2027',
       '/petani',
       '/peta',
       '/penyaluran',
@@ -129,6 +130,12 @@ export const ROLE_PERMISSIONS: Record<
             href: '/pengajuan',
             iconName: 'pengajuan',
             description: 'Pengesahan usulan baru, KTP, KK & SPPT Pipil',
+          },
+          {
+            label: 'Formulir e-RDKK 2027',
+            href: '/pengajuan-erdkk-2027',
+            iconName: 'pengajuan',
+            description: 'Formulir mandiri usulan e-RDKK 2027',
           },
           {
             label: 'Peta GIS & Poligon Lahan',
@@ -239,6 +246,7 @@ export const ROLE_PERMISSIONS: Record<
       '/dashboard',
       '/peta',
       '/pengajuan',
+      '/pengajuan-erdkk-2027',
       '/laporan',
       '/profil',
       '/cetak-erdkk',
@@ -260,6 +268,7 @@ export const ROLE_PERMISSIONS: Record<
         children: [
           { label: 'Digitasi Peta GIS', href: '/peta', iconName: 'peta', description: 'Pemetaan petak sawah & poligon' },
           { label: 'Verifikasi Usulan e-RDKK', href: '/pengajuan', iconName: 'pengajuan', description: 'Verifikasi berkas fisik petani' },
+          { label: 'Formulir e-RDKK 2027', href: '/pengajuan-erdkk-2027', iconName: 'pengajuan', description: 'Formulir usulan mandiri petani 2027' },
         ],
       },
       {
@@ -301,6 +310,7 @@ export const ROLE_PERMISSIONS: Record<
       '/alokasi-poktan',
       '/petani',
       '/pengajuan',
+      '/pengajuan-erdkk-2027',
       '/profil',
       '/cetak-erdkk',
       '/cetak-kalender-tanam',
@@ -324,6 +334,7 @@ export const ROLE_PERMISSIONS: Record<
           { label: 'Penerimaan Distribusi Kios', href: '/distribusi', iconName: 'distribusi', description: 'Penerimaan DO dari KPL' },
           { label: 'Alokasi e-RDKK Poktan', href: '/alokasi-poktan', iconName: 'alokasi-poktan', description: 'Jatah pupuk MT-1, 2, 3' },
           { label: 'Input Usulan Lahan Baru', href: '/pengajuan', iconName: 'pengajuan', description: 'Pendaftaran anggota/lahan baru' },
+          { label: 'Formulir e-RDKK 2027', href: '/pengajuan-erdkk-2027', iconName: 'pengajuan', description: 'Formulir usulan mandiri petani 2027' },
         ],
       },
       { label: 'Anggota & Petani', href: '/petani', iconName: 'petani' },
@@ -382,9 +393,10 @@ export const ROLE_PERMISSIONS: Record<
     description:
       'Khusus petani terdaftar: hanya melihat kuota pupuk milik sendiri, jadwal dosis pemupukan, peta sawah sendiri, dan mencetak Kartu Tani Digital / Kartu Lahan.',
     defaultPath: '/cek-kuota',
-    allowedPaths: ['/cek-kuota', '/peta', '/cetak-erdkk', '/cetak-kalender-tanam'],
+    allowedPaths: ['/cek-kuota', '/peta', '/cetak-erdkk', '/cetak-kalender-tanam', '/pengajuan-erdkk-2027'],
     menuItems: [
       { label: 'Cek Kuota & Kartu Tani', href: '/cek-kuota', iconName: 'cek-kuota' },
+      { label: 'Formulir e-RDKK 2027', href: '/pengajuan-erdkk-2027', iconName: 'pengajuan' },
       { label: 'Peta Lahan Saya', href: '/peta', iconName: 'peta' },
     ],
     canApproveDinas: false,

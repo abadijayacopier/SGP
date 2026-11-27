@@ -7,6 +7,7 @@ export async function GET(request: Request) {
     const { searchParams } = new URL(request.url);
     const status = searchParams.get('status');
     const poktanId = searchParams.get('poktanId');
+    const tahunParam = searchParams.get('tahun');
 
     const where: any = {};
     if (status && status !== 'SEMUA') {
@@ -14,6 +15,9 @@ export async function GET(request: Request) {
     }
     if (poktanId && poktanId !== 'SEMUA') {
       where.poktanId = poktanId;
+    }
+    if (tahunParam && tahunParam !== 'SEMUA') {
+      where.tahunPengajuan = parseInt(tahunParam, 10);
     }
 
     const pengajuanList = await prisma.pengajuanLahan.findMany({
@@ -51,6 +55,7 @@ export async function POST(request: Request) {
       tempatLahir,
       tanggalLahir,
       namaIbuKandung,
+      telepon,
       komoditasRencana,
       luasHa,
       desa,
@@ -62,10 +67,53 @@ export async function POST(request: Request) {
       fileKk,
       filePipil,
       catatan,
+      tahunPengajuan,
+      rencanaMt1Komoditas,
+      rencanaMt1LuasHa,
+      rencanaMt2Komoditas,
+      rencanaMt2LuasHa,
+      rencanaMt3Komoditas,
+      rencanaMt3LuasHa,
+      estimasiUreaKg,
+      estimasiNpkKg,
+      estimasiOrganikKg,
     } = body;
 
-    const count = await prisma.pengajuanLahan.count();
-    const nomorPengajuan = `REG-ERDKK-2026-${String(count + 1).padStart(3, '0')}`;
+    const tahun = tahunPengajuan ? parseInt(String(tahunPengajuan), 10) : 2027;
+    const cleanNik = String(nikPemilik || '').trim().replace(/\D/g, '');
+
+    if (!cleanNik || cleanNik.length < 10) {
+      return NextResponse.json(
+        { success: false, error: 'NIK Pemilik wajib minimal 10 digit angka.' },
+        { status: 400 }
+      );
+    }
+
+    // 1. Validasi Duplikasi Pengajuan pada Tahun yang Sama (Blokir Duplikasi)
+    const duplicate = await prisma.pengajuanLahan.findFirst({
+      where: {
+        nikPemilik: cleanNik,
+        tahunPengajuan: tahun,
+      },
+      include: { poktan: true },
+    });
+
+    if (duplicate) {
+      return NextResponse.json(
+        {
+          success: false,
+          isDuplicate: true,
+          error: `NIK ${cleanNik} telah terdaftar dalam antrean e-RDKK ${tahun} atas nama ${duplicate.namaPemilik} (Status: ${duplicate.status}).`,
+          data: duplicate,
+        },
+        { status: 409 }
+      );
+    }
+
+    const count = await prisma.pengajuanLahan.count({
+      where: { tahunPengajuan: tahun },
+    });
+    const nomorPengajuan = `REG-ERDKK-${tahun}-${String(count + 1).padStart(3, '0')}`;
 
     let resolvedPetaniId = petaniId;
     let resolvedPoktanId = poktanId;
@@ -78,7 +126,7 @@ export async function POST(request: Request) {
     // Jika petaniId adalah '__NEW__' atau kosong, daftarkan otomatis ke master Petani berdasarkan NIK
     if (!resolvedPetaniId || resolvedPetaniId === '__NEW__') {
       const existingByNik = await prisma.petani.findUnique({
-        where: { nik: nikPemilik },
+        where: { nik: cleanNik },
       });
       if (existingByNik) {
         resolvedPetaniId = existingByNik.id;
@@ -86,19 +134,20 @@ export async function POST(request: Request) {
       } else {
         const createdPetani = await prisma.petani.create({
           data: {
-            nik: nikPemilik,
-            noKk: noKk || nikPemilik,
+            nik: cleanNik,
+            noKk: noKk || cleanNik,
             nama: namaPemilik,
             tempatLahir: tempatLahir || 'Magetan',
             tanggalLahir: tanggalLahir || null,
             namaIbuKandung: namaIbuKandung || null,
+            telepon: telepon || null,
             alamat: `Desa ${desa || 'Kediren'}`,
             desa: desa || 'Kediren',
             kecamatan: kecamatan || 'Lembeyan',
             kabupaten: kabupaten || 'Magetan',
             poktanId: resolvedPoktanId,
             statusVerifikasi: 'MENUNGGU_VERIFIKASI_PPL',
-            totalLuasLahan: 0,
+            totalLuasLahan: parseFloat(luasHa) || 0,
           },
         });
         resolvedPetaniId = createdPetani.id;
@@ -111,22 +160,33 @@ export async function POST(request: Request) {
         petaniId: resolvedPetaniId,
         poktanId: resolvedPoktanId,
         namaPemilik,
-        nikPemilik,
-        noKk,
+        nikPemilik: cleanNik,
+        noKk: noKk || cleanNik,
         tempatLahir: tempatLahir || 'Magetan',
         tanggalLahir: tanggalLahir || null,
         namaIbuKandung: namaIbuKandung || null,
-        komoditasRencana,
-        luasHa: parseFloat(luasHa) || 1.0,
-        desa,
-        kecamatan,
+        telepon: telepon || null,
+        komoditasRencana: komoditasRencana || rencanaMt1Komoditas || 'Padi',
+        luasHa: parseFloat(luasHa) || parseFloat(rencanaMt1LuasHa) || 1.0,
+        tahunPengajuan: tahun,
+        rencanaMt1Komoditas: rencanaMt1Komoditas || 'Padi',
+        rencanaMt1LuasHa: parseFloat(rencanaMt1LuasHa) || parseFloat(luasHa) || 0,
+        rencanaMt2Komoditas: rencanaMt2Komoditas || 'Jagung',
+        rencanaMt2LuasHa: parseFloat(rencanaMt2LuasHa) || 0,
+        rencanaMt3Komoditas: rencanaMt3Komoditas || 'Padi',
+        rencanaMt3LuasHa: parseFloat(rencanaMt3LuasHa) || 0,
+        estimasiUreaKg: parseFloat(estimasiUreaKg) || 0,
+        estimasiNpkKg: parseFloat(estimasiNpkKg) || 0,
+        estimasiOrganikKg: parseFloat(estimasiOrganikKg) || 0,
+        desa: desa || 'Kediren',
+        kecamatan: kecamatan || 'Lembeyan',
         kabupaten: kabupaten || 'Magetan',
-        nomorPipil,
+        nomorPipil: nomorPipil || '-',
         coordinates: coordinates ? JSON.stringify(coordinates) : null,
         fileKtp: fileKtp || '/uploads/sample_ktp.svg',
         fileKk: fileKk || '/uploads/sample_kk.svg',
         filePipil: filePipil || '/uploads/sample_pipil.svg',
-        catatan: catatan || 'Pengajuan baru e-RDKK dan pemetaan petak lahan.',
+        catatan: catatan || `Pengajuan e-RDKK Petani Tahun Anggaran ${tahun}.`,
         status: 'DIAJUKAN_POKTAN',
       },
       include: {

@@ -35,6 +35,7 @@ import {
   Plus,
   Search,
   Filter,
+  Sparkles,
 } from 'lucide-react';
 import {
   showSuccess,
@@ -584,6 +585,15 @@ export default function PengajuanPage() {
 
           {/* Action Tools */}
           <div className="flex items-center gap-1.5">
+            <Link
+              href="/pengajuan-erdkk-2027"
+              target="_blank"
+              className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-amber-400 hover:bg-amber-500 text-slate-950 text-xs font-black shadow-xs transition"
+              title="Buka Formulir Mandiri Petani 2027 (Akses Publik / Tanpa Login)"
+            >
+              <Sparkles className="w-3.5 h-3.5 text-slate-950" />
+              <span>Form e-RDKK 2027</span>
+            </Link>
             <Link
               href="/cetak-erdkk"
               className="inline-flex items-center gap-1.5 px-3 py-2 rounded-xl bg-slate-900 hover:bg-slate-800 text-white text-xs font-bold shadow-xs transition"
