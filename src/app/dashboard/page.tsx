@@ -14,20 +14,44 @@ export default async function DashboardPage() {
   let pengajuanList: any[] = [];
   let petaniSample: any[] = [];
   let stokKiosList: any[] = [];
+  let poktanList: any[] = [];
 
   try {
     const results = await Promise.all([
       prisma.petani.count(),
       prisma.poktan.count(),
       prisma.lahan.count(),
-      prisma.lahan.findMany(),
-      prisma.alokasiPupuk.findMany(),
+      prisma.lahan.findMany({
+        include: {
+          petani: {
+            select: {
+              id: true,
+              nama: true,
+              desa: true,
+              poktanId: true,
+              poktan: { select: { nama: true } },
+            },
+          },
+        },
+      }),
+      prisma.alokasiPupuk.findMany({
+        include: {
+          petani: {
+            select: {
+              id: true,
+              nama: true,
+              desa: true,
+              poktanId: true,
+            },
+          },
+        },
+      }),
       prisma.penyaluranPupuk.findMany({
         include: {
           petani: { include: { poktan: true } },
         },
         orderBy: { tanggalPenyaluran: 'desc' },
-        take: 5,
+        take: 12,
       }),
       prisma.pengajuanLahan.findMany({
         include: {
@@ -43,6 +67,9 @@ export default async function DashboardPage() {
         },
       }),
       prisma.stokKios.findMany(),
+      prisma.poktan.findMany({
+        orderBy: [{ desa: 'asc' }, { nama: 'asc' }],
+      }),
     ]);
 
     totalPetani = results[0];
@@ -54,6 +81,7 @@ export default async function DashboardPage() {
     pengajuanList = results[6];
     petaniSample = results[7];
     stokKiosList = results[8];
+    poktanList = results[9];
   } catch (dbError) {
     console.error('[Dashboard Server Error] Database query failed:', dbError);
   }
@@ -96,6 +124,9 @@ export default async function DashboardPage() {
       pengajuanList={JSON.parse(JSON.stringify(pengajuanList))}
       petaniSample={JSON.parse(JSON.stringify(petaniSample))}
       stokKiosList={JSON.parse(JSON.stringify(stokKiosList))}
+      allLahan={JSON.parse(JSON.stringify(allLahan))}
+      allAlokasi={JSON.parse(JSON.stringify(allAlokasi))}
+      poktanList={JSON.parse(JSON.stringify(poktanList))}
     />
   );
 }
