@@ -385,7 +385,7 @@ export default function PenyaluranPage() {
               {/* Step 1: Pilih Petani / Scan QR Kartu Tani */}
               <div>
                 <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-                  <h3 className="font-bold text-sm text-slate-800 flex items-center gap-2 text-emerald-700">
+                  <h3 className="font-bold text-sm text-emerald-700 flex items-center gap-2">
                     <UserCheck className="w-4 h-4" />
                     1. Pilih Petani Penerima / Scan QR Kartu Tani
                   </h3>
@@ -442,7 +442,7 @@ export default function PenyaluranPage() {
               {alokasiAktif ? (
                 <div className="pt-4 border-t border-slate-100">
                    <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
-                    <h3 className="font-bold text-sm text-slate-800 flex items-center gap-2 text-emerald-700">
+                    <h3 className="font-bold text-sm text-emerald-700 flex items-center gap-2">
                       <Sprout className="w-4 h-4" />
                       2. Input Jumlah Penebusan & Kontrol Kuota
                     </h3>
@@ -542,7 +542,7 @@ export default function PenyaluranPage() {
               {/* Step 3: Verifikasi Foto KTP & Foto Diri dengan KAMERA LANGSUNG */}
               <div className="pt-4 border-t border-slate-100">
                 <div className="flex items-center justify-between mb-1">
-                  <h3 className="font-bold text-sm text-slate-800 flex items-center gap-2 text-emerald-700">
+                  <h3 className="font-bold text-sm text-emerald-700 flex items-center gap-2">
                     <ShieldCheck className="w-4 h-4 text-emerald-600" />
                     3. Verifikasi Foto Identitas (Kamera Live / Unggah) & Validasi Poktan
                   </h3>

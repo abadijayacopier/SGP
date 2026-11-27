@@ -643,7 +643,7 @@ export default function PengajuanPage() {
           <form onSubmit={handleSubmit} className="space-y-6 text-xs">
             {/* Section A: Identitas Pemilik */}
             <div>
-              <h3 className="font-bold text-sm text-slate-800 mb-3 flex items-center gap-1.5 text-emerald-700">
+              <h3 className="font-bold text-sm text-emerald-700 mb-3 flex items-center gap-1.5">
                 <UserCheck className="w-4 h-4" />
                 1. Data Petani Pemilik / Penggarap
               </h3>
@@ -776,7 +776,7 @@ export default function PengajuanPage() {
 
             {/* Section B: Data Lahan & Komoditas */}
             <div className="pt-4 border-t border-slate-100">
-              <h3 className="font-bold text-sm text-slate-800 mb-3 flex items-center gap-1.5 text-emerald-700">
+              <h3 className="font-bold text-sm text-emerald-700 mb-3 flex items-center gap-1.5">
                 <Building2 className="w-4 h-4" />
                 2. Data Lahan & Komoditas Tanam
               </h3>
@@ -859,7 +859,7 @@ export default function PengajuanPage() {
 
             {/* Section C: Upload Berkas Wajib (KTP, KK, Pipil) */}
             <div className="pt-4 border-t border-slate-100">
-              <h3 className="font-bold text-sm text-slate-800 mb-1.5 flex items-center gap-1.5 text-emerald-700">
+              <h3 className="font-bold text-sm text-emerald-700 mb-1.5 flex items-center gap-1.5">
                 <FileCheck className="w-4 h-4" />
                 3. Lampiran Berkas Dokumen Wajib (Kamera Langsung / Unggah File)
               </h3>

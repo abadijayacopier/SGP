@@ -2025,7 +2025,7 @@ export default function PetaniPage() {
               {/* DAFTAR BLOK-BLOK SAWAH MILIK PETANI */}
               <div>
                 <div className="flex items-center justify-between mb-3">
-                  <h4 className="font-black text-sm text-slate-900 flex items-center gap-1.5 text-emerald-800">
+                  <h4 className="font-black text-sm text-emerald-800 flex items-center gap-1.5">
                     <Layers className="w-4 h-4 text-emerald-600" />
                     Daftar Blok-Blok Sawah ({selectedPetani.lahan?.length || 0} Petak)
                   </h4>
@@ -2110,7 +2110,7 @@ export default function PetaniPage() {
 
               {/* Alokasi Pupuk e-RDKK Terakumulasi */}
               <div>
-                <h4 className="font-black text-sm text-slate-900 mb-2 flex items-center gap-1.5 text-emerald-800">
+                <h4 className="font-black text-sm text-emerald-800 mb-2 flex items-center gap-1.5">
                   <Sprout className="w-4 h-4 text-emerald-600" />
                   Alokasi Kuota Pupuk Subsidi e-RDKK
                 </h4>
