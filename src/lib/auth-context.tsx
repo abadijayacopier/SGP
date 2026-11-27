@@ -112,6 +112,7 @@ export const ROLE_PERMISSIONS: Record<
       '/cetak-f6',
       '/verifikasi',
       '/kepala-desa',
+      '/editor-kartu-tani',
     ],
     menuItems: [
       {
@@ -188,6 +189,12 @@ export const ROLE_PERMISSIONS: Record<
             description: 'Direktori anggota Poktan & filter per Desa',
           },
           {
+            label: 'Editor Kartu Anggota',
+            href: '/editor-kartu-tani',
+            iconName: 'petani',
+            description: 'Desain & cetak Kartu Anggota Kelompok Tani (CR-80)',
+          },
+          {
             label: 'Buku Kas Keuangan Poktan',
             href: '/buku-kas-poktan',
             iconName: 'buku-kas',
@@ -259,6 +266,7 @@ export const ROLE_PERMISSIONS: Record<
       '/cetak-f6',
       '/verifikasi',
       '/kepala-desa',
+      '/editor-kartu-tani',
     ],
     menuItems: [
       { label: 'Workspace BPP', href: '/dashboard', iconName: 'dashboard' },
@@ -316,6 +324,7 @@ export const ROLE_PERMISSIONS: Record<
       '/cetak-kalender-tanam',
       '/buku-kas-poktan',
       '/kepala-desa',
+      '/editor-kartu-tani',
     ],
     menuItems: [
       { label: 'Workspace Poktan', href: '/dashboard', iconName: 'dashboard' },

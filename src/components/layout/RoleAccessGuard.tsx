@@ -16,6 +16,7 @@ const PUBLIC_OR_PRINT_PREFIXES = [
   '/cetak-kartu-tani',
   '/cetak-kalender-tanam',
   '/cetak-erdkk',
+  '/editor-kartu-tani',
 ];
 
 const PATH_LABELS: Record<string, string> = {
@@ -37,6 +38,7 @@ const PATH_LABELS: Record<string, string> = {
   '/field-maps': 'Mode Lapangan (Field Maps Android)',
   '/buku-kas-poktan': 'Buku Kas & Jasa Poktan',
   '/kepala-desa': 'Data Kepala Desa & Perangkat',
+  '/editor-kartu-tani': 'Editor Kartu Anggota Petani (CR-80)',
 };
 
 export default function RoleAccessGuard({ children }: { children: React.ReactNode }) {
