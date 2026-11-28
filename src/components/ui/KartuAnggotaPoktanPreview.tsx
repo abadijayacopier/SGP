@@ -46,18 +46,18 @@ export function KartuAnggotaPoktanPreview({
       />
 
       {/* 2. OVERLAY HEADER BERSIH (MENUTUP TEXT BAWAAN AGAR TIDAK DOUBLE/TABRAKAN) */}
-      <div className="absolute top-[34px] left-[154px] z-10 bg-[#FAF9F6] px-2.5 py-0.5 rounded shadow-2xs pointer-events-none">
-        <div className="font-extrabold text-[20px] tracking-wider text-[#0B5D3B] uppercase font-sans leading-tight">
+      <div className="absolute top-[74px] left-[96px] z-10 bg-[#FAF9F6] w-[220px] h-[42px] flex flex-col justify-center pointer-events-none">
+        <div className="font-extrabold text-[19px] tracking-wider text-[#0B5D3B] uppercase font-sans leading-none">
           KARTU TANI
         </div>
-        <div className="font-bold text-[12px] tracking-wider text-[#137A4E] uppercase font-sans leading-none mt-0.5">
+        <div className="font-bold text-[11px] tracking-wider text-[#137A4E] uppercase font-sans leading-none mt-1 truncate">
           POKTAN {data.kelompokTani ? data.kelompokTani.replace(/^POKTAN\s+/i, '') : 'SRI MULYO'}
         </div>
       </div>
 
       {/* 3. BINGKAI FOTO PASFOTO (Posisi pas pada kotak di template) */}
       <div
-        className="absolute left-[102px] top-[130px] w-[92px] h-[115px] rounded-[6px] overflow-hidden border-[2.5px] border-[#D4AF37] shadow-inner bg-[#E5E5E5] z-10 flex items-center justify-center"
+        className="absolute left-[102px] top-[128px] w-[92px] h-[115px] rounded-[6px] overflow-hidden border-[2.5px] border-[#D4AF37] shadow-inner bg-[#E5E5E5] z-10 flex items-center justify-center"
       >
         {data.fotoUrl ? (
           // eslint-disable-next-line @next/next/no-img-element
@@ -77,7 +77,7 @@ export function KartuAnggotaPoktanPreview({
       </div>
 
       {/* 4. AREA DATA ANGGOTA (Dengan latar putih bersih agar tidak bertabrakan dengan gambar bukit hijau) */}
-      <div className="absolute left-[208px] top-[128px] w-[185px] z-10 p-2.5 rounded-xl bg-white/95 backdrop-blur-xs shadow-xs border border-amber-200/60 space-y-1.5 text-[#0B5D3B] font-sans">
+      <div className="absolute left-[204px] top-[126px] w-[190px] z-10 p-2.5 rounded-xl bg-white/95 backdrop-blur-xs shadow-xs border border-amber-200/60 space-y-1.5 text-[#0B5D3B] font-sans">
         {/* Nama Lengkap */}
         <div className="border-b border-slate-100 pb-1">
           <span className="block text-[8px] font-bold tracking-wider uppercase text-slate-500 leading-none">
@@ -130,7 +130,7 @@ export function KartuAnggotaPoktanPreview({
       </div>
 
       {/* 5. KODE QR VERIFIKASI DIGITAL KELOMPOK TANI (Di dalam batas kartu) */}
-      <div className="absolute left-[98px] bottom-[42px] z-10 flex items-center gap-1.5 bg-white/95 backdrop-blur-xs px-1.5 py-1 rounded-lg border border-[#D4AF37]/60 shadow-xs">
+      <div className="absolute left-[102px] top-[249px] w-[92px] h-[40px] z-10 flex items-center justify-center gap-1.5 bg-white/95 backdrop-blur-xs px-1.5 py-1 rounded-lg border border-[#D4AF37]/60 shadow-xs">
         <QrCodeView
           value={
             data.qrPayload ||
@@ -138,7 +138,7 @@ export function KartuAnggotaPoktanPreview({
               ? `${window.location.origin}/verifikasi?q=KARTUTANI:${data.nik || data.nomorAnggota}`
               : `/verifikasi?q=KARTUTANI:${data.nik || data.nomorAnggota}`)
           }
-          size={36}
+          size={30}
         />
         <div className="text-[7px] font-mono leading-tight text-[#0B5D3B]">
           <span className="font-bold block">KTA SAH</span>
