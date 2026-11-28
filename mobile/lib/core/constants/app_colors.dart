@@ -13,6 +13,8 @@ class AppColors {
   // Secondary Accents
   static const Color accentAmber = Color(0xFFD97706);    // Amber 600 (Padi Siap Panen / Peringatan)
   static const Color accentAmberBg = Color(0xFFFFFBEB);  // Amber 50
+  static const Color accentYellow = Color(0xFFFBBF24);   // Amber / Yellow accent
+  static const Color accentRed = Color(0xFFEF4444);      // Red accent
   static const Color accentBlue = Color(0xFF0284C7);     // Sky 600 (Irigasi Teknis)
 
   // Status Colors

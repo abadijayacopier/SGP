@@ -1,13 +1,20 @@
 import 'package:dio/dio.dart';
-import '../constants/api_endpoints.dart';
+import '../services/server_config_service.dart';
 
 class ApiClient {
-  late final Dio dio;
+  static ApiClient? _instance;
+  static ApiClient get instance => _instance ??= ApiClient._();
 
-  ApiClient() {
-    dio = Dio(
+  late Dio _dio;
+
+  ApiClient._() {
+    _initDio();
+  }
+
+  void _initDio() {
+    _dio = Dio(
       BaseOptions(
-        baseUrl: ApiEndpoints.baseUrl,
+        baseUrl: ServerConfigService.instance.baseUrl,
         connectTimeout: const Duration(seconds: 15),
         receiveTimeout: const Duration(seconds: 15),
         headers: {
@@ -17,10 +24,10 @@ class ApiClient {
       ),
     );
 
-    dio.interceptors.add(
+    _dio.interceptors.add(
       InterceptorsWrapper(
         onRequest: (options, handler) {
-          // Tambahkan header identitas aplikasi mobile
+          options.baseUrl = ServerConfigService.instance.baseUrl;
           options.headers['X-Client-Type'] = 'Flutter-Android-BPP';
           return handler.next(options);
         },
@@ -31,19 +38,21 @@ class ApiClient {
     );
   }
 
+  Dio get dio => _dio;
+
   Future<Response> get(String path, {Map<String, dynamic>? queryParameters}) async {
-    return await dio.get(path, queryParameters: queryParameters);
+    return await _dio.get(path, queryParameters: queryParameters);
   }
 
   Future<Response> post(String path, {dynamic data}) async {
-    return await dio.post(path, data: data);
+    return await _dio.post(path, data: data);
   }
 
   Future<Response> put(String path, {dynamic data}) async {
-    return await dio.put(path, data: data);
+    return await _dio.put(path, data: data);
   }
 
   Future<Response> delete(String path, {Map<String, dynamic>? queryParameters}) async {
-    return await dio.delete(path, queryParameters: queryParameters);
+    return await _dio.delete(path, queryParameters: queryParameters);
   }
 }

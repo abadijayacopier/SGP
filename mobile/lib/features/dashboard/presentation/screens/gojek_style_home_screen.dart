@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 import '../../../../core/constants/app_colors.dart';
+import '../../../../core/services/sync_service.dart';
 import '../../../gis_mapping/presentation/screens/field_map_screen.dart';
 import '../../../pupuk/presentation/screens/kartu_tani_screen.dart';
+import '../../../pupuk/presentation/screens/riwayat_tebus_screen.dart';
+import '../../../petani/presentation/screens/petani_list_screen.dart';
+import '../../../jadwal_tanam/presentation/screens/jadwal_tanam_screen.dart';
+import '../../../sync/presentation/screens/sync_screen.dart';
 
 /// Halaman Beranda Modern dengan Desain Super-App ala Gojek
 /// Disesuaikan untuk Kebutuhan Pertanian BPP Kecamatan Lembeyan
@@ -14,6 +19,60 @@ class GojekStyleHomeScreen extends StatefulWidget {
 
 class _GojekStyleHomeScreenState extends State<GojekStyleHomeScreen> {
   int _currentNavIndex = 0;
+  int _pendingSurveys = 0;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadPendingSurveys();
+  }
+
+  Future<void> _loadPendingSurveys() async {
+    final count = await SyncService.instance.getPendingSurveyCount();
+    if (mounted) {
+      setState(() => _pendingSurveys = count);
+    }
+  }
+
+  void _showBppHelpDialog() {
+    showDialog(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+        title: const Row(
+          children: [
+            Icon(Icons.support_agent, color: AppColors.primary),
+            SizedBox(width: 8),
+            Text('Pusat Bantuan BPP', style: TextStyle(fontSize: 16)),
+          ],
+        ),
+        content: const Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Balai Penyuluhan Pertanian (BPP) Kecamatan Lembeyan',
+              style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13),
+            ),
+            SizedBox(height: 6),
+            Text('Kabupaten Magetan, Jawa Timur', style: TextStyle(fontSize: 12, color: AppColors.textMuted)),
+            Divider(height: 20),
+            Text('• Layanan Verifikasi e-RDKK & Kartu Tani', style: TextStyle(fontSize: 12)),
+            Text('• Pendampingan PPL Lapangan Pemetaan Lahan', style: TextStyle(fontSize: 12)),
+            Text('• Konsultasi Dosis Pemupukan Berimbang', style: TextStyle(fontSize: 12)),
+            SizedBox(height: 12),
+            Text('Jam Operasional: Senin - Jumat (07.30 - 15.30 WIB)', style: TextStyle(fontSize: 11, fontStyle: FontStyle.italic)),
+          ],
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx),
+            child: const Text('Tutup'),
+          ),
+        ],
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -27,6 +86,40 @@ class _GojekStyleHomeScreenState extends State<GojekStyleHomeScreen> {
               // 1. TOP BAR & SEARCH BAR ALA GOJEK
               _buildTopSearchBar(),
 
+              // Banner Notifikasi Pending Sync (jika ada survei sawah offline)
+              if (_pendingSurveys > 0)
+                Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 10, 16, 0),
+                  child: InkWell(
+                    onTap: () async {
+                      await Navigator.push(context, MaterialPageRoute(builder: (_) => const SyncScreen()));
+                      _loadPendingSurveys();
+                    },
+                    borderRadius: BorderRadius.circular(12),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      decoration: BoxDecoration(
+                        color: Colors.amber.shade50,
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(color: Colors.amber),
+                      ),
+                      child: Row(
+                        children: [
+                          const Icon(Icons.sync_problem, color: Colors.amber, size: 20),
+                          const SizedBox(width: 10),
+                          Expanded(
+                            child: Text(
+                              'Ada $_pendingSurveys survei sawah offline yang belum terkirim ke server.',
+                              style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: Colors.amber.shade900),
+                            ),
+                          ),
+                          const Text('Kirim', style: TextStyle(fontSize: 12, fontWeight: FontWeight.bold, color: AppColors.primary)),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+
               const SizedBox(height: 14),
 
               // 2. KARTU KUOTA PUPUK SUBSIDI (ALA GOPAY WALLET CARD)
@@ -34,7 +127,7 @@ class _GojekStyleHomeScreenState extends State<GojekStyleHomeScreen> {
 
               const SizedBox(height: 20),
 
-              // 3. GRID 8 MENU LAYANAN UTAMA (ALA GORIDE / GOFOOD / GOSEND)
+              // 3. GRID 8 MENU LAYANAN UTAMA
               _buildGojekServiceGrid(),
 
               const SizedBox(height: 24),
@@ -44,7 +137,7 @@ class _GojekStyleHomeScreenState extends State<GojekStyleHomeScreen> {
 
               const SizedBox(height: 20),
 
-              // 5. BANNER INFO MUSIM TANAM & JADWAL PEMUPUKAN (ALA PROMO CAROUSEL)
+              // 5. BANNER INFO MUSIM TANAM & JADWAL PEMUPUKAN
               _buildMusimTanamInfoSection(),
 
               const SizedBox(height: 24),
@@ -53,47 +146,38 @@ class _GojekStyleHomeScreenState extends State<GojekStyleHomeScreen> {
         ),
       ),
 
-      // 6. BOTTOM NAVIGATION BAR ALA GOJEK
+      // 6. BOTTOM NAVIGATION BAR
       bottomNavigationBar: _buildGojekBottomNav(),
     );
   }
 
-  // Widget 1: Top Bar & Search Bar
+  // Widget 1: Top Bar & Search Bar Input
   Widget _buildTopSearchBar() {
     return Container(
       color: Colors.white,
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 14),
       child: Column(
         children: [
           Row(
             children: [
-              // Avatar Pengguna
+              // Logo Tunas Pertanian Lembeyan
               Container(
-                width: 40,
-                height: 40,
-                decoration: const BoxDecoration(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
                   color: AppColors.primarySurface,
-                  shape: BoxShape.circle,
+                  borderRadius: BorderRadius.circular(12),
                 ),
-                child: const Center(
-                  child: Text(
-                    'SP',
-                    style: TextStyle(
-                      color: AppColors.primaryDark,
-                      fontWeight: FontWeight.bold,
-                      fontSize: 14,
-                    ),
-                  ),
-                ),
+                child: const Icon(Icons.eco, color: AppColors.primary, size: 22),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               // Greeting & Lokasi Poktan
               const Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Halo, Supriyanto! 👋',
+                      'SGP Lembeyan Mobile 🌾',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
@@ -101,48 +185,73 @@ class _GojekStyleHomeScreenState extends State<GojekStyleHomeScreen> {
                       ),
                     ),
                     Text(
-                      'Poktan Sri Mulyo • Desa Kediren',
+                      'Kecamatan Lembeyan • Magetan',
                       style: TextStyle(fontSize: 11, color: AppColors.textMuted),
                     ),
                   ],
                 ),
               ),
-              // Tombol Notifikasi & Bantuan
+              // Tombol Sinkronisasi Server
               IconButton(
-                icon: const Icon(Icons.notifications_none, color: AppColors.textMain),
-                onPressed: () {},
+                icon: Badge(
+                  isLabelVisible: _pendingSurveys > 0,
+                  label: Text('$_pendingSurveys'),
+                  child: const Icon(Icons.sync, color: AppColors.primary),
+                ),
+                tooltip: 'Sinkronisasi Data',
+                onPressed: () async {
+                  await Navigator.push(context, MaterialPageRoute(builder: (_) => const SyncScreen()));
+                  _loadPendingSurveys();
+                },
+              ),
+              // Tombol Bantuan
+              IconButton(
+                icon: const Icon(Icons.help_outline, color: AppColors.textMain),
+                tooltip: 'Bantuan BPP',
+                onPressed: _showBppHelpDialog,
               ),
             ],
           ),
           const SizedBox(height: 10),
           // Floating Search Bar Input
-          Container(
-            height: 44,
-            padding: const EdgeInsets.symmetric(horizontal: 14),
-            decoration: BoxDecoration(
-              color: const Color(0xFFF1F5F9),
-              borderRadius: BorderRadius.circular(24),
-              border: Border.all(color: const Color(0xFFE2E8F0)),
-            ),
-            child: Row(
-              children: [
-                const Icon(Icons.search, color: AppColors.textMuted, size: 20),
-                const SizedBox(width: 8),
-                const Expanded(
-                  child: Text(
-                    'Cari NIK, nama petani, atau blok sawah...',
-                    style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+          InkWell(
+            onTap: () {
+              Navigator.push(context, MaterialPageRoute(builder: (_) => const PetaniListScreen()));
+            },
+            borderRadius: BorderRadius.circular(24),
+            child: Container(
+              height: 44,
+              padding: const EdgeInsets.symmetric(horizontal: 14),
+              decoration: BoxDecoration(
+                color: const Color(0xFFF1F5F9),
+                borderRadius: BorderRadius.circular(24),
+                border: Border.all(color: const Color(0xFFE2E8F0)),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.search, color: AppColors.textMuted, size: 20),
+                  const SizedBox(width: 8),
+                  const Expanded(
+                    child: Text(
+                      'Cari NIK, nama petani, atau blok sawah...',
+                      style: TextStyle(fontSize: 12, color: AppColors.textMuted),
+                    ),
                   ),
-                ),
-                Container(
-                  padding: const EdgeInsets.all(4),
-                  decoration: BoxDecoration(
-                    color: AppColors.primary.withOpacity(0.12),
-                    shape: BoxShape.circle,
+                  InkWell(
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const KartuTaniScreen()));
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.all(5),
+                      decoration: const BoxDecoration(
+                        color: AppColors.primarySurface,
+                        shape: BoxShape.circle,
+                      ),
+                      child: const Icon(Icons.qr_code_scanner, color: AppColors.primary, size: 16),
+                    ),
                   ),
-                  child: const Icon(Icons.qr_code_scanner, color: AppColors.primary, size: 16),
-                ),
-              ],
+                ],
+              ),
             ),
           ),
         ],
@@ -156,7 +265,7 @@ class _GojekStyleHomeScreenState extends State<GojekStyleHomeScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Container(
         decoration: BoxDecoration(
-          color: const Color(0xFF064E3B), // Deep Forest Green khas Gojek/Pertanian
+          color: const Color(0xFF064E3B), // Deep Forest Green
           borderRadius: BorderRadius.circular(20),
           boxShadow: const [
             BoxShadow(
@@ -179,59 +288,65 @@ class _GojekStyleHomeScreenState extends State<GojekStyleHomeScreen> {
                       children: [
                         Row(
                           children: [
+                            const Text(
+                              'e-RDKK Pupuk Subsidi',
+                              style: TextStyle(color: Colors.white70, fontSize: 11, fontWeight: FontWeight.w600),
+                            ),
+                            const SizedBox(width: 6),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                               decoration: BoxDecoration(
-                                color: Colors.white24,
-                                borderRadius: BorderRadius.circular(6),
+                                color: AppColors.accentYellow.withAlpha(50),
+                                borderRadius: BorderRadius.circular(4),
                               ),
                               child: const Text(
-                                'e-RDKK 2026',
-                                style: TextStyle(color: Colors.white, fontSize: 9, fontWeight: FontWeight.bold),
+                                'MT 2026',
+                                style: TextStyle(color: AppColors.accentYellow, fontSize: 9, fontWeight: FontWeight.bold),
                               ),
-                            ),
-                            const SizedBox(width: 6),
-                            const Text(
-                              'Musim Tanam MT 1',
-                              style: TextStyle(color: Colors.white70, fontSize: 11),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 6),
-                        const Text(
-                          'Sisa Kuota Pupuk Bersubsidi',
-                          style: TextStyle(color: Colors.white, fontSize: 13, fontWeight: FontWeight.w600),
-                        ),
                         const SizedBox(height: 4),
                         const Text(
-                          '67 Kg Urea • 50 Kg NPK • 102 Kg Organik',
+                          'Urea: 350 kg • NPK: 250 kg',
                           style: TextStyle(
-                            color: Color(0xFFA7F3D0),
-                            fontSize: 12,
-                            fontWeight: FontWeight.bold,
+                            color: Colors.white,
+                            fontSize: 17,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: -0.3,
                           ),
+                        ),
+                        const SizedBox(height: 2),
+                        const Text(
+                          'Sisa Kuota Siap Tebus di Kios Resmi',
+                          style: TextStyle(color: Colors.white60, fontSize: 10),
                         ),
                       ],
                     ),
                   ),
-                  Container(
-                    width: 44,
-                    height: 44,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.15),
-                      shape: BoxShape.circle,
+                  ElevatedButton(
+                    onPressed: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const RiwayatTebusScreen()));
+                    },
+                    style: ElevatedButton.styleFrom(
+                      backgroundColor: AppColors.accentYellow,
+                      foregroundColor: const Color(0xFF064E3B),
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+                      minimumSize: Size.zero,
+                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+                      elevation: 0,
                     ),
-                    child: const Icon(Icons.eco, color: Colors.white, size: 24),
+                    child: const Text('Detail Kuota', style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold)),
                   ),
                 ],
               ),
             ),
 
-            // Baris Bawah: Quick Action Buttons ala GoPay (Tebus, Riwayat, Kartu)
+            // Baris Bawah: 4 Tombol Aksi Cepat
             Container(
-              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
               decoration: const BoxDecoration(
-                color: Color(0xFF047857), // Sedikit lebih terang
+                color: Color(0xFF047857),
                 borderRadius: BorderRadius.vertical(bottom: Radius.circular(20)),
               ),
               child: Row(
@@ -241,31 +356,29 @@ class _GojekStyleHomeScreenState extends State<GojekStyleHomeScreen> {
                     icon: Icons.qr_code,
                     label: 'Scan Kartu',
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const KartuTaniScreen()),
-                      );
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const KartuTaniScreen()));
                     },
                   ),
                   _buildGopayActionButton(
                     icon: Icons.receipt_long,
                     label: 'Riwayat Tebus',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const RiwayatTebusScreen()));
+                    },
                   ),
                   _buildGopayActionButton(
                     icon: Icons.map,
                     label: 'Petak Sawah',
                     onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(builder: (_) => const FieldMapScreen()),
-                      );
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const FieldMapScreen()));
                     },
                   ),
                   _buildGopayActionButton(
                     icon: Icons.calendar_month,
                     label: 'Jadwal Tanam',
-                    onTap: () {},
+                    onTap: () {
+                      Navigator.push(context, MaterialPageRoute(builder: (_) => const JadwalTanamScreen()));
+                    },
                   ),
                 ],
               ),
@@ -300,17 +413,17 @@ class _GojekStyleHomeScreenState extends State<GojekStyleHomeScreen> {
     );
   }
 
-  // Widget 3: Grid 8 Layanan Utama ala Gojek Super-App (GoRide, GoFood, dll.)
+  // Widget 3: Grid 8 Layanan Utama
   Widget _buildGojekServiceGrid() {
     final services = [
       {'title': 'Peta Sawah', 'icon': Icons.map_outlined, 'color': AppColors.primary, 'screen': const FieldMapScreen()},
       {'title': 'Kartu Tani', 'icon': Icons.badge_outlined, 'color': const Color(0xFF047857), 'screen': const KartuTaniScreen()},
-      {'title': 'Tebus Pupuk', 'icon': Icons.storefront_outlined, 'color': AppColors.accentAmber, 'screen': const KartuTaniScreen()},
-      {'title': 'Jadwal Tanam', 'icon': Icons.event_note_outlined, 'color': AppColors.accentBlue, 'screen': null},
-      {'title': 'Daftar Petani', 'icon': Icons.groups_outlined, 'color': const Color(0xFF0D9488), 'screen': null},
-      {'title': 'Poktan Desa', 'icon': Icons.domain_outlined, 'color': const Color(0xFF0284C7), 'screen': null},
-      {'title': 'Surat Ukur', 'icon': Icons.description_outlined, 'color': const Color(0xFF475569), 'screen': null},
-      {'title': 'Bantuan BPP', 'icon': Icons.support_agent_outlined, 'color': const Color(0xFFEA580C), 'screen': null},
+      {'title': 'Tebus Pupuk', 'icon': Icons.storefront_outlined, 'color': AppColors.accentAmber, 'screen': const RiwayatTebusScreen()},
+      {'title': 'Jadwal Tanam', 'icon': Icons.event_note_outlined, 'color': AppColors.accentBlue, 'screen': const JadwalTanamScreen()},
+      {'title': 'Daftar Petani', 'icon': Icons.groups_outlined, 'color': const Color(0xFF0D9488), 'screen': const PetaniListScreen()},
+      {'title': 'Poktan Desa', 'icon': Icons.domain_outlined, 'color': const Color(0xFF0284C7), 'screen': const PetaniListScreen()},
+      {'title': 'Sinkron Data', 'icon': Icons.sync_outlined, 'color': const Color(0xFF475569), 'screen': const SyncScreen()},
+      {'title': 'Bantuan BPP', 'icon': Icons.support_agent_outlined, 'color': const Color(0xFFEA580C), 'action': 'help'},
     ];
 
     return Padding(
@@ -340,19 +453,14 @@ class _GojekStyleHomeScreenState extends State<GojekStyleHomeScreen> {
             final icon = item['icon'] as IconData;
             final title = item['title'] as String;
             final screen = item['screen'] as Widget?;
+            final action = item['action'] as String?;
 
             return InkWell(
               onTap: () {
-                if (screen != null) {
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => screen));
-                } else {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('Menu $title siap digunakan.'),
-                      backgroundColor: AppColors.primary,
-                      duration: const Duration(seconds: 1),
-                    ),
-                  );
+                if (action == 'help') {
+                  _showBppHelpDialog();
+                } else if (screen != null) {
+                  Navigator.push(context, MaterialPageRoute(builder: (_) => screen)).then((_) => _loadPendingSurveys());
                 }
               },
               borderRadius: BorderRadius.circular(16),
@@ -363,7 +471,7 @@ class _GojekStyleHomeScreenState extends State<GojekStyleHomeScreen> {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: color.withOpacity(0.12),
+                      color: color.withAlpha(30),
                       shape: BoxShape.circle,
                     ),
                     child: Icon(icon, color: color, size: 24),
@@ -378,7 +486,6 @@ class _GojekStyleHomeScreenState extends State<GojekStyleHomeScreen> {
                     ),
                     textAlign: TextAlign.center,
                     maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
                   ),
                 ],
               ),
@@ -389,26 +496,26 @@ class _GojekStyleHomeScreenState extends State<GojekStyleHomeScreen> {
     );
   }
 
-  // Widget 4: Hero Banner Pemetaan Sawah Lapangan
+  // Widget 4: Hero Banner GIS Pemetaan
   Widget _buildGisHeroBanner() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: InkWell(
         onTap: () {
-          Navigator.push(context, MaterialPageRoute(builder: (_) => const FieldMapScreen()));
+          Navigator.push(context, MaterialPageRoute(builder: (_) => const FieldMapScreen())).then((_) => _loadPendingSurveys());
         },
         borderRadius: BorderRadius.circular(20),
         child: Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(18),
           decoration: BoxDecoration(
             gradient: const LinearGradient(
-              colors: [Color(0xFF047857), Color(0xFF10B981)],
+              colors: [Color(0xFF047857), Color(0xFF065F46)],
               begin: Alignment.topLeft,
               end: Alignment.bottomRight,
             ),
             borderRadius: BorderRadius.circular(20),
             boxShadow: const [
-              BoxShadow(color: Color(0x28047857), blurRadius: 10, offset: Offset(0, 4)),
+              BoxShadow(color: Color(0x2A047857), blurRadius: 12, offset: Offset(0, 5)),
             ],
           ),
           child: Row(
@@ -416,35 +523,40 @@ class _GojekStyleHomeScreenState extends State<GojekStyleHomeScreen> {
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text(
-                      'Pemetaan Petak Sawah (GIS)',
-                      style: TextStyle(color: Colors.white, fontSize: 15, fontWeight: FontWeight.bold),
+                  children: [
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: Colors.white24,
+                        borderRadius: BorderRadius.circular(6),
+                      ),
+                      child: const Text(
+                        '🛰️ SATELIT ESRI REAL-TIME',
+                        style: TextStyle(color: Colors.white, fontSize: 10, fontWeight: FontWeight.bold),
+                      ),
                     ),
-                    SizedBox(height: 4),
-                    Text(
-                      'Ukur batas fisik sawah satelit Esri, rekam patok GPS, & simpan otomatis saat offline.',
-                      style: TextStyle(color: Colors.white70, fontSize: 11, height: 1.3),
+                    const SizedBox(height: 8),
+                    const Text(
+                      'Mulai Ukur Petak Sawah',
+                      style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Perekaman titik patok akurasi GPS satelit dan simpan offline tanpa sinyal.',
+                      style: TextStyle(color: Colors.white70, fontSize: 11),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 12),
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-                decoration: BoxDecoration(
+                width: 52,
+                height: 52,
+                decoration: const BoxDecoration(
                   color: Colors.white,
-                  borderRadius: BorderRadius.circular(12),
+                  shape: BoxShape.circle,
                 ),
-                child: const Row(
-                  children: [
-                    Text(
-                      'Mulai',
-                      style: TextStyle(color: AppColors.primaryDark, fontWeight: FontWeight.bold, fontSize: 12),
-                    ),
-                    Icon(Icons.arrow_forward_ios, color: AppColors.primaryDark, size: 12),
-                  ],
-                ),
+                child: const Icon(Icons.navigation, color: AppColors.primary, size: 28),
               ),
             ],
           ),
@@ -453,7 +565,7 @@ class _GojekStyleHomeScreenState extends State<GojekStyleHomeScreen> {
     );
   }
 
-  // Widget 5: Banner Informasi Jadwal Pemupukan (Gojek Promo Carousel Style)
+  // Widget 5: Musim Tanam Info
   Widget _buildMusimTanamInfoSection() {
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16),
@@ -461,46 +573,45 @@ class _GojekStyleHomeScreenState extends State<GojekStyleHomeScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           const Text(
-            'Informasi Pertanian Kecamatan Lembeyan',
+            'Kalender Tanam & Rekomendasi BPP',
             style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: AppColors.textMain),
           ),
           const SizedBox(height: 10),
           Container(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(14),
             decoration: BoxDecoration(
               color: Colors.white,
-              borderRadius: BorderRadius.circular(18),
-              border: Border.all(color: AppColors.border),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFE2E8F0)),
             ),
             child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Container(
-                  width: 44,
-                  height: 44,
+                  padding: const EdgeInsets.all(10),
                   decoration: BoxDecoration(
-                    color: AppColors.accentAmber.withOpacity(0.12),
+                    color: AppColors.accentAmberBg,
                     borderRadius: BorderRadius.circular(12),
                   ),
-                  child: const Icon(Icons.wb_sunny_outlined, color: AppColors.accentAmber, size: 24),
+                  child: const Icon(Icons.wb_sunny, color: AppColors.accentAmber, size: 24),
                 ),
-                const SizedBox(width: 14),
+                const SizedBox(width: 12),
                 const Expanded(
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        'Jadwal Rekomendasi Pemupukan Fase 1',
-                        style: TextStyle(fontSize: 13, fontWeight: FontWeight.bold, color: AppColors.textMain),
+                        'Pola Tanam MT 1 Walikan',
+                        style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13, color: AppColors.textMain),
                       ),
-                      SizedBox(height: 3),
+                      SizedBox(height: 2),
                       Text(
-                        'Usia tanaman 7-14 HST: Aplikasi Urea 35 Kg + NPK 25 Kg. Pastikan debit air irigasi mencukupi.',
-                        style: TextStyle(fontSize: 11, color: AppColors.textMuted, height: 1.3),
+                        'Oktober - Januari: Padi Sawah Inpari 32 dengan rekomendasi pemupukan berimbang.',
+                        style: TextStyle(fontSize: 11, color: AppColors.textMuted),
                       ),
                     ],
                   ),
                 ),
+                const Icon(Icons.chevron_right, color: AppColors.textMuted),
               ],
             ),
           ),
@@ -509,24 +620,29 @@ class _GojekStyleHomeScreenState extends State<GojekStyleHomeScreen> {
     );
   }
 
-  // Widget 6: Bottom Navigation Bar Ramping ala Gojek
+  // Widget 6: Bottom Navigation Bar
   Widget _buildGojekBottomNav() {
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(color: Color(0x0D000000), blurRadius: 10, offset: Offset(0, -3)),
         ],
       ),
       child: BottomNavigationBar(
         currentIndex: _currentNavIndex,
-        onTap: (index) {
+        onTap: (index) async {
           setState(() => _currentNavIndex = index);
           if (index == 1) {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const FieldMapScreen()));
+            await Navigator.push(context, MaterialPageRoute(builder: (_) => const FieldMapScreen()));
           } else if (index == 2) {
-            Navigator.push(context, MaterialPageRoute(builder: (_) => const KartuTaniScreen()));
+            await Navigator.push(context, MaterialPageRoute(builder: (_) => const KartuTaniScreen()));
+          } else if (index == 3) {
+            await Navigator.push(context, MaterialPageRoute(builder: (_) => const RiwayatTebusScreen()));
+          } else if (index == 4) {
+            await Navigator.push(context, MaterialPageRoute(builder: (_) => const SyncScreen()));
           }
+          _loadPendingSurveys();
         },
         type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
@@ -540,7 +656,7 @@ class _GojekStyleHomeScreenState extends State<GojekStyleHomeScreen> {
           BottomNavigationBarItem(icon: Icon(Icons.map_outlined), label: 'Peta GIS'),
           BottomNavigationBarItem(icon: Icon(Icons.badge_outlined), label: 'Kartu Tani'),
           BottomNavigationBarItem(icon: Icon(Icons.receipt_long_outlined), label: 'Transaksi'),
-          BottomNavigationBarItem(icon: Icon(Icons.person_outline), label: 'Akun'),
+          BottomNavigationBarItem(icon: Icon(Icons.cloud_sync_outlined), label: 'Sinkron'),
         ],
       ),
     );
