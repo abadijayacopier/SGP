@@ -2075,7 +2075,7 @@ export default function PetaniPage() {
                       href={`/peta`}
                       className="text-[11px] font-bold text-emerald-700 hover:underline flex items-center gap-1"
                     >
-                      Buka Semua di Peta GIS &rarr;
+                      Lihat Peta Sawah &rarr;
                     </Link>
                   )}
                 </div>
@@ -2116,22 +2116,10 @@ export default function PetaniPage() {
                           )}
                         </div>
 
-                        <div className="flex flex-wrap items-center gap-2 shrink-0 w-full sm:w-auto mt-2 sm:mt-0">
-                          <Link
-                            href={`/peta`}
-                            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1 text-[11px] font-bold bg-white border border-slate-200 text-slate-700 px-3 py-2 rounded-xl hover:bg-slate-100 transition shadow-2xs"
-                          >
-                            <Compass className="w-3.5 h-3.5 text-emerald-600" />
-                            Peta
-                          </Link>
-                          <Link
-                            href={`/cetak-lahan/${l.id}`}
-                            target="_blank"
-                            className="flex-1 sm:flex-initial inline-flex items-center justify-center gap-1.5 text-[11px] font-bold bg-slate-900 text-white px-3 py-2 rounded-xl hover:bg-emerald-700 transition shadow-2xs"
-                          >
-                            <Printer className="w-3.5 h-3.5 text-emerald-300" />
-                            Cetak Kartu Lahan
-                          </Link>
+                        <div className="shrink-0 sm:text-right mt-2 sm:mt-0">
+                          <span className="inline-block text-[10px] font-bold text-emerald-800 bg-white border border-emerald-200 px-2.5 py-1 rounded-lg shadow-2xs">
+                            Poligon GIS Terdaftar
+                          </span>
                         </div>
                       </div>
                     ))}
@@ -2224,8 +2212,48 @@ export default function PetaniPage() {
                 )}
               </div>
 
-              {/* Sisi Kanan (Desktop) / Sisi Atas (Mobile): Cetak Kartu Tani & Tutup Rincian */}
-              <div className="grid grid-cols-1 min-[420px]:grid-cols-2 sm:flex sm:items-center gap-2">
+              {/* Sisi Kanan (Desktop) / Sisi Atas (Mobile): Deretan Tombol Aksi (Lihat Peta Sawah, Cetak Kartu Lahan, Cetak Kartu Tani, Tutup) */}
+              <div className="flex flex-wrap items-center justify-end gap-2">
+                {/* 1. Tombol Lihat Peta Sawah */}
+                <Link
+                  href="/peta"
+                  onClick={() => setDetailModalOpen(false)}
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-emerald-50 hover:bg-emerald-100 active:scale-95 text-emerald-800 font-bold rounded-xl text-xs border border-emerald-300 transition shadow-2xs text-center cursor-pointer"
+                  title="Buka Peta GIS & Pantau Lokasi Sawah Petani"
+                >
+                  <Compass className="w-4 h-4 text-emerald-600 shrink-0" />
+                  <span>Lihat Peta Sawah</span>
+                </Link>
+
+                {/* 2. Tombol Cetak Kartu Lahan */}
+                {selectedPetani.lahan && selectedPetani.lahan.length > 0 ? (
+                  <Link
+                    href={`/cetak-lahan/${selectedPetani.lahan[0].id}`}
+                    target="_blank"
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 font-bold rounded-xl text-xs border border-slate-300 transition shadow-2xs text-center cursor-pointer"
+                    title="Cetak Surat Kepemilikan & Peta Petak Lahan Resmi"
+                  >
+                    <Printer className="w-4 h-4 text-emerald-700 shrink-0" />
+                    <span>Cetak Kartu Lahan</span>
+                  </Link>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() =>
+                      showWarning(
+                        'Belum Ada Lahan Terpetakan',
+                        'Petani ini belum memiliki koordinat poligon petak sawah yang dipetakan untuk dicetak.'
+                      )
+                    }
+                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-slate-50 text-slate-400 font-semibold rounded-xl text-xs border border-slate-200 transition text-center cursor-not-allowed"
+                    title="Petani belum memiliki data pemetaan petak sawah"
+                  >
+                    <Printer className="w-4 h-4 text-slate-400 shrink-0" />
+                    <span>Cetak Kartu Lahan</span>
+                  </button>
+                )}
+
+                {/* 3. Tombol Cetak Kartu Tani Digital */}
                 <Link
                   href={`/cetak-kartu-tani/${selectedPetani.id}`}
                   target="_blank"
@@ -2234,10 +2262,12 @@ export default function PetaniPage() {
                   <CreditCard className="w-4 h-4 shrink-0" />
                   <span>Cetak Kartu Tani Digital</span>
                 </Link>
+
+                {/* 4. Tombol Tutup Rincian */}
                 <button
                   type="button"
                   onClick={() => setDetailModalOpen(false)}
-                  className="inline-flex items-center justify-center px-5 py-2.5 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white font-bold rounded-xl text-xs transition shadow-2xs cursor-pointer"
+                  className="inline-flex items-center justify-center px-4 py-2.5 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white font-bold rounded-xl text-xs transition shadow-2xs cursor-pointer"
                 >
                   Tutup Rincian
                 </button>
