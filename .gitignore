@@ -25,6 +25,7 @@ yarn-error.log*
 # Database
 prisma/*.db
 prisma/*.db-journal
+public/*.db
 
 
 # OS Files
