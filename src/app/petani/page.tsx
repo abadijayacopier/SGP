@@ -27,6 +27,7 @@ import {
   Edit3,
   Trash2,
   AlertTriangle,
+  User,
 } from 'lucide-react';
 import {
   showSuccess,
@@ -695,9 +696,9 @@ export default function PetaniPage() {
           <span className="text-[11px] text-blue-600 font-medium">Wilayah BPP Kec. Lembeyan</span>
         </div>
         <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
-          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Blok Sawah</span>
+          <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Pemetaan Lahan GIS</span>
           <div className="text-xl font-black text-emerald-700 mt-1">{totalBlokSawah} Petak</div>
-          <span className="text-[11px] text-slate-500">Terpetakan poligon GIS</span>
+          <span className="text-[11px] text-slate-500">{totalBlokSawah > 0 ? 'Terpetakan poligon GIS' : 'Belum dipetakan'}</span>
         </div>
         <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-2xs">
           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Total Luas Baku</span>
@@ -943,7 +944,7 @@ export default function PetaniPage() {
                   Daftar Anggota Petani ({filteredPetani.length} Orang)
                 </h3>
                 <p className="text-xs text-slate-500 mt-0.5">
-                  Klik baris petani (misal: Kasdi Mulyono atau Sukirno) untuk melihat rincian daftar blok-blok sawah miliknya.
+                  Klik tombol &quot;Detail Petani&quot; atau baris tabel untuk melihat rincian profil petani, kuota pupuk e-RDKK, dan status pemetaan lahan.
                 </p>
               </div>
               <span className="text-xs font-semibold text-slate-500 shrink-0">
@@ -1041,10 +1042,11 @@ export default function PetaniPage() {
                           setSelectedPetani(item);
                           setDetailModalOpen(true);
                         }}
-                        className="flex-1 min-w-[110px] inline-flex items-center justify-center gap-1 bg-slate-900 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs py-2 px-2.5 rounded-xl shadow-xs transition"
+                        className="flex-1 min-w-[110px] inline-flex items-center justify-center gap-1.5 bg-slate-900 hover:bg-emerald-700 active:scale-95 text-white font-bold text-xs py-2 px-2.5 rounded-xl shadow-xs transition"
                       >
-                        <span>Blok Sawah</span>
-                        <ChevronRight className="w-3.5 h-3.5" />
+                        <User className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>Detail Petani</span>
+                        <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
                       </button>
 
                       <button
@@ -1079,7 +1081,7 @@ export default function PetaniPage() {
                     <th className="py-3 px-4">Kelompok Tani</th>
                     <th className="py-3 px-4">Domisili / Desa</th>
                     <th className="py-3 px-4">Total Luas Terakumulasi</th>
-                    <th className="py-3 px-4">Daftar Blok Sawah</th>
+                    <th className="py-3 px-4">Status Pemetaan</th>
                     <th className="py-3 px-4">Alokasi e-RDKK</th>
                     <th className="py-3 px-4 text-right">Aksi</th>
                   </tr>
@@ -1129,7 +1131,7 @@ export default function PetaniPage() {
                           ) : (
                             <span className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-800 font-bold px-2.5 py-1 rounded-full border border-amber-300 text-xs shadow-2xs">
                               <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
-                              Belum Dipetakan
+                              Belum Dipetakan (0 Petak)
                             </span>
                           )}
                         </td>
@@ -1168,9 +1170,12 @@ export default function PetaniPage() {
                                 setSelectedPetani(item);
                                 setDetailModalOpen(true);
                               }}
-                              className="inline-flex items-center gap-1 bg-slate-900 hover:bg-emerald-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg shadow-2xs transition whitespace-nowrap"
+                              className="inline-flex items-center gap-1.5 bg-slate-900 hover:bg-emerald-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg shadow-2xs transition whitespace-nowrap active:scale-95 cursor-pointer"
+                              title="Lihat Detail Petani"
                             >
-                              Blok Sawah <ChevronRight className="w-3.5 h-3.5" />
+                              <User className="w-3.5 h-3.5 text-emerald-400" />
+                              <span>Detail Petani</span>
+                              <ChevronRight className="w-3.5 h-3.5 text-slate-400" />
                             </button>
                             <button
                               type="button"
@@ -2034,10 +2039,14 @@ export default function PetaniPage() {
             {/* Statistik Akumulasi Luas Petani */}
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 sm:gap-3 text-xs">
               <div className="bg-emerald-50 border border-emerald-200 rounded-2xl p-3 text-center">
-                <span className="text-[10px] font-bold text-emerald-800 uppercase">Jumlah Blok Sawah</span>
-                <p className="text-xl font-black text-emerald-950 mt-0.5">
-                  {selectedPetani.lahan?.length || 0} Petak
-                </p>
+                <span className="text-[10px] font-bold text-emerald-800 uppercase">Status Pemetaan GIS</span>
+                <div className="text-base sm:text-lg font-black text-emerald-950 mt-0.5">
+                  {selectedPetani.lahan && selectedPetani.lahan.length > 0 ? (
+                    `${selectedPetani.lahan.length} Petak Terpetakan`
+                  ) : (
+                    <span className="text-amber-800 font-bold text-sm block">Belum Ada Pemetaan (0 Petak)</span>
+                  )}
+                </div>
               </div>
               <div className="bg-blue-50 border border-blue-200 rounded-2xl p-3 text-center">
                 <span className="text-[10px] font-bold text-blue-800 uppercase">Total Luas Terdaftar</span>
@@ -2054,19 +2063,21 @@ export default function PetaniPage() {
             </div>
 
             <div className="space-y-6 text-xs">
-              {/* DAFTAR BLOK-BLOK SAWAH MILIK PETANI */}
+              {/* DAFTAR / STATUS PEMETAAN LAHAN */}
               <div>
                 <div className="flex items-center justify-between mb-3">
                   <h4 className="font-black text-sm text-emerald-800 flex items-center gap-1.5">
                     <Layers className="w-4 h-4 text-emerald-600" />
-                    Daftar Blok-Blok Sawah ({selectedPetani.lahan?.length || 0} Petak)
+                    Status Pemetaan Lahan Pertanian (GIS Spasial)
                   </h4>
-                  <Link
-                    href={`/peta`}
-                    className="text-[11px] font-bold text-emerald-700 hover:underline flex items-center gap-1"
-                  >
-                    Buka Semua di Peta GIS &rarr;
-                  </Link>
+                  {selectedPetani.lahan && selectedPetani.lahan.length > 0 && (
+                    <Link
+                      href={`/peta`}
+                      className="text-[11px] font-bold text-emerald-700 hover:underline flex items-center gap-1"
+                    >
+                      Buka Semua di Peta GIS &rarr;
+                    </Link>
+                  )}
                 </div>
 
                 {selectedPetani.lahan && selectedPetani.lahan.length > 0 ? (
@@ -2126,14 +2137,32 @@ export default function PetaniPage() {
                     ))}
                   </div>
                 ) : (
-                  <div className="p-6 text-center border-2 border-dashed border-slate-200 rounded-2xl text-slate-400">
-                    Petani ini belum memiliki petak lahan yang dipetakan.
-                    <div className="mt-2">
+                  <div className="p-5 sm:p-6 rounded-2xl border-2 border-dashed border-amber-300 bg-amber-50/60 text-center space-y-3">
+                    <div className="w-10 h-10 rounded-full bg-amber-100 text-amber-700 mx-auto flex items-center justify-center">
+                      <AlertTriangle className="w-5 h-5 text-amber-600" />
+                    </div>
+                    <div>
+                      <h5 className="font-bold text-slate-800 text-sm">
+                        Belum Ada Data Pemetaan Lahan / Edit Peta
+                      </h5>
+                      <p className="text-xs text-slate-600 mt-1 max-w-md mx-auto">
+                        Petani ini telah terverifikasi dalam e-RDKK resmi Poktan {selectedPetani.poktan?.nama || 'SRI MULYO'} dengan luas terdaftar <strong>{Number(selectedPetani.totalLuasLahan || 0).toFixed(2)} Ha</strong>, namun koordinat poligon petak sawah fisik belum dipetakan / diedit pada GIS.
+                      </p>
+                    </div>
+                    <div className="pt-1 flex flex-wrap items-center justify-center gap-2">
                       <Link
                         href="/peta"
-                        className="text-emerald-600 font-bold hover:underline text-xs"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-xs transition active:scale-95"
                       >
-                        + Buka Peta GIS & Digitasi Lahan Sekarang
+                        <Compass className="w-4 h-4" />
+                        <span>Buka Peta GIS & Mulai Pemetaan</span>
+                      </Link>
+                      <Link
+                        href="/field-maps"
+                        className="inline-flex items-center gap-1.5 px-4 py-2 bg-slate-900 hover:bg-slate-800 text-amber-300 font-bold text-xs rounded-xl shadow-xs transition active:scale-95"
+                      >
+                        <MapPin className="w-4 h-4 text-amber-300" />
+                        <span>Survei GPS Field Maps</span>
                       </Link>
                     </div>
                   </div>
