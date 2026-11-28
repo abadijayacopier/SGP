@@ -27,14 +27,12 @@ jobs:
       - name: Setup Flutter SDK
         uses: subosito/flutter-action@v2
         with:
-          flutter-version: '3.22.x'
           channel: 'stable'
           cache: true
 
-      - name: Generate Android Platform Files & Install Dependencies
+      - name: Install Dependencies
         run: |
           cd mobile
-          flutter create . --org com.bpplembeyan --project-name pertanian_mobile
           flutter pub get
 
       - name: Build Android Release APK

@@ -198,7 +198,7 @@ class _FieldMapScreenState extends ConsumerState<FieldMapScreen> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          '${survey.points.length} Titik Patok • Keliling: ${survey.livePerimeterMeters} m',
+                          '${survey.points.length} Titik Patok • Keliling: ${survey.livePerimeterMeters} m${_gpsAccuracy > 0 ? " • Akurasi: ±${_gpsAccuracy.toStringAsFixed(0)}m" : ""}',
                           style: const TextStyle(fontSize: 11, color: AppColors.textMuted),
                         ),
                       ],
