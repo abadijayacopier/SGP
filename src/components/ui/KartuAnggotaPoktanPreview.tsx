@@ -18,7 +18,7 @@ export interface KartuAnggotaData {
 
 interface Props {
   data: KartuAnggotaData;
-  scale?: number; // default scale jika di layar
+  scale?: number;
   className?: string;
 }
 
@@ -37,7 +37,7 @@ export function KartuAnggotaPoktanPreview({
         WebkitPrintColorAdjust: 'exact',
       }}
     >
-      {/* 1. LAYER LATAR BELAKANG GAMBAR ASLI PERSIS REFERENSI USER */}
+      {/* 1. LAYER LATAR BELAKANG GAMBAR ASLI TEMPLATE */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/images/kartu-tani-template.jpg"
@@ -45,18 +45,17 @@ export function KartuAnggotaPoktanPreview({
         className="absolute inset-0 w-full h-full object-cover pointer-events-none z-0"
       />
 
-      {/* 2. OVERLAY HEADER DINAMIS (JIKA SUBJUDUL KELOMPOK TANI DIUBAH) */}
-      <div className="absolute top-[28px] left-[155px] z-10 pointer-events-none">
-        <div className="font-extrabold text-[22px] tracking-wider text-[#0B5D3B] uppercase font-sans leading-tight">
+      {/* 2. OVERLAY HEADER BERSIH (MENUTUP TEXT BAWAAN AGAR TIDAK DOUBLE/TABRAKAN) */}
+      <div className="absolute top-[34px] left-[154px] z-10 bg-[#FAF9F6] px-2.5 py-0.5 rounded shadow-2xs pointer-events-none">
+        <div className="font-extrabold text-[20px] tracking-wider text-[#0B5D3B] uppercase font-sans leading-tight">
           KARTU TANI
         </div>
-        <div className="font-bold text-[13px] tracking-wide text-[#137A4E] uppercase font-sans leading-none mt-0.5">
-          {data.kelompokTani || 'KELOMPOK TANI'}
+        <div className="font-bold text-[12px] tracking-wider text-[#137A4E] uppercase font-sans leading-none mt-0.5">
+          POKTAN {data.kelompokTani ? data.kelompokTani.replace(/^POKTAN\s+/i, '') : 'SRI MULYO'}
         </div>
       </div>
 
-      {/* 3. BINGKAI FOTO PASFOTO (Ukuran & Posisi pas persis pada kotak abu-abu di template) */}
-      {/* Kotak abu-abu di gambar terletak pada: left ~102px, top ~130px, lebar ~92px, tinggi ~115px (rasio 3:4) */}
+      {/* 3. BINGKAI FOTO PASFOTO (Posisi pas pada kotak di template) */}
       <div
         className="absolute left-[102px] top-[130px] w-[92px] h-[115px] rounded-[6px] overflow-hidden border-[2.5px] border-[#D4AF37] shadow-inner bg-[#E5E5E5] z-10 flex items-center justify-center"
       >
@@ -68,70 +67,70 @@ export function KartuAnggotaPoktanPreview({
             className="w-full h-full object-cover"
           />
         ) : (
-          <div className="flex flex-col items-center justify-center text-slate-400 p-2 text-center">
-            <svg className="w-8 h-8 opacity-60" fill="currentColor" viewBox="0 0 24 24">
+          <div className="flex flex-col items-center justify-center text-slate-400 p-2 text-center bg-slate-100 w-full h-full">
+            <svg className="w-8 h-8 text-slate-400" fill="currentColor" viewBox="0 0 24 24">
               <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
             </svg>
-            <span className="text-[9px] mt-1 font-semibold leading-tight">Pasfoto 3:4</span>
+            <span className="text-[9px] mt-1 font-semibold text-slate-500 leading-tight">Pasfoto 3:4</span>
           </div>
         )}
       </div>
 
-      {/* 4. AREA DATA ANGGOTA (Di sebelah kanan foto, di area putih bersih) */}
-      <div className="absolute left-[208px] top-[130px] w-[205px] z-10 space-y-2 text-[#0B5D3B] font-sans">
-        {/* Nama Anggota */}
-        <div>
-          <span className="block text-[9px] font-bold tracking-wider uppercase text-slate-500 leading-none">
+      {/* 4. AREA DATA ANGGOTA (Dengan latar putih bersih agar tidak bertabrakan dengan gambar bukit hijau) */}
+      <div className="absolute left-[208px] top-[128px] w-[185px] z-10 p-2.5 rounded-xl bg-white/95 backdrop-blur-xs shadow-xs border border-amber-200/60 space-y-1.5 text-[#0B5D3B] font-sans">
+        {/* Nama Lengkap */}
+        <div className="border-b border-slate-100 pb-1">
+          <span className="block text-[8px] font-bold tracking-wider uppercase text-slate-500 leading-none">
             Nama Lengkap
           </span>
-          <strong className="text-[14px] font-black tracking-tight text-[#0B5D3B] uppercase block leading-tight truncate">
+          <strong className="text-[13px] font-black tracking-tight text-[#0B5D3B] uppercase block leading-tight truncate">
             {data.nama || 'NAMA PETANI'}
           </strong>
         </div>
 
         {/* No. Anggota */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-[9px] font-bold tracking-wider uppercase text-slate-500 w-[72px] shrink-0 leading-none">
+        <div className="flex items-center justify-between gap-1 text-[9px]">
+          <span className="font-bold uppercase text-slate-500 shrink-0">
             No. Anggota:
           </span>
-          <span className="text-[11px] font-mono font-black text-[#B8860B] leading-none truncate">
+          <span className="font-mono font-black text-[#B8860B] truncate">
             {data.nomorAnggota || 'KT-3509-0001'}
           </span>
         </div>
 
         {/* Jabatan */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-[9px] font-bold tracking-wider uppercase text-slate-500 w-[72px] shrink-0 leading-none">
+        <div className="flex items-center justify-between gap-1 text-[9px]">
+          <span className="font-bold uppercase text-slate-500 shrink-0">
             Jabatan:
           </span>
-          <span className="text-[10px] font-bold text-slate-800 leading-none truncate bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200/60">
+          <span className="font-bold text-slate-800 truncate bg-amber-100/80 px-1.5 py-0.5 rounded text-[8.5px]">
             {data.jabatan || 'Anggota Aktif'}
           </span>
         </div>
 
         {/* Kelompok Tani */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-[9px] font-bold tracking-wider uppercase text-slate-500 w-[72px] shrink-0 leading-none">
+        <div className="flex items-center justify-between gap-1 text-[9px]">
+          <span className="font-bold uppercase text-slate-500 shrink-0">
             Poktan:
           </span>
-          <span className="text-[10.5px] font-black text-[#137A4E] leading-none truncate">
+          <span className="font-black text-[#137A4E] truncate">
             {data.kelompokTani || 'Sri Mulyo'}
           </span>
         </div>
 
-        {/* Desa / Kecamatan */}
-        <div className="flex items-start gap-1.5 pt-0.5">
-          <span className="text-[9px] font-bold tracking-wider uppercase text-slate-500 w-[72px] shrink-0 leading-none">
+        {/* Wilayah / Desa */}
+        <div className="flex items-start justify-between gap-1 text-[9px]">
+          <span className="font-bold uppercase text-slate-500 shrink-0">
             Wilayah:
           </span>
-          <span className="text-[9.5px] font-semibold text-slate-700 leading-tight">
-            {data.desaKecamatan || 'Kediren, Kec. Lembeyan'}
+          <span className="font-semibold text-slate-700 text-right text-[8.5px] truncate">
+            {data.desaKecamatan || 'Kediren, Lembeyan'}
           </span>
         </div>
       </div>
 
-      {/* 5. KODE QR VERIFIKASI DIGITAL KELOMPOK TANI (Sudut Kiri Bawah) */}
-      <div className="absolute left-[20px] bottom-[20px] z-10 flex items-center gap-2 bg-white/90 backdrop-blur-xs p-1 rounded-lg border border-[#D4AF37]/50 shadow-xs">
+      {/* 5. KODE QR VERIFIKASI DIGITAL KELOMPOK TANI (Di dalam batas kartu) */}
+      <div className="absolute left-[98px] bottom-[42px] z-10 flex items-center gap-1.5 bg-white/95 backdrop-blur-xs px-1.5 py-1 rounded-lg border border-[#D4AF37]/60 shadow-xs">
         <QrCodeView
           value={
             data.qrPayload ||
@@ -139,17 +138,17 @@ export function KartuAnggotaPoktanPreview({
               ? `${window.location.origin}/verifikasi?q=KARTUTANI:${data.nik || data.nomorAnggota}`
               : `/verifikasi?q=KARTUTANI:${data.nik || data.nomorAnggota}`)
           }
-          size={38}
+          size={36}
         />
-        <div className="text-[7.5px] font-mono leading-tight text-[#0B5D3B]">
+        <div className="text-[7px] font-mono leading-tight text-[#0B5D3B]">
           <span className="font-bold block">KTA SAH</span>
-          <span className="text-slate-500 text-[6.5px]">e-VERIFIKASI</span>
+          <span className="text-slate-500 text-[6px]">e-VERIFIKASI</span>
         </div>
       </div>
 
-      {/* Label Tanpa Elemen Bank di Kanan Bawah */}
-      <div className="absolute right-[22px] bottom-[16px] z-10 text-right pointer-events-none">
-        <span className="text-[8px] font-bold uppercase tracking-wider text-emerald-100 bg-emerald-950/60 px-2 py-0.5 rounded-full border border-emerald-500/40 backdrop-blur-xs">
+      {/* 6. LABEL KTA RESMI DI KANAN BAWAH KARTU */}
+      <div className="absolute right-[92px] bottom-[48px] z-10 text-right pointer-events-none">
+        <span className="text-[8px] font-bold uppercase tracking-wider text-emerald-100 bg-emerald-950/70 px-2 py-0.5 rounded-full border border-emerald-500/40 backdrop-blur-xs">
           KTA KELOMPOK TANI RESMI
         </span>
       </div>
