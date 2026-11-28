@@ -5,13 +5,19 @@ export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
     const poktanId = searchParams.get('poktanId');
+    const desa = searchParams.get('desa');
     const tahun = parseInt(searchParams.get('tahun') || '2026');
     const musimTanam = searchParams.get('musimTanam') || 'MT 1';
 
-    // Ambil daftar petani berdasarkan Poktan
+    // Ambil daftar petani berdasarkan Poktan dan/atau Desa
     const wherePetani: any = {};
     if (poktanId && poktanId !== 'SEMUA') {
       wherePetani.poktanId = poktanId;
+    } else if (desa && desa !== 'SEMUA') {
+      wherePetani.OR = [
+        { desa: { contains: desa } },
+        { poktan: { desa: { contains: desa } } },
+      ];
     }
 
     const petaniList = await prisma.petani.findMany({

@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useMemo } from 'react';
 import { useAuth } from '@/lib/auth-context';
 import {
   Calculator,
@@ -25,7 +25,10 @@ import {
   RotateCcw,
   X,
   Plus,
+  MapPin,
+  ChevronDown,
 } from 'lucide-react';
+import { DESA_LEMBEYAN_LIST } from '@/lib/erdkk-format';
 import {
   downloadTemplateAlokasiPoktanExcel,
   exportAlokasiPoktanExcel,
@@ -63,6 +66,7 @@ export default function AlokasiPoktanPage() {
   const { currentUser } = useAuth();
 
   const [poktanList, setPoktanList] = useState<any[]>([]);
+  const [selectedDesa, setSelectedDesa] = useState<string>('Kediren');
   const [selectedPoktanId, setSelectedPoktanId] = useState<string>('');
   const [musimTanam, setMusimTanam] = useState<string>('MT 1');
   const [tahun, setTahun] = useState<number>(2026);
@@ -119,6 +123,79 @@ export default function AlokasiPoktanPage() {
   });
   const [actionLoading, setActionLoading] = useState(false);
 
+  // Hitung jumlah Poktan per desa
+  const poktanCountByDesa = useMemo(() => {
+    const map: Record<string, number> = {};
+    poktanList.forEach((p) => {
+      if (p.desa) {
+        const d = p.desa.toLowerCase();
+        map[d] = (map[d] || 0) + 1;
+      }
+    });
+    return map;
+  }, [poktanList]);
+
+  // Daftar Desa unik (menggabungkan 10 Desa resmi Lembeyan dan data Poktan yang ada)
+  const availableDesaList = useMemo(() => {
+    const list = [...DESA_LEMBEYAN_LIST];
+    poktanList.forEach((p) => {
+      if (p.desa && !list.some((d) => d.toLowerCase() === p.desa.toLowerCase())) {
+        list.push(p.desa);
+      }
+    });
+    return list.sort((a, b) => {
+      const countA = poktanCountByDesa[a.toLowerCase()] || 0;
+      const countB = poktanCountByDesa[b.toLowerCase()] || 0;
+      if (countA > 0 && countB === 0) return -1;
+      if (countB > 0 && countA === 0) return 1;
+      return a.localeCompare(b);
+    });
+  }, [poktanList, poktanCountByDesa]);
+
+  // Daftar Poktan yang difilter bertingkat berdasarkan Desa yang dipilih
+  const filteredPoktanOptions = useMemo(() => {
+    if (selectedDesa === 'SEMUA') {
+      return poktanList;
+    }
+    return poktanList.filter(
+      (p) => (p.desa || '').trim().toLowerCase() === selectedDesa.trim().toLowerCase()
+    );
+  }, [poktanList, selectedDesa]);
+
+  // Handler pergantian Desa -> otomatis sesuaikan Poktan
+  const handleDesaChange = (newDesa: string) => {
+    setSelectedDesa(newDesa);
+    if (newDesa === 'SEMUA') {
+      if (!selectedPoktanId && poktanList.length > 0) {
+        setSelectedPoktanId(poktanList[0].id);
+      }
+    } else {
+      const poktanInDesa = poktanList.filter(
+        (p) => (p.desa || '').trim().toLowerCase() === newDesa.trim().toLowerCase()
+      );
+      const isCurrentInDesa = poktanInDesa.some((p) => p.id === selectedPoktanId);
+      if (!isCurrentInDesa) {
+        if (poktanInDesa.length > 0) {
+          const prioritized = poktanInDesa.find((p) => (p.jumlahAnggota || p.anggota?.length || 0) > 0) || poktanInDesa[0];
+          setSelectedPoktanId(prioritized.id);
+        } else {
+          setSelectedPoktanId('SEMUA');
+        }
+      }
+    }
+  };
+
+  // Handler pergantian Poktan
+  const handlePoktanChange = (newPoktanId: string) => {
+    setSelectedPoktanId(newPoktanId);
+    if (newPoktanId !== 'SEMUA') {
+      const found = poktanList.find((p) => p.id === newPoktanId);
+      if (found && found.desa && selectedDesa !== 'SEMUA' && found.desa.toLowerCase() !== selectedDesa.toLowerCase()) {
+        setSelectedDesa(found.desa);
+      }
+    }
+  };
+
   // Load Poktan Awal (dengan safe retry saat Fast Refresh / Recompile)
   useEffect(() => {
     let isMounted = true;
@@ -133,9 +210,19 @@ export default function AlokasiPoktanPage() {
             const matched = json.data.find(
               (p: any) => p.nama.toLowerCase() === currentUser.wilayah?.toLowerCase()
             );
-            setSelectedPoktanId(matched ? matched.id : json.data[0].id);
+            if (matched) {
+              setSelectedPoktanId(matched.id);
+              if (matched.desa) setSelectedDesa(matched.desa);
+            } else {
+              setSelectedPoktanId(json.data[0].id);
+              if (json.data[0].desa) setSelectedDesa(json.data[0].desa);
+            }
           } else {
-            setSelectedPoktanId(json.data[0].id);
+            // Prioritaskan Poktan SRI MULYO jika ada, atau gunakan poktan pertama
+            const sriMulyo = json.data.find((p: any) => p.nama.toUpperCase().includes('SRI MULYO'));
+            const initialPoktan = sriMulyo || json.data[0];
+            setSelectedPoktanId(initialPoktan.id);
+            if (initialPoktan.desa) setSelectedDesa(initialPoktan.desa);
           }
         }
       } catch (err) {
@@ -154,12 +241,15 @@ export default function AlokasiPoktanPage() {
 
   // Load Alokasi Petani
   const fetchAlokasi = async () => {
-    if (!selectedPoktanId) return;
     try {
       setLoading(true);
-      const res = await fetch(
-        `/api/alokasi-poktan?poktanId=${selectedPoktanId}&musimTanam=${musimTanam}&tahun=${tahun}`
-      );
+      const params = new URLSearchParams({
+        poktanId: selectedPoktanId || 'SEMUA',
+        desa: selectedDesa || 'SEMUA',
+        musimTanam,
+        tahun: String(tahun),
+      });
+      const res = await fetch(`/api/alokasi-poktan?${params.toString()}`);
       if (!res.ok) return;
       const json = await res.json();
       if (json.success && Array.isArray(json.data)) {
@@ -174,8 +264,10 @@ export default function AlokasiPoktanPage() {
   };
 
   useEffect(() => {
-    fetchAlokasi();
-  }, [selectedPoktanId, musimTanam, tahun]);
+    if (selectedPoktanId || selectedDesa) {
+      fetchAlokasi();
+    }
+  }, [selectedPoktanId, selectedDesa, musimTanam, tahun]);
 
   // Handle Edit Nilai Alokasi Per Baris
   const handleItemChange = (index: number, field: string, value: number) => {
@@ -480,8 +572,14 @@ export default function AlokasiPoktanPage() {
   const handleOpenTambahModal = async () => {
     try {
       setActionLoading(true);
-      // Ambil seluruh petani terdaftar di poktan ini
-      const res = await fetch(`/api/petani?poktanId=${selectedPoktanId}`);
+      // Ambil seluruh petani terdaftar di poktan/desa ini
+      const endpoint =
+        selectedPoktanId && selectedPoktanId !== 'SEMUA'
+          ? `/api/petani?poktanId=${selectedPoktanId}`
+          : selectedDesa && selectedDesa !== 'SEMUA'
+          ? `/api/petani?desa=${selectedDesa}`
+          : `/api/petani`;
+      const res = await fetch(endpoint);
       const json = await res.json();
       if (json.success && Array.isArray(json.data)) {
         // Filter petani yang belum memiliki alokasi di tabel ini
@@ -626,44 +724,106 @@ export default function AlokasiPoktanPage() {
       <div className="bg-white rounded-3xl border border-slate-200 p-5 shadow-xs space-y-4 no-print">
         <div className="flex flex-wrap items-center justify-between gap-4">
           <div className="flex flex-wrap items-center gap-3">
+            {/* Tingkat 1: Wilayah Desa / Kelurahan */}
             <div>
-              <label className="text-xs font-bold text-slate-500 block mb-1">Kelompok Tani (Poktan):</label>
-              <select
-                value={selectedPoktanId}
-                onChange={(e) => setSelectedPoktanId(e.target.value)}
-                className="text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800"
-              >
-                {poktanList.map((pok) => (
-                  <option key={pok.id} value={pok.id}>
-                    {pok.nama} (Desa {pok.desa})
-                  </option>
-                ))}
-              </select>
+              <label className="text-xs font-bold text-slate-700 block mb-1 flex items-center gap-1.5">
+                <MapPin className="w-3.5 h-3.5 text-emerald-600 shrink-0" />
+                <span>Desa / Kelurahan:</span>
+                <span className="text-[10px] text-emerald-700 font-bold bg-emerald-50 px-1.5 py-0.2 rounded border border-emerald-200/60 ml-auto">
+                  {availableDesaList.length} Desa
+                </span>
+              </label>
+              <div className="relative">
+                <select
+                  value={selectedDesa}
+                  onChange={(e) => handleDesaChange(e.target.value)}
+                  className="text-xs font-bold bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-200 rounded-xl pl-3 pr-8 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer appearance-none shadow-2xs transition"
+                >
+                  <option value="SEMUA">Semua Wilayah Desa (Kec. Lembeyan)</option>
+                  {availableDesaList.map((desaName) => {
+                    const countPok = poktanCountByDesa[desaName.toLowerCase()] || 0;
+                    return (
+                      <option key={desaName} value={desaName}>
+                        Desa {desaName} {countPok > 0 ? `(${countPok} Poktan)` : ''}
+                      </option>
+                    );
+                  })}
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
             </div>
 
+            {/* Tingkat 2: Kelompok Tani (Poktan) - Terfilter Otomatis Berdasarkan Desa */}
             <div>
-              <label className="text-xs font-bold text-slate-500 block mb-1">Musim Tanam (MT):</label>
-              <select
-                value={musimTanam}
-                onChange={(e) => setMusimTanam(e.target.value)}
-                className="text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800"
-              >
-                <option value="MT 1">MT 1 (Walikan - Padi)</option>
-                <option value="MT 2">MT 2 (Kemarau - Jagung, Palawija dll)</option>
-                <option value="MT 3">MT 3 (Rendeng - Padi)</option>
-              </select>
+              <label className="text-xs font-bold text-slate-700 block mb-1 flex items-center gap-1.5">
+                <Users className="w-3.5 h-3.5 text-blue-600 shrink-0" />
+                <span>Kelompok Tani (Poktan):</span>
+                <span className="text-[10px] text-blue-700 font-bold bg-blue-50 px-1.5 py-0.2 rounded border border-blue-200/60 ml-auto">
+                  {filteredPoktanOptions.length} Poktan
+                </span>
+              </label>
+              <div className="relative">
+                <select
+                  value={selectedPoktanId}
+                  onChange={(e) => handlePoktanChange(e.target.value)}
+                  className={`text-xs font-bold border rounded-xl pl-3 pr-8 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 cursor-pointer appearance-none shadow-2xs transition ${
+                    selectedPoktanId !== 'SEMUA'
+                      ? 'bg-blue-50/70 border-blue-300 text-blue-900 ring-1 ring-blue-500/20'
+                      : 'bg-slate-50 hover:bg-slate-100/80 focus:bg-white border-slate-200'
+                  }`}
+                >
+                  {filteredPoktanOptions.length > 1 && (
+                    <option value="SEMUA">
+                      {selectedDesa !== 'SEMUA'
+                        ? `Semua Kelompok Tani di Desa ${selectedDesa} (${filteredPoktanOptions.length} Poktan)`
+                        : `Semua Kelompok Tani (${poktanList.length} Poktan Se-Kecamatan)`}
+                    </option>
+                  )}
+                  {filteredPoktanOptions.length === 0 ? (
+                    <option value="">-- Belum Ada Poktan Terdaftar di Desa Ini --</option>
+                  ) : (
+                    filteredPoktanOptions.map((pok) => (
+                      <option key={pok.id} value={pok.id}>
+                        {pok.nama} {selectedDesa === 'SEMUA' ? `(Desa ${pok.desa})` : ''} {pok.jumlahAnggota > 0 ? `• ${pok.jumlahAnggota} Petani` : ''}
+                      </option>
+                    ))
+                  )}
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
             </div>
 
+            {/* Musim Tanam */}
             <div>
-              <label className="text-xs font-bold text-slate-500 block mb-1">Tahun Anggaran:</label>
-              <select
-                value={tahun}
-                onChange={(e) => setTahun(parseInt(e.target.value))}
-                className="text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl px-3 py-2 text-slate-800"
-              >
-                <option value={2026}>2026</option>
-                <option value={2027}>2027</option>
-              </select>
+              <label className="text-xs font-bold text-slate-700 block mb-1">Musim Tanam (MT):</label>
+              <div className="relative">
+                <select
+                  value={musimTanam}
+                  onChange={(e) => setMusimTanam(e.target.value)}
+                  className="text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl pl-3 pr-8 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer appearance-none shadow-2xs"
+                >
+                  <option value="MT 1">MT 1 (Walikan - Padi)</option>
+                  <option value="MT 2">MT 2 (Kemarau - Jagung, Palawija dll)</option>
+                  <option value="MT 3">MT 3 (Rendeng - Padi)</option>
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
+            </div>
+
+            {/* Tahun Anggaran */}
+            <div>
+              <label className="text-xs font-bold text-slate-700 block mb-1">Tahun Anggaran:</label>
+              <div className="relative">
+                <select
+                  value={tahun}
+                  onChange={(e) => setTahun(parseInt(e.target.value))}
+                  className="text-xs font-bold bg-slate-50 border border-slate-200 rounded-xl pl-3 pr-8 py-2 text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 cursor-pointer appearance-none shadow-2xs"
+                >
+                  <option value={2026}>2026</option>
+                  <option value={2027}>2027</option>
+                </select>
+                <ChevronDown className="w-3.5 h-3.5 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
+              </div>
             </div>
           </div>
 
@@ -838,10 +998,10 @@ export default function AlokasiPoktanPage() {
           <div>
             <h3 className="text-base font-black text-slate-900 flex items-center gap-2">
               <Users className="w-5 h-5 text-emerald-600" />
-              Daftar Alokasi e-RDKK Petani &mdash; {selectedPoktan?.nama || 'Poktan'}
+              Daftar Alokasi e-RDKK Petani &mdash; {selectedPoktan ? selectedPoktan.nama : selectedPoktanId === 'SEMUA' ? (selectedDesa !== 'SEMUA' ? `Desa ${selectedDesa} (Semua Poktan)` : 'Seluruh Poktan Se-Kecamatan') : 'Poktan'}
             </h3>
             <p className="text-xs text-slate-500">
-              Musim Tanam {musimTanam} &bull; Tahun Anggaran {tahun}
+              Musim Tanam {musimTanam} &bull; Tahun Anggaran {tahun} {selectedDesa !== 'SEMUA' && selectedPoktan ? `&bull; Desa ${selectedPoktan.desa || selectedDesa}` : selectedDesa !== 'SEMUA' ? `&bull; Wilayah Desa ${selectedDesa}` : ''}
             </p>
           </div>
           <div className="flex items-center gap-2">
@@ -868,7 +1028,7 @@ export default function AlokasiPoktanPage() {
             </div>
           ) : filteredItems.length === 0 ? (
             <div className="p-8 text-center text-slate-400 text-xs italic">
-              Belum ada petani terdaftar pada kelompok tani ini.
+              Belum ada data petani terdaftar pada filter alokasi ini.
             </div>
           ) : (
             filteredItems.map((item, index) => {
@@ -1020,7 +1180,7 @@ export default function AlokasiPoktanPage() {
               ) : filteredItems.length === 0 ? (
                 <tr>
                   <td colSpan={10} className="py-8 text-center text-slate-400 italic">
-                    Belum ada petani terdaftar pada kelompok tani ini.
+                    Belum ada data petani terdaftar pada filter alokasi ini.
                   </td>
                 </tr>
               ) : (
@@ -1440,7 +1600,7 @@ export default function AlokasiPoktanPage() {
                     Tambah Petani ke Alokasi e-RDKK
                   </h3>
                   <p className="text-xs text-slate-500">
-                    {selectedPoktan?.nama} &bull; {musimTanam} {tahun}
+                    {selectedPoktan?.nama || (selectedDesa !== 'SEMUA' ? `Desa ${selectedDesa}` : 'Poktan')} &bull; {musimTanam} {tahun}
                   </p>
                 </div>
               </div>
