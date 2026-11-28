@@ -5,7 +5,7 @@ import 'package:latlong2/latlong.dart';
 import '../../../../core/constants/app_colors.dart';
 import '../../../../core/constants/api_endpoints.dart';
 import '../../../../core/services/gps_service.dart';
-import '../providers/survey_provider.dart';
+import '../../providers/survey_provider.dart';
 
 /// Layar Peta Spasial GIS Satelit Esri World Imagery (Mobile Native)
 class FieldMapScreen extends ConsumerStatefulWidget {

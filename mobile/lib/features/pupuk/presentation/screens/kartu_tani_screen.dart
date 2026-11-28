@@ -212,7 +212,7 @@ class KartuTaniScreen extends StatelessWidget {
           borderRadius: BorderRadius.circular(16),
           border: Border.all(color: AppColors.border),
           boxShadow: const [
-            BoxShadow(color: Colors.black05, blurRadius: 4, offset: Offset(0, 2)),
+            BoxShadow(color: Color(0x0D000000), blurRadius: 4, offset: Offset(0, 2)),
           ],
         ),
         child: Column(

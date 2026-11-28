@@ -1,6 +1,6 @@
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:latlong2/latlong.dart';
-import '../../../../core/utils/gis_calculator.dart';
+import '../../../core/utils/gis_calculator.dart';
 
 class SurveyState {
   final List<LatLng> points;

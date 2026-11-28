@@ -321,7 +321,7 @@ class _GojekStyleHomeScreenState extends State<GojekStyleHomeScreen> {
           color: Colors.white,
           borderRadius: BorderRadius.circular(20),
           boxShadow: const [
-            BoxShadow(color: Colors.black05, blurRadius: 8, offset: Offset(0, 3)),
+            BoxShadow(color: Color(0x0D000000), blurRadius: 8, offset: Offset(0, 3)),
           ],
         ),
         child: GridView.builder(
@@ -514,8 +514,8 @@ class _GojekStyleHomeScreenState extends State<GojekStyleHomeScreen> {
     return Container(
       decoration: const BoxDecoration(
         color: Colors.white,
-        boxShadow: [
-          BoxShadow(color: Colors.black05, blurRadius: 10, offset: Offset(0, -3)),
+        boxShadow: const [
+          BoxShadow(color: Color(0x0D000000), blurRadius: 10, offset: Offset(0, -3)),
         ],
       ),
       child: BottomNavigationBar(
@@ -528,7 +528,7 @@ class _GojekStyleHomeScreenState extends State<GojekStyleHomeScreen> {
             Navigator.push(context, MaterialPageRoute(builder: (_) => const KartuTaniScreen()));
           }
         },
-        type: BottomNavigationBarStyle.fixed,
+        type: BottomNavigationBarType.fixed,
         backgroundColor: Colors.white,
         selectedItemColor: AppColors.primary,
         unselectedItemColor: AppColors.textMuted,

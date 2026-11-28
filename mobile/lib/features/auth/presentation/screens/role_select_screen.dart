@@ -138,7 +138,7 @@ class RoleSelectScreen extends StatelessWidget {
             borderRadius: BorderRadius.circular(20),
             border: Border.all(color: AppColors.border),
             boxShadow: const [
-              BoxShadow(color: Colors.black05, blurRadius: 6, offset: Offset(0, 3)),
+              BoxShadow(color: Color(0x0D000000), blurRadius: 6, offset: Offset(0, 3)),
             ],
           ),
           child: Row(
