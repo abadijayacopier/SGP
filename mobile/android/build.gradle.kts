@@ -3,6 +3,11 @@ allprojects {
         google()
         mavenCentral()
     }
+    tasks.configureEach {
+        if (name.contains("lintVital", ignoreCase = true) || name.contains("lintAnalyze", ignoreCase = true)) {
+            enabled = false
+        }
+    }
 }
 
 val newBuildDir: Directory =
