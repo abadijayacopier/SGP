@@ -196,15 +196,15 @@ export default async function CetakLahanPage({ params }: Props) {
   const scaleBarMeters = widthMeters > 180 ? 50 : 25;
   const scaleBarPx = Math.min(120, Math.max(30, scaleBarMeters * scale));
 
-  // Warna poligon khas per komoditas
+  // Warna poligon khas per komoditas (Outline Hitam Resmi Standar Kadastral / BPN)
   const komLower = (lahan.komoditas || 'padi').toLowerCase();
   const polyStyle = komLower.includes('jagung')
-    ? { fill: '#f59e0b', stroke: '#fde047', badge: 'Jagung' }
+    ? { fill: '#fde047', stroke: '#000000', badge: 'Jagung' }
     : komLower.includes('kedelai')
-    ? { fill: '#eab308', stroke: '#fef08a', badge: 'Kedelai' }
+    ? { fill: '#fef08a', stroke: '#000000', badge: 'Kedelai' }
     : komLower.includes('tebu')
-    ? { fill: '#38bdf8', stroke: '#bae6fd', badge: 'Tebu' }
-    : { fill: '#22c55e', stroke: '#86efac', badge: 'Padi Sawah' };
+    ? { fill: '#7dd3fc', stroke: '#000000', badge: 'Tebu' }
+    : { fill: '#86efac', stroke: '#000000', badge: 'Padi Sawah' };
 
   const now = new Date();
   const currentDate = `${now.getDate()} ${BULAN_INDONESIA[now.getMonth()]} ${now.getFullYear()}`;
@@ -349,43 +349,43 @@ export default async function CetakLahanPage({ params }: Props) {
           </h4>
 
           <div className="border border-slate-300 rounded-xl p-3 bg-slate-50 flex flex-col md:flex-row gap-4 items-stretch">
-            {/* SVG Visual Representation of the Land Polygon (Skala Geodesik Proporsional) */}
-            <div className="w-full md:w-3/5 bg-emerald-950 rounded-lg p-2.5 flex flex-col items-center justify-between border border-emerald-800 relative overflow-hidden">
+            {/* SVG Visual Representation of the Land Polygon (Skala Geodesik Proporsional - Background Putih & Outline Hitam Resmi) */}
+            <div className="w-full md:w-3/5 bg-white rounded-xl p-3 flex flex-col items-center justify-between border-2 border-slate-300 shadow-xs relative overflow-hidden">
               <div className="w-full flex items-center justify-between z-10 px-1">
-                <div className="text-[10px] font-mono text-emerald-300 bg-emerald-900/90 px-2 py-0.5 rounded border border-emerald-700">
+                <div className="text-[10px] font-mono font-bold text-slate-800 bg-slate-100 px-2.5 py-1 rounded border border-slate-300 shadow-2xs">
                   {lahan.kodeLahan} &bull; {coords.length} Patok &bull; {lahan.komoditas}
                 </div>
-                <div className="text-[10px] font-bold text-white bg-red-600/90 px-2 py-0.5 rounded shadow-2xs">
+                <div className="text-[10px] font-bold text-white bg-red-600 px-2.5 py-1 rounded shadow-2xs font-sans tracking-wide">
                   Utara (N) &uarr;
                 </div>
               </div>
 
               <svg width="100%" height="260" viewBox={`0 0 ${svgWidth} ${svgHeight}`} className="my-1">
-                {/* Grid lines background */}
+                {/* Grid lines background (Kertas Milimeter Blok Kadastral BPN) */}
                 <defs>
                   <pattern id={`grid-${lahan.id}`} width="28" height="28" patternUnits="userSpaceOnUse">
-                    <path d="M 28 0 L 0 0 0 28" fill="none" stroke="rgba(255,255,255,0.08)" strokeWidth="1" />
+                    <path d="M 28 0 L 0 0 0 28" fill="none" stroke="#e2e8f0" strokeWidth="1" />
                   </pattern>
                 </defs>
                 <rect width="100%" height="100%" fill={`url(#grid-${lahan.id})`} />
 
                 {/* Label Sempadan Utara / Selatan / Barat / Timur */}
-                <text x={svgWidth / 2} y="14" textAnchor="middle" fill="#6ee7b7" fontSize="9" opacity="0.8">
+                <text x={svgWidth / 2} y="14" textAnchor="middle" fill="#475569" fontSize="9.5" fontWeight="600" fontFamily="sans-serif">
                   &uarr; Utara: {(lahan.batasUtara || '-').slice(0, 34)}
                 </text>
-                <text x={svgWidth / 2} y={svgHeight - 6} textAnchor="middle" fill="#6ee7b7" fontSize="9" opacity="0.8">
+                <text x={svgWidth / 2} y={svgHeight - 6} textAnchor="middle" fill="#475569" fontSize="9.5" fontWeight="600" fontFamily="sans-serif">
                   &darr; Selatan: {(lahan.batasSelatan || '-').slice(0, 34)}
                 </text>
 
-                {/* Poligon Lahan Sawah Proporsional */}
+                {/* Poligon Lahan Sawah Proporsional - Outline Hitam */}
                 {projectedPoints.length >= 3 && (
                   <>
                     <polygon
                       points={normalizedPoints}
                       fill={polyStyle.fill}
-                      fillOpacity="0.42"
-                      stroke={polyStyle.stroke}
-                      strokeWidth="3"
+                      fillOpacity="0.35"
+                      stroke="#000000"
+                      strokeWidth="2.5"
                       strokeLinejoin="round"
                     />
 
@@ -399,20 +399,20 @@ export default async function CetakLahanPage({ params }: Props) {
                         <g key={`seg-${idx}`}>
                           <rect
                             x={midX - 22}
-                            y={midY - 8}
+                            y={midY - 8.5}
                             width="44"
-                            height="15"
+                            height="16"
                             rx="4"
-                            fill="rgba(2, 44, 34, 0.88)"
-                            stroke="rgba(110, 231, 183, 0.45)"
-                            strokeWidth="0.8"
+                            fill="#ffffff"
+                            stroke="#000000"
+                            strokeWidth="1.2"
                           />
                           <text
                             x={midX}
-                            y={midY + 2.5}
+                            y={midY + 3}
                             textAnchor="middle"
-                            fill="#fde047"
-                            fontSize="8.5"
+                            fill="#000000"
+                            fontSize="9"
                             fontFamily="monospace"
                             fontWeight="bold"
                           >
@@ -429,7 +429,7 @@ export default async function CetakLahanPage({ params }: Props) {
                         y1={centroidSvg.y}
                         x2={centroidSvg.x + 6}
                         y2={centroidSvg.y}
-                        stroke="#ffffff"
+                        stroke="#000000"
                         strokeWidth="1.2"
                         strokeDasharray="2,1"
                       />
@@ -438,7 +438,7 @@ export default async function CetakLahanPage({ params }: Props) {
                         y1={centroidSvg.y - 6}
                         x2={centroidSvg.x}
                         y2={centroidSvg.y + 6}
-                        stroke="#ffffff"
+                        stroke="#000000"
                         strokeWidth="1.2"
                         strokeDasharray="2,1"
                       />
@@ -446,10 +446,14 @@ export default async function CetakLahanPage({ params }: Props) {
                         x={centroidSvg.x}
                         y={centroidSvg.y + 14}
                         textAnchor="middle"
-                        fill="#ffffff"
-                        fontSize="9"
+                        fill="#000000"
+                        fontSize="9.5"
                         fontWeight="bold"
-                        opacity="0.9"
+                        fontFamily="monospace"
+                        paintOrder="stroke"
+                        stroke="#ffffff"
+                        strokeWidth="2.5"
+                        strokeLinejoin="round"
                       >
                         {lahan.luasHa} Ha ({formatAngka(lahan.luasM2)} m²)
                       </text>
@@ -466,16 +470,20 @@ export default async function CetakLahanPage({ params }: Props) {
                             cy={pt.y}
                             r="5.5"
                             fill="#facc15"
-                            stroke="#0f172a"
-                            strokeWidth="1.8"
+                            stroke="#000000"
+                            strokeWidth="2"
                           />
                           <text
                             x={pt.x + labelOffsetX}
                             y={pt.y + labelOffsetY}
-                            fill="#ffffff"
-                            fontSize="10"
+                            fill="#000000"
+                            fontSize="10.5"
                             fontWeight="bold"
                             fontFamily="monospace"
+                            paintOrder="stroke"
+                            stroke="#ffffff"
+                            strokeWidth="2"
+                            strokeLinejoin="round"
                           >
                             {pt.label}
                           </text>
@@ -485,10 +493,10 @@ export default async function CetakLahanPage({ params }: Props) {
 
                     {/* Skala Bar Geodesik */}
                     <g transform={`translate(14, ${svgHeight - 24})`}>
-                      <line x1="0" y1="6" x2={scaleBarPx} y2="6" stroke="#ffffff" strokeWidth="2" />
-                      <line x1="0" y1="2" x2="0" y2="10" stroke="#ffffff" strokeWidth="2" />
-                      <line x1={scaleBarPx} y1="2" x2={scaleBarPx} y2="10" stroke="#ffffff" strokeWidth="2" />
-                      <text x={scaleBarPx / 2} y="2" textAnchor="middle" fill="#a7f3d0" fontSize="8" fontFamily="monospace">
+                      <line x1="0" y1="6" x2={scaleBarPx} y2="6" stroke="#000000" strokeWidth="2" />
+                      <line x1="0" y1="2" x2="0" y2="10" stroke="#000000" strokeWidth="2" />
+                      <line x1={scaleBarPx} y1="2" x2={scaleBarPx} y2="10" stroke="#000000" strokeWidth="2" />
+                      <text x={scaleBarPx / 2} y="2" textAnchor="middle" fill="#0f172a" fontSize="8.5" fontFamily="monospace" fontWeight="bold">
                         {scaleBarMeters}m
                       </text>
                     </g>
@@ -496,9 +504,9 @@ export default async function CetakLahanPage({ params }: Props) {
                 )}
               </svg>
 
-              <div className="w-full flex items-center justify-between text-[10px] text-emerald-300 px-1">
-                <span className="italic">*Proyeksi Geodesik WGS84 (Skala Proporsional 1:1)</span>
-                <span className="font-mono font-bold text-amber-300">
+              <div className="w-full flex items-center justify-between text-[10px] text-slate-600 px-1 pt-1.5 border-t border-slate-200 mt-1">
+                <span className="italic text-slate-500 font-sans">*Proyeksi Geodesik WGS84 (Skala Proporsional 1:1)</span>
+                <span className="font-mono font-bold text-slate-900 bg-slate-100 px-2 py-0.5 rounded border border-slate-300">
                   Keliling: {formatAngka(perimeterM)} m
                 </span>
               </div>

@@ -285,19 +285,20 @@ export default async function CetakKartuTaniPage({ params }: Props) {
                     <tr key={l.id}>
                       <td className="py-1.5 sm:py-2 px-2 sm:px-3 border-r font-mono text-center">#{idx + 1}</td>
                       <td className="py-1.5 sm:py-2 px-1.5 border-r text-center">
-                        <div className="inline-flex flex-col items-center bg-emerald-950 rounded-lg p-1 border border-emerald-800">
+                        <div className="inline-flex flex-col items-center bg-white rounded-lg p-1 border border-slate-300 shadow-2xs">
                           <svg width="56" height="40" viewBox="0 0 60 44">
                             {pts.length >= 3 && (
                               <polygon
                                 points={svgPts}
-                                fill="#22c55e"
-                                fillOpacity="0.5"
-                                stroke="#86efac"
-                                strokeWidth="1.5"
+                                fill="#dcfce7"
+                                fillOpacity="0.7"
+                                stroke="#000000"
+                                strokeWidth="1.8"
+                                strokeLinejoin="round"
                               />
                             )}
                           </svg>
-                          <span className="text-[8px] font-mono text-emerald-300">
+                          <span className="text-[8px] font-mono font-bold text-slate-700">
                             {pts.length} Patok
                           </span>
                         </div>
