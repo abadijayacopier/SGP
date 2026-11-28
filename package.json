@@ -5,11 +5,12 @@
   "scripts": {
     "dev": "next dev -H 0.0.0.0",
     "dev:https": "next dev -H 0.0.0.0 --experimental-https",
-    "build": "prisma generate && next build",
+    "prebuild": "node scripts/prepare-env.js",
+    "build": "node scripts/prepare-env.js && prisma generate && next build",
     "start": "next start",
     "lint": "next lint",
     "seed": "tsx prisma/seed.ts",
-    "postinstall": "prisma generate"
+    "postinstall": "node scripts/prepare-env.js && prisma generate"
   },
   "dependencies": {
     "@prisma/client": "^6.4.1",
