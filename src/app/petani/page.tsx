@@ -26,6 +26,7 @@ import {
   CreditCard,
   Edit3,
   Trash2,
+  AlertTriangle,
 } from 'lucide-react';
 import {
   showSuccess,
@@ -992,9 +993,15 @@ export default function PetaniPage() {
                       <span className="bg-slate-100 text-slate-600 px-2 py-0.5 rounded-md border border-slate-200">
                         📍 {item.desa || 'Lembeyan'}
                       </span>
-                      <span className="bg-emerald-50 text-emerald-800 font-bold px-2 py-0.5 rounded-md border border-emerald-200">
-                        {item.lahan?.length || 0} Blok Sawah
-                      </span>
+                      {item.lahan && item.lahan.length > 0 ? (
+                        <span className="bg-emerald-50 text-emerald-800 font-bold px-2 py-0.5 rounded-md border border-emerald-200">
+                          {item.lahan.length} Blok Sawah
+                        </span>
+                      ) : (
+                        <span className="bg-amber-50 text-amber-800 font-bold px-2 py-0.5 rounded-md border border-amber-200">
+                          Belum Dipetakan (0 Petak)
+                        </span>
+                      )}
                       {item.alokasiPupuk?.length > 0 ? (
                         <span className="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-md border border-emerald-300">
                           e-RDKK: {item.alokasiPupuk[0].komoditas}
@@ -1114,10 +1121,17 @@ export default function PetaniPage() {
                           </span>
                         </td>
                         <td className="py-3.5 px-4">
-                          <span className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-full border border-emerald-300 text-xs shadow-2xs hover:bg-emerald-200 transition">
-                            <Layers className="w-3.5 h-3.5" />
-                            {item.lahan?.length || 0} Blok Sawah
-                          </span>
+                          {item.lahan && item.lahan.length > 0 ? (
+                            <span className="inline-flex items-center gap-1.5 bg-emerald-100 text-emerald-800 font-bold px-2.5 py-1 rounded-full border border-emerald-300 text-xs shadow-2xs hover:bg-emerald-200 transition">
+                              <Layers className="w-3.5 h-3.5" />
+                              {item.lahan.length} Blok Sawah
+                            </span>
+                          ) : (
+                            <span className="inline-flex items-center gap-1.5 bg-amber-50 text-amber-800 font-bold px-2.5 py-1 rounded-full border border-amber-300 text-xs shadow-2xs">
+                              <AlertTriangle className="w-3.5 h-3.5 text-amber-600" />
+                              Belum Dipetakan
+                            </span>
+                          )}
                         </td>
                         <td className="py-3.5 px-4">
                           {item.alokasiPupuk?.length > 0 ? (

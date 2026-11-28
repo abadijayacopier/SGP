@@ -748,6 +748,49 @@ export default function PetaPage() {
         </div>
       )}
 
+      {/* Notifikasi Belum Melakukan Pemetaan Lahan */}
+      {!loading && lahanList.length === 0 && (
+        <div className="bg-gradient-to-r from-amber-500/10 via-amber-50 to-orange-500/10 border-2 border-amber-300 rounded-3xl p-4 sm:p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-sm animate-fade-in">
+          <div className="flex items-start sm:items-center gap-3.5">
+            <div className="w-11 h-11 rounded-2xl bg-amber-500 text-white flex items-center justify-center font-black text-xl shadow-xs shrink-0">
+              <AlertTriangle className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <div className="flex flex-wrap items-center gap-2">
+                <strong className="text-sm sm:text-base font-black text-slate-900">
+                  Belum Melakukan Pemetaan Lahan (0 Petak Terpetakan)
+                </strong>
+                <span className="bg-amber-400 text-amber-950 text-[10px] font-black px-2.5 py-0.5 rounded-full uppercase tracking-wider">
+                  Status: Menunggu Digitasi
+                </span>
+              </div>
+              <p className="text-xs text-amber-900/80 mt-1 leading-relaxed max-w-3xl">
+                Sebanyak <strong>{petaniList.length} Petani</strong> telah terdaftar di database e-RDKK, namun belum ada koordinat poligon petak sawah fisik yang dipetakan secara GIS. Gunakan tombol <strong>&quot;+ Digitasi Poligon Peta&quot;</strong> di atas peta atau aplikasi <strong>Field Maps</strong> untuk mulai memetakan patok sawah fisik petani.
+              </p>
+            </div>
+          </div>
+          <div className="flex items-center gap-2 shrink-0">
+            {permissions.canDigitasiGis && (
+              <button
+                type="button"
+                onClick={() => setIsDrawingMode(true)}
+                className="inline-flex items-center gap-2 px-4 py-2.5 rounded-2xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-md transition cursor-pointer active:scale-95"
+              >
+                <Plus className="w-4 h-4" />
+                Mulai Digitasi Petak
+              </button>
+            )}
+            <Link
+              href="/field-maps"
+              className="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 text-amber-300 font-bold text-xs shadow-md transition"
+            >
+              <Compass className="w-4 h-4 text-amber-300" />
+              GPS Lapangan
+            </Link>
+          </div>
+        </div>
+      )}
+
       {/* Filter and Search Bar Row */}
       <div className="bg-white p-3.5 sm:p-5 rounded-3xl border border-slate-200/80 shadow-xs max-w-full overflow-hidden">
         <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 max-w-full">
@@ -1050,8 +1093,12 @@ export default function PetaPage() {
         {/* Mobile Card View (Smartphone Friendly) */}
         <div className="block lg:hidden divide-y divide-slate-100">
           {filteredLahan.length === 0 ? (
-            <div className="py-8 text-center text-slate-400 text-xs italic">
-              Tidak ada petak sawah yang sesuai pencarian.
+            <div className="py-12 px-4 text-center bg-white rounded-2xl">
+              <div className="w-12 h-12 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto mb-3 shadow-2xs">
+                <AlertTriangle className="w-6 h-6" />
+              </div>
+              <div className="font-black text-slate-800 text-sm">Belum Melakukan Pemetaan Lahan</div>
+              <p className="text-xs text-slate-500 mt-1">Belum ada petak sawah yang terdaftar di peta GIS.</p>
             </div>
           ) : (
             paginatedLahan.map((item) => {
@@ -1187,8 +1234,16 @@ export default function PetaPage() {
             <tbody className="divide-y divide-slate-100">
               {filteredLahan.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="py-12 text-center text-slate-400 text-xs italic">
-                    Tidak ada petak sawah yang sesuai dengan pencarian atau filter yang dipilih.
+                  <td colSpan={6} className="py-16 text-center">
+                    <div className="w-14 h-14 rounded-2xl bg-amber-100 text-amber-600 flex items-center justify-center mx-auto mb-3 shadow-2xs">
+                      <AlertTriangle className="w-7 h-7" />
+                    </div>
+                    <div className="font-black text-slate-800 text-sm sm:text-base">
+                      Belum Melakukan Pemetaan Lahan
+                    </div>
+                    <p className="text-xs text-slate-500 mt-1 max-w-md mx-auto leading-relaxed">
+                      Belum ada petak sawah yang tersimpan di sistem GIS. Silakan gunakan fitur digitasi poligon peta atau aplikasi survei lapangan untuk memetakan blok sawah petani.
+                    </p>
                   </td>
                 </tr>
               ) : (
