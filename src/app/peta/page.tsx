@@ -425,6 +425,25 @@ export default function PetaPage() {
     }
   };
 
+  const [redrawTargetLahan, setRedrawTargetLahan] = useState<LahanItem | null>(null);
+
+  const handleStartRedrawPolygon = (item: LahanItem) => {
+    setRedrawTargetLahan(item);
+    setIsDrawingMode(true);
+    showToast(
+      `Mode gambar ulang aktif untuk "${item.namaLahan}". Klik titik-titik patok batas baru di peta satelit.`,
+      'info'
+    );
+    setFlyToTarget({
+      lat: item.centerLat,
+      lng: item.centerLng,
+      zoom: 18,
+      label: item.namaLahan,
+      keterangan: 'Gambar ulang batas poligon petak',
+      timestamp: Date.now(),
+    });
+  };
+
   const handlePolygonCreated = (
     coords: [number, number][],
     luasHa: number,
@@ -438,6 +457,31 @@ export default function PetaPage() {
     setDrawnPerimeter(perimeterM);
     setOverlapData(overlapInfo || null);
     setForceOverride(false);
+
+    if (redrawTargetLahan) {
+      setEditingLahan(redrawTargetLahan);
+      setEditFormData({
+        namaLahan: redrawTargetLahan.namaLahan || '',
+        petaniId: redrawTargetLahan.petani?.id || (redrawTargetLahan as any).petaniId || '',
+        komoditas: redrawTargetLahan.komoditas || 'Padi',
+        kabupaten: redrawTargetLahan.kabupaten || 'Magetan',
+        statusKepemilikan: redrawTargetLahan.statusKepemilikan || 'Milik Sendiri',
+        statusIrigasi: redrawTargetLahan.statusIrigasi || 'Irigasi Teknis',
+        nomorPipil: redrawTargetLahan.nomorPipil || '',
+        batasUtara: redrawTargetLahan.batasUtara || '',
+        batasSelatan: redrawTargetLahan.batasSelatan || '',
+        batasTimur: redrawTargetLahan.batasTimur || '',
+        batasBarat: redrawTargetLahan.batasBarat || '',
+      });
+      setEditModalOpen(true);
+      setIsDrawingMode(false);
+      showToast(
+        `Batas poligon baru berhasil direkam (${luasHa} Ha). Silakan periksa & simpan pembaruan petak.`,
+        'success'
+      );
+      return;
+    }
+
     setModalOpen(true);
     setIsDrawingMode(false);
   };
@@ -657,22 +701,39 @@ export default function PetaPage() {
 
     setEditSubmitting(true);
     try {
+      const isRedraw = Boolean(
+        redrawTargetLahan &&
+        redrawTargetLahan.id === editingLahan.id &&
+        drawnCoords.length >= 3
+      );
       const res = await fetch('/api/lahan', {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           id: editingLahan.id,
           ...editFormData,
+          ...(isRedraw
+            ? {
+                coordinates: drawnCoords,
+                luasHa: drawnLuasHa,
+                luasM2: drawnLuasM2,
+                centerLat: drawnCoords.reduce((s, c) => s + c[0], 0) / drawnCoords.length,
+                centerLng: drawnCoords.reduce((s, c) => s + c[1], 0) / drawnCoords.length,
+              }
+            : {}),
         }),
       });
       const json = await res.json();
       if (json.success) {
         showSuccess(
           'Petak Lahan Diperbarui!',
-          `Data petak sawah "${editFormData.namaLahan}" (${editingLahan.kodeLahan}) berhasil diperbarui.`
+          `Data petak sawah "${editFormData.namaLahan}" (${editingLahan.kodeLahan}) berhasil diperbarui${
+            isRedraw ? ' dengan batas koordinat baru' : ''
+          }.`
         );
         setEditModalOpen(false);
         setEditingLahan(null);
+        setRedrawTargetLahan(null);
         fetchLahan();
         fetchPetani();
         if (typeof window !== 'undefined') {
@@ -1279,6 +1340,8 @@ export default function PetaPage() {
         }}
         onToggleDrawingMode={() => setIsDrawingMode(!isDrawingMode)}
         canDigitasiGis={permissions.canDigitasiGis}
+        onEditLahan={handleOpenEditLahan}
+        onRedrawPolygon={handleStartRedrawPolygon}
       />
 
       {/* Table list of Lahan with Direct Print Card button */}
@@ -2323,27 +2386,46 @@ export default function PetaPage() {
               </div>
               <button
                 type="button"
-                onClick={() => setEditModalOpen(false)}
+                onClick={() => {
+                  setEditModalOpen(false);
+                  setRedrawTargetLahan(null);
+                }}
                 className="p-1.5 rounded-full text-slate-400 hover:bg-slate-100 cursor-pointer"
               >
                 <X className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Informasi Spasial Kadastral Tetap */}
-            <div className="my-4 bg-emerald-50/70 border border-emerald-200/90 rounded-2xl p-3.5 space-y-2 text-xs">
-              <div className="flex items-center justify-between">
-                <span className="font-mono text-[11px] font-bold bg-white text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded shadow-2xs">
-                  {editingLahan.kodeLahan}
-                </span>
-                <span className="font-black text-emerald-800 text-sm">
-                  {editingLahan.luasHa} Ha ({editingLahan.luasM2.toLocaleString('id-ID')} m²)
-                </span>
+            {/* Informasi Spasial Kadastral Tetap / Batas Baru Hasil Gambar Ulang */}
+            {redrawTargetLahan && redrawTargetLahan.id === editingLahan.id && drawnCoords.length >= 3 ? (
+              <div className="my-4 bg-blue-50 border border-blue-200 rounded-2xl p-3.5 space-y-1.5 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-[11px] font-bold bg-white text-blue-800 border border-blue-300 px-2 py-0.5 rounded shadow-2xs">
+                    {editingLahan.kodeLahan} &bull; Batas Poligon Baru
+                  </span>
+                  <span className="font-black text-blue-900 text-sm">
+                    {drawnLuasHa} Ha ({drawnLuasM2.toLocaleString('id-ID')} m²)
+                  </span>
+                </div>
+                <p className="text-[11px] text-blue-900 leading-snug">
+                  ✨ Batas poligon baru berhasil direkam ({drawnCoords.length} titik patok). Luas baku & koordinat akan otomatis diperbarui setelah Anda klik Simpan Perubahan.
+                </p>
               </div>
-              <p className="text-[11px] text-emerald-900 leading-snug">
-                📍 Wilayah: <strong>Kecamatan Lembeyan, Kabupaten {editingLahan.kabupaten || 'Magetan'}</strong>
-              </p>
-            </div>
+            ) : (
+              <div className="my-4 bg-emerald-50/70 border border-emerald-200/90 rounded-2xl p-3.5 space-y-2 text-xs">
+                <div className="flex items-center justify-between">
+                  <span className="font-mono text-[11px] font-bold bg-white text-emerald-800 border border-emerald-300 px-2 py-0.5 rounded shadow-2xs">
+                    {editingLahan.kodeLahan}
+                  </span>
+                  <span className="font-black text-emerald-800 text-sm">
+                    {editingLahan.luasHa} Ha ({editingLahan.luasM2.toLocaleString('id-ID')} m²)
+                  </span>
+                </div>
+                <p className="text-[11px] text-emerald-900 leading-snug">
+                  📍 Wilayah: <strong>Kecamatan Lembeyan, Kabupaten {editingLahan.kabupaten || 'Magetan'}</strong>
+                </p>
+              </div>
+            )}
 
             <form onSubmit={handleSaveEditLahan} className="space-y-3.5 text-xs">
               <div>
@@ -2502,7 +2584,10 @@ export default function PetaPage() {
               <div className="pt-4 flex items-center justify-end gap-2 border-t border-slate-100">
                 <button
                   type="button"
-                  onClick={() => setEditModalOpen(false)}
+                  onClick={() => {
+                    setEditModalOpen(false);
+                    setRedrawTargetLahan(null);
+                  }}
                   className="px-4 py-2 rounded-xl text-slate-600 font-semibold hover:bg-slate-100 cursor-pointer"
                 >
                   Batal

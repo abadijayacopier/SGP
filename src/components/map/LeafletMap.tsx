@@ -47,6 +47,7 @@ import {
   Globe,
   Loader2,
   Plus,
+  Edit3,
 } from 'lucide-react';
 import { DESA_COORDINATES_LEMBEYAN, DESA_LEMBEYAN_LIST, LEMBEYAN_POI_LIST } from '@/lib/erdkk-format';
 import { calculateDistanceMeters } from '@/lib/calculations';
@@ -128,6 +129,8 @@ interface LeafletMapProps {
   onSelectDesaFromMap?: (desaKey: string) => void;
   onToggleDrawingMode?: () => void;
   canDigitasiGis?: boolean;
+  onEditLahan?: (lahan: LahanItem) => void;
+  onRedrawPolygon?: (lahan: LahanItem) => void;
 }
 
 // Komponen untuk otomatis memusatkan dan zoom ke poligon atau wilayah desa yang dipilih
@@ -318,6 +321,8 @@ export default function LeafletMap({
   onSelectDesaFromMap,
   onToggleDrawingMode,
   canDigitasiGis = true,
+  onEditLahan,
+  onRedrawPolygon,
 }: LeafletMapProps) {
   const [drawingPoints, setDrawingPoints] = useState<[number, number][]>([]);
   const [selectedFotoPreview, setSelectedFotoPreview] = useState<string | null>(null);
@@ -1491,22 +1496,59 @@ export default function LeafletMap({
                     </div>
                   )}
 
-                  <div className="pt-1.5 space-y-1.5">
+                  <div className="pt-2 space-y-2 border-t border-slate-100 mt-2">
+                    {/* Tombol 1: Jadwal Kalender Tanam */}
                     <Link
                       href={`/cek-kuota?tab=kalkulator&lahanId=${lahan.id}`}
-                      className="w-full inline-flex items-center justify-center gap-1.5 text-xs font-bold bg-amber-600 hover:bg-amber-700 text-white px-3 py-1.5 rounded-xl shadow-xs transition"
+                      className="w-full inline-flex items-center justify-center gap-1.5 text-xs font-bold bg-amber-500 hover:bg-amber-600 active:scale-95 !text-white text-white px-3 py-2 rounded-xl shadow-xs transition"
+                      style={{ color: '#ffffff', textDecoration: 'none' }}
                     >
-                      <Sparkles className="w-3.5 h-3.5" />
-                      Jadwal Kalender Tanam
+                      <Sparkles className="w-3.5 h-3.5 text-white shrink-0" style={{ color: '#ffffff' }} />
+                      <span className="font-bold text-white" style={{ color: '#ffffff' }}>Jadwal Kalender Tanam</span>
                     </Link>
+
+                    {/* Tombol 2: Cetak Surat Lahan */}
                     <Link
                       href={`/cetak-lahan/${lahan.id}`}
                       target="_blank"
-                      className="w-full inline-flex items-center justify-center gap-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-xl shadow-xs transition"
+                      className="w-full inline-flex items-center justify-center gap-1.5 text-xs font-bold bg-emerald-600 hover:bg-emerald-700 active:scale-95 !text-white text-white px-3 py-2 rounded-xl shadow-xs transition"
+                      style={{ color: '#ffffff', textDecoration: 'none' }}
                     >
-                      <Printer className="w-3.5 h-3.5" />
-                      Cetak Surat Lahan
+                      <Printer className="w-3.5 h-3.5 text-white shrink-0" style={{ color: '#ffffff' }} />
+                      <span className="font-bold text-white" style={{ color: '#ffffff' }}>Cetak Surat Lahan</span>
                     </Link>
+
+                    {/* Tombol 3: Edit Data Petak Sawah */}
+                    {onEditLahan && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onEditLahan(lahan);
+                        }}
+                        className="w-full inline-flex items-center justify-center gap-1.5 text-xs font-black bg-slate-900 hover:bg-slate-800 active:scale-95 text-amber-300 px-3 py-2 rounded-xl shadow-xs transition cursor-pointer"
+                        style={{ color: '#fde047', textDecoration: 'none' }}
+                      >
+                        <Edit3 className="w-3.5 h-3.5 text-amber-300 shrink-0" style={{ color: '#fde047' }} />
+                        <span className="font-black text-amber-300" style={{ color: '#fde047' }}>Edit Data Petak Sawah</span>
+                      </button>
+                    )}
+
+                    {/* Tombol 4: Gambar Ulang Poligon Petak */}
+                    {onRedrawPolygon && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          onRedrawPolygon(lahan);
+                        }}
+                        className="w-full inline-flex items-center justify-center gap-1.5 text-xs font-bold bg-blue-600 hover:bg-blue-700 active:scale-95 !text-white text-white px-3 py-2 rounded-xl shadow-xs transition cursor-pointer"
+                        style={{ color: '#ffffff', textDecoration: 'none' }}
+                      >
+                        <Compass className="w-3.5 h-3.5 text-white shrink-0" style={{ color: '#ffffff' }} />
+                        <span className="font-bold text-white" style={{ color: '#ffffff' }}>Gambar Ulang Poligon</span>
+                      </button>
+                    )}
                   </div>
                 </div>
               </Popup>

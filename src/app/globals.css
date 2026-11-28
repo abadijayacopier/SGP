@@ -145,6 +145,32 @@ select optgroup {
   line-height: 1.5;
 }
 
+/* Fix font color of buttons inside Leaflet Popup so text is crisp white and never inherits link color */
+.leaflet-container .leaflet-popup-content a,
+.leaflet-container .leaflet-popup-content a:hover,
+.leaflet-container .leaflet-popup-content a:visited,
+.leaflet-container .leaflet-popup-content a:focus {
+  text-decoration: none !important;
+}
+
+.leaflet-container .leaflet-popup-content a.bg-amber-600,
+.leaflet-container .leaflet-popup-content a.bg-amber-600 *,
+.leaflet-container .leaflet-popup-content a.bg-amber-500,
+.leaflet-container .leaflet-popup-content a.bg-amber-500 *,
+.leaflet-container .leaflet-popup-content a.bg-emerald-600,
+.leaflet-container .leaflet-popup-content a.bg-emerald-600 *,
+.leaflet-container .leaflet-popup-content a.bg-blue-600,
+.leaflet-container .leaflet-popup-content a.bg-blue-600 *,
+.leaflet-container .leaflet-popup-content a.text-white,
+.leaflet-container .leaflet-popup-content a.text-white * {
+  color: #ffffff !important;
+}
+
+.leaflet-container .leaflet-popup-content button.text-amber-300,
+.leaflet-container .leaflet-popup-content button.text-amber-300 * {
+  color: #fde047 !important;
+}
+
 .leaflet-popup-tip-container {
   margin-top: -1px;
 }

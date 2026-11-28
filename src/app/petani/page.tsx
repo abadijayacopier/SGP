@@ -2299,26 +2299,26 @@ export default function PetaniPage() {
                   <Link
                     href={`/cetak-lahan/${selectedPetani.lahan[0].id}`}
                     target="_blank"
-                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 font-bold rounded-xl text-xs border border-slate-300 transition shadow-2xs text-center cursor-pointer"
+                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-100 active:scale-95 text-slate-900 font-bold rounded-xl text-xs border border-slate-300 transition shadow-2xs text-center cursor-pointer"
                     title="Cetak Surat Kepemilikan & Peta Petak Lahan Resmi"
                   >
-                    <Printer className="w-4 h-4 text-emerald-700 shrink-0" />
-                    <span className="truncate">Cetak Kartu Lahan</span>
+                    <Printer className="w-4 h-4 text-slate-800 shrink-0" />
+                    <span className="truncate text-slate-900 font-bold">Cetak Kartu Lahan</span>
                   </Link>
                 ) : (
                   <button
                     type="button"
                     onClick={() =>
                       showWarning(
-                        'Belum Ada Lahan Terpetakan',
-                        'Petani ini belum memiliki koordinat poligon petak sawah yang dipetakan untuk dicetak.'
+                        'Petak Lahan Belum Terpetakan di GIS',
+                        'Petani ini belum memiliki petak sawah yang digambar di peta GIS. Silakan buka tombol "Lihat Peta Sawah" untuk mendigitasi batas patok lahannya terlebih dahulu.'
                       )
                     }
-                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-50 text-slate-400 font-semibold rounded-xl text-xs border border-slate-200 transition text-center cursor-not-allowed"
-                    title="Petani belum memiliki data pemetaan petak sawah"
+                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white hover:bg-slate-50 active:scale-95 text-slate-700 font-bold rounded-xl text-xs border border-slate-300 transition shadow-2xs text-center cursor-pointer"
+                    title="Petani belum memiliki koordinat poligon petak sawah"
                   >
-                    <Printer className="w-4 h-4 text-slate-400 shrink-0" />
-                    <span className="truncate">Cetak Kartu Lahan</span>
+                    <Printer className="w-4 h-4 text-slate-700 shrink-0" />
+                    <span className="truncate text-slate-700 font-bold">Cetak Kartu Lahan</span>
                   </button>
                 )}
 

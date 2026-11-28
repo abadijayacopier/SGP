@@ -28,6 +28,8 @@ interface MapWrapperProps {
   onSelectDesaFromMap?: (desaKey: string) => void;
   onToggleDrawingMode?: () => void;
   canDigitasiGis?: boolean;
+  onEditLahan?: (lahan: LahanItem) => void;
+  onRedrawPolygon?: (lahan: LahanItem) => void;
 }
 
 const DynamicLeafletMap = dynamic(() => import('./LeafletMap'), {

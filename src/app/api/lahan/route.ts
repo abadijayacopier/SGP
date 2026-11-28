@@ -292,6 +292,11 @@ export async function PATCH(request: Request) {
       batasTimur,
       batasBarat,
       fotoLahan,
+      coordinates,
+      luasHa,
+      luasM2,
+      centerLat,
+      centerLng,
     } = body;
 
     const oldPetaniId = existing.petaniId;
@@ -334,6 +339,21 @@ export async function PATCH(request: Request) {
     if (fotoLahan !== undefined) {
       updateData.fotoLahan = fotoLahan;
     }
+    if (coordinates !== undefined) {
+      updateData.coordinates = typeof coordinates === 'string' ? coordinates : JSON.stringify(coordinates);
+    }
+    if (luasHa !== undefined && !isNaN(Number(luasHa))) {
+      updateData.luasHa = Number(luasHa);
+    }
+    if (luasM2 !== undefined && !isNaN(Number(luasM2))) {
+      updateData.luasM2 = Number(luasM2);
+    }
+    if (centerLat !== undefined && !isNaN(Number(centerLat))) {
+      updateData.centerLat = Number(centerLat);
+    }
+    if (centerLng !== undefined && !isNaN(Number(centerLng))) {
+      updateData.centerLng = Number(centerLng);
+    }
 
     const updatedLahan = await prisma.lahan.update({
       where: { id },
@@ -345,7 +365,7 @@ export async function PATCH(request: Request) {
       },
     });
 
-    // Jika pemilik petani dialihkan, rekalkulasi total luas lahan untuk petani lama dan baru
+    // Jika pemilik petani dialihkan atau luas lahan berubah, rekalkulasi total luas lahan
     if (targetPetaniId !== oldPetaniId) {
       // 1. Rekalkulasi petani lama
       const oldRemaining = await prisma.lahan.findMany({ where: { petaniId: oldPetaniId } });
@@ -358,6 +378,13 @@ export async function PATCH(request: Request) {
       // 2. Rekalkulasi petani baru
       const newAllLahan = await prisma.lahan.findMany({ where: { petaniId: targetPetaniId } });
       const newTotalLuas = newAllLahan.reduce((sum, l) => sum + l.luasHa, 0);
+      await prisma.petani.update({
+        where: { id: targetPetaniId },
+        data: { totalLuasLahan: Math.round(newTotalLuas * 100) / 100 },
+      });
+    } else if (luasHa !== undefined) {
+      const allLahan = await prisma.lahan.findMany({ where: { petaniId: targetPetaniId } });
+      const newTotalLuas = allLahan.reduce((sum, l) => sum + l.luasHa, 0);
       await prisma.petani.update({
         where: { id: targetPetaniId },
         data: { totalLuasLahan: Math.round(newTotalLuas * 100) / 100 },
