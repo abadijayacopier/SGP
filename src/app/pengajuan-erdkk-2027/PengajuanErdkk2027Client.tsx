@@ -18,7 +18,6 @@ import {
   X,
   ExternalLink,
   ChevronRight,
-  Sparkles,
   Calendar,
   Layers,
   Phone,
@@ -778,7 +777,7 @@ export default function PengajuanErdkk2027Client({ poktanList }: Props) {
               </div>
             </div>
 
-            {/* LANGKAH 3: RENCANA TANAM 3 MUSIM 2027 & KALKULATOR PUPUK */}
+            {/* LANGKAH 3: KOMODITAS & LUAS LAHAN USULAN 2027 */}
             <div className="bg-white rounded-3xl p-6 sm:p-7 border border-slate-200 shadow-sm space-y-5">
               <div className="flex items-center justify-between border-b border-slate-100 pb-3">
                 <div className="flex items-center gap-2.5">
@@ -787,59 +786,59 @@ export default function PengajuanErdkk2027Client({ poktanList }: Props) {
                   </div>
                   <div>
                     <h2 className="text-base font-black text-slate-900 leading-tight">
-                      Rencana Tanam 3 Musim e-RDKK Tahun 2027
+                      Komoditas & Luas Lahan Usulan e-RDKK 2027
                     </h2>
                     <p className="text-xs text-slate-500">
-                      Rencana komoditas & luasan tanam untuk Musim Tanam 1, 2, dan 3.
+                      Isikan jenis komoditas utama dan luasan lahan usulan yang didaftarkan ke e-RDKK Tahun Anggaran 2027.
                     </p>
                   </div>
                 </div>
 
-                <span className="text-[10px] font-black uppercase tracking-wider bg-amber-100 text-amber-900 px-2.5 py-1 rounded-full border border-amber-300">
+                <span className="text-[10px] font-black uppercase tracking-wider bg-emerald-100 text-emerald-900 px-2.5 py-1 rounded-full border border-emerald-300">
                   T.A 2027
                 </span>
               </div>
 
-              {/* GRID 3 MUSIM TANAM */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* MT 1: Walikan */}
-                <div className="p-4 rounded-2xl bg-emerald-50/60 border border-emerald-200 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black uppercase text-emerald-900">
-                      MT 1 (Walikan)
-                    </span>
-                    <span className="text-[10px] text-emerald-700 bg-white px-2 py-0.5 rounded-full font-bold">
-                      Musim Hujan
-                    </span>
-                  </div>
-
+              {/* SATU BLOK INPUT: KOMODITAS & LUAS LAHAN USULAN */}
+              <div className="p-5 sm:p-6 rounded-2xl bg-slate-50 border border-slate-200 space-y-4">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Pilihan Komoditas Utama */}
                   <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
-                      Komoditas:
+                    <label className="text-xs font-bold text-slate-800 block mb-1.5">
+                      Komoditas Utama Usulan <span className="text-red-500">*</span>:
                     </label>
                     <select
                       value={formData.rencanaMt1Komoditas}
-                      onChange={(e) =>
-                        setFormData({ ...formData, rencanaMt1Komoditas: e.target.value })
-                      }
-                      className="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800"
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        setFormData({
+                          ...formData,
+                          rencanaMt1Komoditas: val,
+                          rencanaMt2Komoditas: val,
+                          rencanaMt3Komoditas: val,
+                        });
+                      }}
+                      className="w-full bg-white border border-slate-300 rounded-xl px-3 py-2.5 text-xs font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-2xs"
                     >
                       {Object.keys(STANDAR_PUPUK).map((k) => (
-                        <option key={`mt1-${k}`} value={k}>
+                        <option key={`komoditas-${k}`} value={k}>
                           {k}
                         </option>
                       ))}
                     </select>
+                    <p className="text-[10px] text-slate-500 mt-1">
+                      Komoditas tanaman utama yang diusulkan untuk alokasi pupuk e-RDKK 2027.
+                    </p>
                   </div>
 
-                  {/* Kolom Input Pipil (m²) & Otomatis Konversi ke Hektar (Ha) */}
-                  <div className="space-y-1.5">
+                  {/* Dual Input: Luas Pipil (m²) & Konversi Otomatis Hektar (Ha) */}
+                  <div>
+                    <label className="text-xs font-bold text-slate-800 block mb-1.5">
+                      Luas Lahan Usulan <span className="text-red-500">*</span>:
+                    </label>
                     <div className="grid grid-cols-2 gap-2">
                       {/* Kolom 1: Luas Pipil (m²) */}
                       <div>
-                        <label className="text-[11px] font-bold text-slate-700 block mb-1 truncate">
-                          Luas Pipil (m²):
-                        </label>
                         <div className="relative">
                           <input
                             type="number"
@@ -858,24 +857,23 @@ export default function PengajuanErdkk2027Client({ poktanList }: Props) {
                               setFormData({
                                 ...formData,
                                 rencanaMt1LuasHa: ha,
+                                rencanaMt2LuasHa: ha,
+                                rencanaMt3LuasHa: ha,
                               });
                             }}
-                            className="w-full bg-white border border-slate-300 rounded-xl pl-2.5 pr-7 py-1.5 text-xs font-mono font-bold text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-2xs"
+                            className="w-full bg-white border border-slate-300 rounded-xl pl-3 pr-8 py-2 text-xs font-mono font-bold text-slate-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-2xs"
                           />
-                          <span className="absolute right-2 top-2 text-[10px] font-bold text-slate-400 pointer-events-none">
+                          <span className="absolute right-2.5 top-2.5 text-[10px] font-bold text-slate-400 pointer-events-none">
                             m²
                           </span>
                         </div>
+                        <span className="text-[9.5px] text-slate-500 block mt-1">
+                          Luas Pipil (m²)
+                        </span>
                       </div>
 
-                      {/* Kolom 2: Konversi Otomatis Hektar (Ha) - Masuk ke e-RDKK */}
+                      {/* Kolom 2: Konversi Otomatis Hektar (Ha) - Masuk e-RDKK */}
                       <div>
-                        <label className="text-[11px] font-bold text-emerald-800 block mb-1 truncate flex items-center justify-between">
-                          <span>Konversi (Ha):</span>
-                          <span className="text-[9px] bg-emerald-200/80 text-emerald-900 px-1.5 py-0.2 rounded font-black">
-                            e-RDKK
-                          </span>
-                        </label>
                         <div className="relative">
                           <input
                             type="number"
@@ -889,300 +887,37 @@ export default function PengajuanErdkk2027Client({ poktanList }: Props) {
                               setFormData({
                                 ...formData,
                                 rencanaMt1LuasHa: ha,
-                              });
-                            }}
-                            className="w-full bg-emerald-100/70 border border-emerald-300 rounded-xl pl-2.5 pr-7 py-1.5 text-xs font-mono font-extrabold text-emerald-950 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-2xs"
-                          />
-                          <span className="absolute right-2 top-2 text-[10px] font-extrabold text-emerald-700 pointer-events-none">
-                            Ha
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="text-[10px] text-emerald-800/80 flex items-center justify-between pt-0.5 font-medium">
-                      <span>
-                        Pipil: <strong>{formData.rencanaMt1LuasHa ? (formData.rencanaMt1LuasHa * 10000).toLocaleString('id-ID') : 0} m²</strong>
-                      </span>
-                      <span>
-                        &rarr; Masuk e-RDKK: <strong className="text-emerald-900">{formData.rencanaMt1LuasHa || 0} Ha</strong>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* MT 2: Gadu / Kemarau 1 */}
-                <div className="p-4 rounded-2xl bg-amber-50/60 border border-amber-200 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black uppercase text-amber-900">
-                      MT 2 (Gadu)
-                    </span>
-                    <span className="text-[10px] text-amber-800 bg-white px-2 py-0.5 rounded-full font-bold">
-                      Kemarau I
-                    </span>
-                  </div>
-
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
-                      Komoditas:
-                    </label>
-                    <select
-                      value={formData.rencanaMt2Komoditas}
-                      onChange={(e) =>
-                        setFormData({ ...formData, rencanaMt2Komoditas: e.target.value })
-                      }
-                      className="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800"
-                    >
-                      {Object.keys(STANDAR_PUPUK).map((k) => (
-                        <option key={`mt2-${k}`} value={k}>
-                          {k}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Kolom Input Pipil (m²) & Otomatis Konversi ke Hektar (Ha) */}
-                  <div className="space-y-1.5">
-                    <div className="grid grid-cols-2 gap-2">
-                      {/* Kolom 1: Luas Pipil (m²) */}
-                      <div>
-                        <label className="text-[11px] font-bold text-slate-700 block mb-1 truncate">
-                          Luas Pipil (m²):
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="number"
-                            step="1"
-                            min="0"
-                            placeholder="Misal: 1400"
-                            value={
-                              formData.rencanaMt2LuasHa
-                                ? Math.round(formData.rencanaMt2LuasHa * 10000)
-                                : ''
-                            }
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              const m2 = val === '' ? 0 : parseFloat(val);
-                              const ha = Math.round((m2 / 10000) * 10000) / 10000;
-                              setFormData({
-                                ...formData,
                                 rencanaMt2LuasHa: ha,
-                              });
-                            }}
-                            className="w-full bg-white border border-slate-300 rounded-xl pl-2.5 pr-7 py-1.5 text-xs font-mono font-bold text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs"
-                          />
-                          <span className="absolute right-2 top-2 text-[10px] font-bold text-slate-400 pointer-events-none">
-                            m²
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Kolom 2: Konversi Otomatis Hektar (Ha) - Masuk ke e-RDKK */}
-                      <div>
-                        <label className="text-[11px] font-bold text-amber-900 block mb-1 truncate flex items-center justify-between">
-                          <span>Konversi (Ha):</span>
-                          <span className="text-[9px] bg-amber-200/80 text-amber-900 px-1.5 py-0.2 rounded font-black">
-                            e-RDKK
-                          </span>
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="number"
-                            step="0.0001"
-                            min="0"
-                            placeholder="0,14"
-                            value={formData.rencanaMt2LuasHa || ''}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              const ha = val === '' ? 0 : parseFloat(val);
-                              setFormData({
-                                ...formData,
-                                rencanaMt2LuasHa: ha,
-                              });
-                            }}
-                            className="w-full bg-amber-100/70 border border-amber-300 rounded-xl pl-2.5 pr-7 py-1.5 text-xs font-mono font-extrabold text-amber-950 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs"
-                          />
-                          <span className="absolute right-2 top-2 text-[10px] font-extrabold text-amber-800 pointer-events-none">
-                            Ha
-                          </span>
-                        </div>
-                      </div>
-                    </div>
-
-                    <div className="text-[10px] text-amber-900/80 flex items-center justify-between pt-0.5 font-medium">
-                      <span>
-                        Pipil: <strong>{formData.rencanaMt2LuasHa ? (formData.rencanaMt2LuasHa * 10000).toLocaleString('id-ID') : 0} m²</strong>
-                      </span>
-                      <span>
-                        &rarr; Masuk e-RDKK: <strong className="text-amber-950">{formData.rencanaMt2LuasHa || 0} Ha</strong>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                {/* MT 3: Rendeng / Kemarau 2 */}
-                <div className="p-4 rounded-2xl bg-teal-50/60 border border-teal-200 space-y-3">
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-black uppercase text-teal-900">
-                      MT 3 (Rendeng)
-                    </span>
-                    <span className="text-[10px] text-teal-800 bg-white px-2 py-0.5 rounded-full font-bold">
-                      Kemarau II
-                    </span>
-                  </div>
-
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
-                      Komoditas:
-                    </label>
-                    <select
-                      value={formData.rencanaMt3Komoditas}
-                      onChange={(e) =>
-                        setFormData({ ...formData, rencanaMt3Komoditas: e.target.value })
-                      }
-                      className="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-bold text-slate-800"
-                    >
-                      {Object.keys(STANDAR_PUPUK).map((k) => (
-                        <option key={`mt3-${k}`} value={k}>
-                          {k}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-
-                  {/* Kolom Input Pipil (m²) & Otomatis Konversi ke Hektar (Ha) */}
-                  <div className="space-y-1.5">
-                    <div className="grid grid-cols-2 gap-2">
-                      {/* Kolom 1: Luas Pipil (m²) */}
-                      <div>
-                        <label className="text-[11px] font-bold text-slate-700 block mb-1 truncate">
-                          Luas Pipil (m²):
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="number"
-                            step="1"
-                            min="0"
-                            placeholder="Misal: 1400"
-                            value={
-                              formData.rencanaMt3LuasHa
-                                ? Math.round(formData.rencanaMt3LuasHa * 10000)
-                                : ''
-                            }
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              const m2 = val === '' ? 0 : parseFloat(val);
-                              const ha = Math.round((m2 / 10000) * 10000) / 10000;
-                              setFormData({
-                                ...formData,
                                 rencanaMt3LuasHa: ha,
                               });
                             }}
-                            className="w-full bg-white border border-slate-300 rounded-xl pl-2.5 pr-7 py-1.5 text-xs font-mono font-bold text-teal-900 focus:outline-none focus:ring-2 focus:ring-teal-500 shadow-2xs"
+                            className="w-full bg-emerald-50 border border-emerald-300 rounded-xl pl-3 pr-8 py-2 text-xs font-mono font-black text-emerald-950 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-2xs"
                           />
-                          <span className="absolute right-2 top-2 text-[10px] font-bold text-slate-400 pointer-events-none">
-                            m²
-                          </span>
-                        </div>
-                      </div>
-
-                      {/* Kolom 2: Konversi Otomatis Hektar (Ha) - Masuk ke e-RDKK */}
-                      <div>
-                        <label className="text-[11px] font-bold text-teal-900 block mb-1 truncate flex items-center justify-between">
-                          <span>Konversi (Ha):</span>
-                          <span className="text-[9px] bg-teal-200/80 text-teal-900 px-1.5 py-0.2 rounded font-black">
-                            e-RDKK
-                          </span>
-                        </label>
-                        <div className="relative">
-                          <input
-                            type="number"
-                            step="0.0001"
-                            min="0"
-                            placeholder="0,14"
-                            value={formData.rencanaMt3LuasHa || ''}
-                            onChange={(e) => {
-                              const val = e.target.value;
-                              const ha = val === '' ? 0 : parseFloat(val);
-                              setFormData({
-                                ...formData,
-                                rencanaMt3LuasHa: ha,
-                              });
-                            }}
-                            className="w-full bg-teal-100/70 border border-teal-300 rounded-xl pl-2.5 pr-7 py-1.5 text-xs font-mono font-extrabold text-teal-950 focus:outline-none focus:ring-2 focus:ring-teal-500 shadow-2xs"
-                          />
-                          <span className="absolute right-2 top-2 text-[10px] font-extrabold text-teal-700 pointer-events-none">
+                          <span className="absolute right-2.5 top-2.5 text-[10px] font-black text-emerald-700 pointer-events-none">
                             Ha
                           </span>
                         </div>
+                        <span className="text-[9.5px] text-emerald-700 font-bold block mt-1 flex items-center justify-between">
+                          <span>Konversi (Ha)</span>
+                          <span className="bg-emerald-200 text-emerald-900 px-1 rounded text-[8.5px] font-black">Masuk e-RDKK</span>
+                        </span>
                       </div>
                     </div>
-
-                    <div className="text-[10px] text-teal-900/80 flex items-center justify-between pt-0.5 font-medium">
-                      <span>
-                        Pipil: <strong>{formData.rencanaMt3LuasHa ? (formData.rencanaMt3LuasHa * 10000).toLocaleString('id-ID') : 0} m²</strong>
-                      </span>
-                      <span>
-                        &rarr; Masuk e-RDKK: <strong className="text-teal-950">{formData.rencanaMt3LuasHa || 0} Ha</strong>
-                      </span>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* WIDGET KALKULATOR ESTIMASI KUOTA PUPUK 2027 */}
-              <div className="p-4 rounded-2xl bg-gradient-to-r from-emerald-900 via-slate-900 to-emerald-950 text-white space-y-3 shadow-md">
-                <div className="flex items-center justify-between border-b border-emerald-800/60 pb-2">
-                  <span className="text-xs font-bold text-emerald-300 flex items-center gap-1.5">
-                    <Sparkles className="w-4 h-4 text-amber-400" />
-                    Kalkulator Rekomendasi Jatah Kuota Pupuk Subsidi 2027:
-                  </span>
-                  <span className="text-[10px] text-slate-400 font-mono">
-                    Total Kumulatif: {estimasiPupuk.totalLuasKumulatif} Ha
-                  </span>
-                </div>
-
-                <div className="grid grid-cols-3 gap-3 text-center">
-                  <div className="bg-white/10 rounded-xl p-2.5 border border-white/10">
-                    <span className="text-[10px] uppercase font-bold text-emerald-300 block">
-                      Pupuk Urea
-                    </span>
-                    <strong className="text-lg font-black font-mono text-white block mt-0.5">
-                      {estimasiPupuk.ureaKg} Kg
-                    </strong>
-                    <span className="text-[9px] text-slate-400">
-                      &plusmn; {Math.ceil(estimasiPupuk.ureaKg / 50)} Sak (50kg)
-                    </span>
-                  </div>
-
-                  <div className="bg-white/10 rounded-xl p-2.5 border border-white/10">
-                    <span className="text-[10px] uppercase font-bold text-amber-300 block">
-                      NPK Phonska
-                    </span>
-                    <strong className="text-lg font-black font-mono text-white block mt-0.5">
-                      {estimasiPupuk.npkKg} Kg
-                    </strong>
-                    <span className="text-[9px] text-slate-400">
-                      &plusmn; {Math.ceil(estimasiPupuk.npkKg / 50)} Sak (50kg)
-                    </span>
-                  </div>
-
-                  <div className="bg-white/10 rounded-xl p-2.5 border border-white/10">
-                    <span className="text-[10px] uppercase font-bold text-teal-300 block">
-                      Petroganik
-                    </span>
-                    <strong className="text-lg font-black font-mono text-white block mt-0.5">
-                      {estimasiPupuk.organikKg} Kg
-                    </strong>
-                    <span className="text-[9px] text-slate-400">
-                      &plusmn; {Math.ceil(estimasiPupuk.organikKg / 40)} Sak (40kg)
-                    </span>
                   </div>
                 </div>
 
-                <p className="text-[10px] text-slate-300 italic text-center">
-                  *Perhitungan otomatis berdasarkan standar dosis rekomendasi teknis Kementan RI untuk komoditas padi & palawija.
-                </p>
+                {/* Banner Penjelasan Sesuai Ketentuan */}
+                <div className="flex items-start gap-2.5 bg-emerald-50/70 border border-emerald-200/80 rounded-xl p-3 text-[11px] text-emerald-900">
+                  <span className="text-emerald-700 font-bold text-sm">💡</span>
+                  <div>
+                    <p className="font-semibold leading-relaxed">
+                      Sistem otomatis mengonversi luasan pipil tanah (<strong className="font-mono">{formData.rencanaMt1LuasHa ? (formData.rencanaMt1LuasHa * 10000).toLocaleString('id-ID') : 0} m²</strong>) menjadi ukuran standar Hektar (<strong className="font-mono">{formData.rencanaMt1LuasHa || 0} Ha</strong>) yang tercatat resmi di pengajuan e-RDKK Tahun 2027.
+                    </p>
+                    <p className="text-[10px] text-emerald-800/80 mt-1">
+                      *Catatan: Pembagian ke dalam Musim Tanam (MT 1, MT 2, MT 3) akan ditentukan oleh Pengurus Kelompok Tani dan Dinas Pertanian pada tahapan <strong>e-RDKK Alokasi</strong>.
+                    </p>
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -1547,73 +1282,38 @@ export default function PengajuanErdkk2027Client({ poktanList }: Props) {
               </div>
             </div>
 
-            {/* BAGIAN II: RENCANA USAHATANI 3 MUSIM & ESTIMASI PUPUK BERSUBSIDI 2027 */}
+            {/* BAGIAN II: USULAN KOMODITAS & LUAS LAHAN e-RDKK 2027 */}
             <div className="mb-3">
               <div className="text-[10px] font-black uppercase tracking-wider text-slate-900 bg-slate-200/80 px-2.5 py-1 border border-slate-900 font-sans flex items-center justify-between">
-                <span>II. RENCANA USAHATANI & ESTIMASI ALOKASI PUPUK 2027</span>
-                <span className="text-[9px] text-slate-600 font-normal">Standar Rekomendasi Kementan RI</span>
+                <span>II. USULAN KOMODITAS & LUAS LAHAN e-RDKK 2027</span>
+                <span className="text-[9px] text-slate-600 font-normal">Pendaftaran Usulan Mandiri</span>
               </div>
-              <table className="w-full border-collapse border border-slate-900 text-[10px] text-center">
+              <table className="w-full border-collapse border border-slate-900 text-[10.5px]">
                 <thead>
-                  <tr className="bg-slate-100 text-slate-900 font-bold">
-                    <th className="border border-slate-900 px-1.5 py-1 w-7">No</th>
-                    <th className="border border-slate-900 px-2 py-1 text-left">Musim Tanam (MT)</th>
-                    <th className="border border-slate-900 px-2 py-1">Komoditas</th>
-                    <th className="border border-slate-900 px-2 py-1">Luas (Ha)</th>
-                    <th className="border border-slate-900 px-2 py-1 bg-emerald-50">Urea (Kg)</th>
-                    <th className="border border-slate-900 px-2 py-1 bg-blue-50">NPK (Kg)</th>
-                    <th className="border border-slate-900 px-2 py-1 bg-amber-50">Organik (Kg)</th>
+                  <tr className="bg-slate-100 text-slate-900 font-bold text-center">
+                    <th className="border border-slate-900 px-2 py-1.5 w-10">No</th>
+                    <th className="border border-slate-900 px-3 py-1.5 text-left">Komoditas Utama Usulan</th>
+                    <th className="border border-slate-900 px-3 py-1.5 text-right">Luas Pipil (m²)</th>
+                    <th className="border border-slate-900 px-3 py-1.5 text-right bg-emerald-50">Luas Usulan (Ha) *Masuk e-RDKK</th>
                   </tr>
                 </thead>
                 <tbody>
                   <tr>
-                    <td className="border border-slate-900 py-1">1</td>
-                    <td className="border border-slate-900 px-2 py-1 text-left font-bold">MT 1 (Walikan)</td>
-                    <td className="border border-slate-900 py-1">{receiptCalculations?.mt1.komoditas}</td>
-                    <td className="border border-slate-900 py-1 font-bold">{receiptCalculations?.mt1.luas.toFixed(2)} Ha</td>
-                    <td className="border border-slate-900 py-1 font-bold text-slate-900">{receiptCalculations?.mt1.urea}</td>
-                    <td className="border border-slate-900 py-1 font-bold text-slate-900">{receiptCalculations?.mt1.npk}</td>
-                    <td className="border border-slate-900 py-1 font-bold text-slate-900">{receiptCalculations?.mt1.organik}</td>
-                  </tr>
-                  <tr>
-                    <td className="border border-slate-900 py-1">2</td>
-                    <td className="border border-slate-900 px-2 py-1 text-left font-bold">MT 2 (Gadu)</td>
-                    <td className="border border-slate-900 py-1">{receiptCalculations?.mt2.komoditas}</td>
-                    <td className="border border-slate-900 py-1 font-bold">{receiptCalculations?.mt2.luas.toFixed(2)} Ha</td>
-                    <td className="border border-slate-900 py-1 font-bold text-slate-900">{receiptCalculations?.mt2.urea}</td>
-                    <td className="border border-slate-900 py-1 font-bold text-slate-900">{receiptCalculations?.mt2.npk}</td>
-                    <td className="border border-slate-900 py-1 font-bold text-slate-900">{receiptCalculations?.mt2.organik}</td>
-                  </tr>
-                  <tr>
-                    <td className="border border-slate-900 py-1">3</td>
-                    <td className="border border-slate-900 px-2 py-1 text-left font-bold">MT 3 (Rendeng)</td>
-                    <td className="border border-slate-900 py-1">{receiptCalculations?.mt3.komoditas}</td>
-                    <td className="border border-slate-900 py-1 font-bold">{receiptCalculations?.mt3.luas.toFixed(2)} Ha</td>
-                    <td className="border border-slate-900 py-1 font-bold text-slate-900">{receiptCalculations?.mt3.urea}</td>
-                    <td className="border border-slate-900 py-1 font-bold text-slate-900">{receiptCalculations?.mt3.npk}</td>
-                    <td className="border border-slate-900 py-1 font-bold text-slate-900">{receiptCalculations?.mt3.organik}</td>
-                  </tr>
-                  <tr className="bg-slate-100 font-black text-slate-900">
-                    <td colSpan={3} className="border border-slate-900 px-2 py-1 text-right uppercase">
-                      Total Kumulatif 1 Tahun:
+                    <td className="border border-slate-900 py-2 text-center font-bold">1</td>
+                    <td className="border border-slate-900 px-3 py-2 text-left font-bold text-slate-900">
+                      {receiptData.rencanaMt1Komoditas || receiptData.komoditas || 'Padi'}
                     </td>
-                    <td className="border border-slate-900 py-1 font-black">
-                      {receiptCalculations?.total.luas.toFixed(2)} Ha
+                    <td className="border border-slate-900 px-3 py-2 text-right font-mono font-medium text-slate-800">
+                      {receiptCalculations ? Math.round(receiptCalculations.mt1.luas * 10000).toLocaleString('id-ID') : 0} m²
                     </td>
-                    <td className="border border-slate-900 py-1 font-black bg-emerald-100/70">
-                      {receiptCalculations?.total.urea} Kg
-                    </td>
-                    <td className="border border-slate-900 py-1 font-black bg-blue-100/70">
-                      {receiptCalculations?.total.npk} Kg
-                    </td>
-                    <td className="border border-slate-900 py-1 font-black bg-amber-100/70">
-                      {receiptCalculations?.total.organik} Kg
+                    <td className="border border-slate-900 px-3 py-2 text-right font-mono font-black text-emerald-950 bg-emerald-50/60">
+                      {receiptCalculations ? receiptCalculations.mt1.luas.toFixed(2) : Number(receiptData.luasHa || 0).toFixed(2)} Ha
                     </td>
                   </tr>
                 </tbody>
               </table>
               <p className="text-[8.5px] text-slate-500 italic mt-1 leading-tight">
-                *Dosis pupuk bersubsidi merupakan estimasi kebutuhan berbasis komoditas sesuai dosis anjuran teknis Kementan RI. Penetapan alokasi final disahkan melalui SK Bupati Magetan.
+                *Catatan: Pembagian kuota alokasi pupuk bersubsidi per Musim Tanam (MT 1, MT 2, MT 3) diproses oleh Pengurus Kelompok Tani dan Petugas Dinas Pertanian pada tahapan e-RDKK Alokasi berdasarkan SK Bupati Magetan.
               </p>
             </div>
 
