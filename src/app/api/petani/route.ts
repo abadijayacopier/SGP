@@ -102,6 +102,7 @@ export async function POST(request: Request) {
       nomorKta,
       jabatan,
       fotoUrl,
+      totalLuasLahan,
     } = body;
 
     if (!nik || !nama || !poktanId) {
@@ -170,7 +171,7 @@ export async function POST(request: Request) {
         jabatan: jabatan ? String(jabatan).trim() : 'Anggota Aktif',
         fotoUrl: fotoUrl || null,
         statusVerifikasi: 'TERVERIFIKASI',
-        totalLuasLahan: 0,
+        totalLuasLahan: totalLuasLahan !== undefined ? Number(totalLuasLahan) || 0 : 0,
       },
       include: {
         poktan: true,
@@ -212,6 +213,7 @@ export async function PATCH(request: Request) {
       nomorKta,
       jabatan,
       fotoUrl,
+      totalLuasLahan,
     } = body;
 
     const cleanNik = nik ? String(nik).trim().replace(/\D/g, '') : undefined;
@@ -245,6 +247,7 @@ export async function PATCH(request: Request) {
           nomorKta: nomorKta !== undefined ? (nomorKta ? String(nomorKta).trim() : null) : targetPetani.nomorKta,
           jabatan: jabatan !== undefined ? (jabatan ? String(jabatan).trim() : 'Anggota Aktif') : targetPetani.jabatan,
           fotoUrl: fotoUrl !== undefined ? fotoUrl : targetPetani.fotoUrl,
+          totalLuasLahan: totalLuasLahan !== undefined ? Number(totalLuasLahan) || 0 : targetPetani.totalLuasLahan,
         },
         include: {
           poktan: true,
@@ -252,6 +255,32 @@ export async function PATCH(request: Request) {
           alokasiPupuk: true,
         },
       });
+
+      // Sinkronisasi otomatis ke lahan & alokasi pupuk jika luas lahan diubah
+      if (totalLuasLahan !== undefined) {
+        const parsedLuas = Number(totalLuasLahan) || 0;
+        if (parsedLuas >= 0) {
+          const lahanUtama = await prisma.lahan.findFirst({ where: { petaniId: targetPetani.id } });
+          if (lahanUtama) {
+            await prisma.lahan.update({
+              where: { id: lahanUtama.id },
+              data: {
+                luasHa: parsedLuas,
+                luasM2: Math.round(parsedLuas * 10000),
+              },
+            });
+          }
+          const alokasi = await prisma.alokasiPupuk.findFirst({ where: { petaniId: targetPetani.id } });
+          if (alokasi) {
+            await prisma.alokasiPupuk.update({
+              where: { id: alokasi.id },
+              data: {
+                luasTanamHa: parsedLuas,
+              },
+            });
+          }
+        }
+      }
     } else {
       // 3. Jika benar-benar belum ada di database, buat baru agar data pengguna aman
       if (!cleanNik || !nama || !poktanId) {
@@ -278,7 +307,7 @@ export async function PATCH(request: Request) {
           kabupaten: kabupaten || 'Magetan',
           poktanId,
           statusVerifikasi: 'TERVERIFIKASI',
-          totalLuasLahan: 0,
+          totalLuasLahan: totalLuasLahan !== undefined ? Number(totalLuasLahan) || 0 : 0,
         },
         include: {
           poktan: true,

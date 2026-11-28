@@ -80,7 +80,9 @@ export default function PetaniPage() {
     kecamatan: 'Lembeyan',
     kabupaten: 'Magetan',
     poktanId: '',
+    totalLuasLahan: '0',
   });
+  const [luasM2Input, setLuasM2Input] = useState('0');
   const [submitting, setSubmitting] = useState(false);
 
   // Modal Tambah / Edit Poktan
@@ -276,6 +278,7 @@ export default function PetaniPage() {
   };
 
   const handleOpenEditPetani = (p: any) => {
+    const luasHa = Number(p.totalLuasLahan || 0);
     setEditingPetaniId(p.id);
     setFormData({
       nik: p.nik || '',
@@ -290,7 +293,9 @@ export default function PetaniPage() {
       kecamatan: p.kecamatan || 'Lembeyan',
       kabupaten: p.kabupaten || 'Magetan',
       poktanId: p.poktanId || poktanList[0]?.id || '',
+      totalLuasLahan: luasHa > 0 ? String(luasHa) : '0',
     });
+    setLuasM2Input(luasHa > 0 ? String(Math.round(luasHa * 10000)) : '0');
     setModalOpen(true);
   };
 
@@ -371,7 +376,9 @@ export default function PetaniPage() {
           kecamatan: 'Lembeyan',
           kabupaten: 'Magetan',
           poktanId: poktanList[0]?.id || '',
+          totalLuasLahan: '0',
         });
+        setLuasM2Input('0');
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('petani-updated', { detail: json.data }));
           window.dispatchEvent(new CustomEvent('poktan-updated'));
@@ -1863,6 +1870,68 @@ export default function PetaniPage() {
                     </option>
                   ))}
                 </select>
+              </div>
+
+              {/* Total Luas Lahan Pertanian (Dukungan Hektar & Pipil m2 Otomatis) */}
+              <div className="bg-emerald-50/60 p-3 rounded-2xl border border-emerald-200/80 space-y-2">
+                <div className="flex items-center justify-between">
+                  <label className="block font-black text-emerald-950 text-xs">
+                    Total Luas Lahan Pertanian *
+                  </label>
+                  <span className="text-[10px] text-emerald-700 font-semibold">
+                    1 Hektar (Ha) = 10.000 m²
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <div>
+                    <label className="block font-bold text-slate-700 text-[11px] mb-1">
+                      Luas Lahan (Ha)
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        step="0.01"
+                        min="0"
+                        placeholder="Contoh: 0.32"
+                        value={formData.totalLuasLahan}
+                        onChange={(e) => {
+                          const ha = e.target.value;
+                          const m2 = ha ? (parseFloat(ha) * 10000).toString() : '';
+                          setFormData({ ...formData, totalLuasLahan: ha });
+                          setLuasM2Input(m2);
+                        }}
+                        className="w-full pl-3 pr-10 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 font-mono font-bold text-emerald-950 bg-white"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 pointer-events-none">
+                        Ha
+                      </span>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block font-bold text-slate-700 text-[11px] mb-1">
+                      Luas Pipil (m²)
+                    </label>
+                    <div className="relative">
+                      <input
+                        type="number"
+                        step="1"
+                        min="0"
+                        placeholder="Contoh: 3200"
+                        value={luasM2Input}
+                        onChange={(e) => {
+                          const m2 = e.target.value;
+                          const ha = m2 ? (parseFloat(m2) / 10000).toString() : '';
+                          setLuasM2Input(m2);
+                          setFormData({ ...formData, totalLuasLahan: ha });
+                        }}
+                        className="w-full pl-3 pr-10 py-2 border border-slate-300 rounded-xl focus:ring-2 focus:ring-emerald-500 font-mono font-bold text-slate-800 bg-white"
+                      />
+                      <span className="absolute right-3 top-1/2 -translate-y-1/2 text-xs font-bold text-slate-400 pointer-events-none">
+                        m²
+                      </span>
+                    </div>
+                  </div>
+                </div>
               </div>
 
               <div>
