@@ -263,6 +263,8 @@ export default function FieldMapsMobile() {
 
   // Bottom Sheet Form Modal
   const [showSaveDrawer, setShowSaveDrawer] = useState(false);
+  const [savingLahan, setSavingLahan] = useState(false);
+  const submitLockRef = useRef(false);
   const [fotoLahan, setFotoLahan] = useState<string | null>(null);
   const [processingPhoto, setProcessingPhoto] = useState(false);
   const [previewFotoModal, setPreviewFotoModal] = useState<string | null>(null);
@@ -274,6 +276,10 @@ export default function FieldMapsMobile() {
     nomorPipil: '',
     statusKepemilikan: 'Milik Sendiri',
     statusIrigasi: 'Irigasi Teknis',
+    batasUtara: '',
+    batasSelatan: '',
+    batasTimur: '',
+    batasBarat: '',
     catatan: '',
   });
 
@@ -740,6 +746,7 @@ export default function FieldMapsMobile() {
 
   // Sync a single offline survey item
   const handleSyncSingle = async (item: OfflineSurveyItem) => {
+    if (isSyncing) return;
     if (!effectiveOnline) {
       showWarning('Sedang Offline', 'Sambungkan smartphone ke internet atau matikan simulasi offline untuk sinkronisasi.');
       return;
@@ -897,9 +904,35 @@ export default function FieldMapsMobile() {
   const handleSaveLahan = async (e: React.FormEvent) => {
     e.preventDefault();
 
+    // 0. Cegah submit ganda saat server/jaringan lemot
+    if (savingLahan || submitLockRef.current) return;
+
     if (surveyPoints.length < 3) {
       showWarning('Patok Kurang', 'Minimal dibutuhkan 3 patok untuk membentuk poligon sawah.');
       return;
+    }
+
+    if (surveyArea.luasM2 < 5) {
+      showWarning('Luas Terlalu Kecil', 'Minimal luas petak hasil ukur adalah 5 m². Periksa kembali titik patok Anda.');
+      return;
+    }
+
+    if (surveyArea.luasHa > 20) {
+      showWarning(
+        'Luas Melebihi Batas Wajar',
+        `Luas petak terhitung ${surveyArea.luasHa} Ha (maksimal sistem 20 Ha). Harap periksa titik patok poligon dari kemungkinan lonjakan sinyal GPS (drifting).`
+      );
+      return;
+    }
+
+    if (surveyArea.luasHa > 2.0) {
+      const confirmQuota = await showConfirm({
+        title: 'Perhatian Batas Kuota Subsidi e-RDKK',
+        text: `Luas petak yang Anda ukur (${surveyArea.luasHa} Ha) melebihi batas alokasi pupuk subsidi perorangan (maksimal 2.00 Ha berdasarkan regulasi Permentan).<br/><br/>Apakah Anda yakin ukuran batas fisik petak ini sudah benar dan ingin tetap menyimpannya?`,
+        confirmButtonText: 'Ya, Lanjutkan Simpan',
+        cancelButtonText: 'Periksa Ulang Titik Patok',
+      });
+      if (!confirmQuota) return;
     }
 
     if (!formData.namaLahan.trim()) {
@@ -925,39 +958,49 @@ export default function FieldMapsMobile() {
     const petaniNama = selectedPetani ? selectedPetani.nama : formData.petaniManual.trim() || 'Petani Terdaftar';
     const poktanNama = selectedPetani?.poktan?.nama || 'Poktan Wilayah Lembeyan';
 
-    // 1. Jika Offline atau pengguna memilih simpan offline
-    if (!effectiveOnline) {
-      saveOfflineSurvey({
-        namaLahan: formData.namaLahan,
-        petaniId: effectivePetaniId || 'offline-petani',
-        petaniNama,
-        poktanNama,
-        komoditas: formData.komoditas || 'Padi',
-        coordinates: surveyPoints,
-        luasHa: surveyArea.luasHa,
-        luasM2: surveyArea.luasM2,
-        nomorPipil: formData.nomorPipil,
-        statusKepemilikan: formData.statusKepemilikan,
-        statusIrigasi: formData.statusIrigasi,
-        catatan: formData.catatan,
-        gpsAccuracy: gpsAccuracy || undefined,
-        fotoLahan: fotoLahan || undefined,
-      });
+    const clientSubmissionId = `sub-${Date.now()}-${Math.random().toString(36).slice(2, 7)}`;
 
-      showSuccess(
-        'Disimpan di Antrean Offline!',
-        'Data patok sawah & foto geotag tersimpan aman di memori HP Anda. Nanti saat dapat sinyal, tekan tombol sinkronisasi.'
-      );
+    submitLockRef.current = true;
+    setSavingLahan(true);
 
-      setShowSaveDrawer(false);
-      setSurveyPoints([]);
-      setFotoLahan(null);
-      setIsWalkTracking(false);
-      return;
-    }
-
-    // 2. Jika Online, kirim ke server /api/lahan
     try {
+      // 1. Jika Offline atau pengguna memilih simpan offline
+      if (!effectiveOnline) {
+        saveOfflineSurvey({
+          namaLahan: formData.namaLahan,
+          petaniId: effectivePetaniId || 'offline-petani',
+          petaniNama,
+          poktanNama,
+          komoditas: formData.komoditas || 'Padi',
+          coordinates: surveyPoints,
+          luasHa: surveyArea.luasHa,
+          luasM2: surveyArea.luasM2,
+          nomorPipil: formData.nomorPipil,
+          statusKepemilikan: formData.statusKepemilikan,
+          statusIrigasi: formData.statusIrigasi,
+          batasUtara: formData.batasUtara.trim() || undefined,
+          batasSelatan: formData.batasSelatan.trim() || undefined,
+          batasTimur: formData.batasTimur.trim() || undefined,
+          batasBarat: formData.batasBarat.trim() || undefined,
+          clientSubmissionId,
+          catatan: formData.catatan,
+          gpsAccuracy: gpsAccuracy || undefined,
+          fotoLahan: fotoLahan || undefined,
+        });
+
+        showSuccess(
+          'Disimpan di Antrean Offline!',
+          'Data patok sawah & batas sempadan tersimpan aman di memori HP Anda. Nanti saat dapat sinyal, tekan tombol sinkronisasi.'
+        );
+
+        setShowSaveDrawer(false);
+        setSurveyPoints([]);
+        setFotoLahan(null);
+        setIsWalkTracking(false);
+        return;
+      }
+
+      // 2. Jika Online, kirim ke server /api/lahan
       const payload = {
         namaLahan: formData.namaLahan,
         petaniId: effectivePetaniId || undefined,
@@ -969,6 +1012,11 @@ export default function FieldMapsMobile() {
         statusKepemilikan: formData.statusKepemilikan,
         statusIrigasi: formData.statusIrigasi,
         nomorPipil: formData.nomorPipil,
+        batasUtara: formData.batasUtara.trim() || undefined,
+        batasSelatan: formData.batasSelatan.trim() || undefined,
+        batasTimur: formData.batasTimur.trim() || undefined,
+        batasBarat: formData.batasBarat.trim() || undefined,
+        clientSubmissionId,
         fotoLahan: fotoLahan || null,
         forceOverride: true,
       };
@@ -981,10 +1029,17 @@ export default function FieldMapsMobile() {
 
       const json = await res.json();
       if (json.success) {
-        showSuccess(
-          'Pemetaan Berhasil!',
-          `Petak "${formData.namaLahan}" (${surveyArea.luasHa} Ha) berhasil didaftarkan ke sistem GIS BPP Lembeyan.`
-        );
+        if (json.isDuplicatePrevented) {
+          showSuccess(
+            'Petak Sudah Terdaftar!',
+            `Data petak "${formData.namaLahan}" (${surveyArea.luasHa} Ha) sudah tersimpan di server. Duplikasi data ganda berhasil dicegah.`
+          );
+        } else {
+          showSuccess(
+            'Pemetaan Berhasil!',
+            `Petak "${formData.namaLahan}" (${surveyArea.luasHa} Ha) dengan batas sempadan lengkap berhasil didaftarkan ke sistem GIS BPP Lembeyan.`
+          );
+        }
         setShowSaveDrawer(false);
         setSurveyPoints([]);
         setFotoLahan(null);
@@ -1033,6 +1088,11 @@ export default function FieldMapsMobile() {
             nomorPipil: formData.nomorPipil,
             statusKepemilikan: formData.statusKepemilikan,
             statusIrigasi: formData.statusIrigasi,
+            batasUtara: formData.batasUtara.trim() || undefined,
+            batasSelatan: formData.batasSelatan.trim() || undefined,
+            batasTimur: formData.batasTimur.trim() || undefined,
+            batasBarat: formData.batasBarat.trim() || undefined,
+            clientSubmissionId,
             catatan: formData.catatan,
             gpsAccuracy: gpsAccuracy || undefined,
           });
@@ -1042,6 +1102,9 @@ export default function FieldMapsMobile() {
       }
     } catch (err: any) {
       showError('Gagal Mengirim Data', err.message);
+    } finally {
+      submitLockRef.current = false;
+      setSavingLahan(false);
     }
   };
 
@@ -1074,6 +1137,7 @@ export default function FieldMapsMobile() {
 
   // Sync All Offline Surveys
   const handleSyncQueue = async () => {
+    if (isSyncing) return;
     if (!effectiveOnline) {
       showWarning('Sedang Offline', 'Sambungkan smartphone Anda ke jaringan internet seluler / WiFi untuk sinkronisasi.');
       return;
@@ -1857,10 +1921,32 @@ export default function FieldMapsMobile() {
                   <Save className="w-5 h-5 text-emerald-600" />
                   Simpan Petak Sawah Hasil Ukur
                 </h3>
-                <p className="text-xs text-slate-500 font-sans">
-                  Hasil ukur: <strong className="text-emerald-700">{surveyArea.luasHa} Ha</strong> (
-                  {surveyArea.luasM2} m²) &bull; {surveyPoints.length} Titik Patok
-                </p>
+                <div className="flex flex-wrap items-center gap-2 mt-1">
+                  <p className="text-xs text-slate-500 font-sans">
+                    Hasil ukur: <strong className="text-emerald-700 font-bold">{surveyArea.luasHa} Ha</strong> (
+                    {surveyArea.luasM2.toLocaleString('id-ID')} m²) &bull; {surveyPoints.length} Titik Patok
+                  </p>
+                  {surveyArea.luasHa > 2.0 && surveyArea.luasHa <= 20 && (
+                    <span className="text-[10px] bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded-full border border-amber-300">
+                      ⚠️ Di Atas Batas Kuota Subsidi (&gt; 2.00 Ha)
+                    </span>
+                  )}
+                  {surveyArea.luasHa <= 2.0 && surveyArea.luasM2 >= 5 && (
+                    <span className="text-[10px] bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded-full border border-emerald-300">
+                      ✓ Wajar Kuota Subsidi (≤ 2.00 Ha)
+                    </span>
+                  )}
+                  {surveyArea.luasM2 < 5 && (
+                    <span className="text-[10px] bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded-full border border-rose-300">
+                      ⛔ Terlalu Kecil (&lt; 5 m²)
+                    </span>
+                  )}
+                  {surveyArea.luasHa > 20 && (
+                    <span className="text-[10px] bg-rose-100 text-rose-800 font-bold px-2 py-0.5 rounded-full border border-rose-300">
+                      ⛔ Melebihi Batas Maksimal (20 Ha)
+                    </span>
+                  )}
+                </div>
               </div>
               <button
                 type="button"
@@ -2195,6 +2281,64 @@ export default function FieldMapsMobile() {
                 </div>
               </div>
 
+              {/* Batas Sempadan Fisik Lahan (Batas Utara, Timur, Selatan, Barat) */}
+              <div className="p-3.5 bg-slate-50 border border-slate-200 rounded-2xl space-y-2.5 font-sans">
+                <div className="flex items-center justify-between">
+                  <label className="text-xs font-bold text-slate-800 flex items-center gap-1.5 font-sans">
+                    <Compass className="w-4 h-4 text-emerald-600" />
+                    Batas Sempadan Lahan (Surat Ukur / Sertifikat)
+                  </label>
+                  <span className="text-[10px] text-emerald-700 bg-emerald-50 px-2 py-0.5 rounded-full font-bold border border-emerald-200">
+                    Batas Fisik
+                  </span>
+                </div>
+                <div className="grid grid-cols-2 gap-2.5">
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-0.5">Batas Utara</label>
+                    <input
+                      type="text"
+                      placeholder="Misal: Sawah Bpk. Tono / Parit"
+                      value={formData.batasUtara}
+                      onChange={(e) => setFormData({ ...formData, batasUtara: e.target.value })}
+                      className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-900 text-xs font-sans focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-0.5">Batas Timur</label>
+                    <input
+                      type="text"
+                      placeholder="Misal: Jalan Usaha Tani"
+                      value={formData.batasTimur}
+                      onChange={(e) => setFormData({ ...formData, batasTimur: e.target.value })}
+                      className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-900 text-xs font-sans focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-0.5">Batas Selatan</label>
+                    <input
+                      type="text"
+                      placeholder="Misal: Sawah Bpk. Samsi"
+                      value={formData.batasSelatan}
+                      onChange={(e) => setFormData({ ...formData, batasSelatan: e.target.value })}
+                      className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-900 text-xs font-sans focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-[11px] font-bold text-slate-700 mb-0.5">Batas Barat</label>
+                    <input
+                      type="text"
+                      placeholder="Misal: Sungai / Saluran Primer"
+                      value={formData.batasBarat}
+                      onChange={(e) => setFormData({ ...formData, batasBarat: e.target.value })}
+                      className="w-full px-2.5 py-1.5 bg-white border border-slate-200 rounded-lg text-slate-900 text-xs font-sans focus:outline-none focus:ring-1 focus:ring-emerald-500"
+                    />
+                  </div>
+                </div>
+                <p className="text-[10px] text-slate-400">
+                  *Batas sempadan akan tercetak otomatis pada Peta Lahan GIS & Surat Keterangan Tanah BPP Lembeyan.
+                </p>
+              </div>
+
               {/* Geotagged Photo Camera Section */}
               <div className="p-3 bg-slate-50 border border-slate-200 rounded-2xl space-y-2">
                 <div className="flex items-center justify-between">
@@ -2252,10 +2396,20 @@ export default function FieldMapsMobile() {
 
               <button
                 type="submit"
-                className="w-full bg-emerald-600 hover:bg-emerald-700 text-white font-black py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm active:scale-[0.99] mt-2"
+                disabled={savingLahan || surveyArea.luasM2 < 5 || surveyArea.luasHa > 20}
+                className="w-full bg-emerald-600 hover:bg-emerald-700 disabled:bg-slate-300 disabled:text-slate-500 disabled:opacity-80 disabled:cursor-not-allowed text-white font-black py-3 rounded-xl shadow-lg transition flex items-center justify-center gap-2 text-sm active:scale-[0.99] mt-2 cursor-pointer"
               >
-                <Save className="w-4 h-4" />
-                <span>{effectiveOnline ? 'Simpan ke Server Database' : 'Simpan ke Antrean HP (Offline)'}</span>
+                {savingLahan ? (
+                  <>
+                    <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0" />
+                    <span>Mengunggah & Menyimpan Petak ke Server...</span>
+                  </>
+                ) : (
+                  <>
+                    <Save className="w-4 h-4" />
+                    <span>{effectiveOnline ? 'Simpan ke Server Database' : 'Simpan ke Antrean HP (Offline)'}</span>
+                  </>
+                )}
               </button>
             </form>
           </div>

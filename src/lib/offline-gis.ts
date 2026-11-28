@@ -13,6 +13,11 @@ export interface OfflineSurveyItem {
   nomorPipil?: string;
   statusKepemilikan?: string;
   statusIrigasi?: string;
+  batasUtara?: string;
+  batasSelatan?: string;
+  batasTimur?: string;
+  batasBarat?: string;
+  clientSubmissionId?: string;
   catatan?: string;
   recordedAt: string;
   gpsAccuracy?: number;
@@ -116,6 +121,11 @@ export async function syncSingleOfflineSurvey(item: OfflineSurveyItem): Promise<
       statusKepemilikan: item.statusKepemilikan || 'Milik Sendiri',
       statusIrigasi: item.statusIrigasi || 'Irigasi Teknis',
       nomorPipil: item.nomorPipil || '',
+      batasUtara: item.batasUtara || undefined,
+      batasSelatan: item.batasSelatan || undefined,
+      batasTimur: item.batasTimur || undefined,
+      batasBarat: item.batasBarat || undefined,
+      clientSubmissionId: item.clientSubmissionId || item.id,
       fotoLahan: item.fotoLahan || undefined,
       forceOverride: true,
     };

@@ -73,6 +73,20 @@ export async function POST(request: Request) {
     // Hitung luas otomatis
     const { luasM2, luasHa } = calculatePolygonArea(coordinates);
 
+    // 1. Validasi Batasan Luas Petak (Min 5 m², Max 20 Ha untuk batas kewajaran pemetaan petak)
+    if (luasM2 < 5) {
+      return NextResponse.json(
+        { success: false, error: 'Luas petak terlalu kecil (minimal 5 m²). Harap periksa titik patok poligon.' },
+        { status: 400 }
+      );
+    }
+    if (luasHa > 20) {
+      return NextResponse.json(
+        { success: false, error: 'Luas petak melebihi batas maksimal kewajaran (20 Ha). Periksa kemungkinan lonjakan GPS (drifting).' },
+        { status: 400 }
+      );
+    }
+
     // Cek potensi tumpang tindih spasial dengan seluruh lahan terdaftar
     const existingLahanList = await prisma.lahan.findMany({
       select: {
@@ -156,6 +170,43 @@ export async function POST(request: Request) {
         });
       }
       finalPetaniId = existingPetani.id;
+    }
+
+    // 2. Anti-Duplikasi / Idempotensi saat Server Lemot (Pencegahan Double Submission)
+    const fiveMinutesAgo = new Date(Date.now() - 5 * 60 * 1000);
+    const existingDuplicate = await prisma.lahan.findFirst({
+      where: {
+        petaniId: finalPetaniId,
+        createdAt: { gte: fiveMinutesAgo },
+        OR: [
+          { coordinates: JSON.stringify(coordinates) },
+          {
+            AND: [
+              { namaLahan: namaLahan },
+              { centerLat: { gte: centerLat - 0.00015, lte: centerLat + 0.00015 } },
+              { centerLng: { gte: centerLng - 0.00015, lte: centerLng + 0.00015 } },
+            ],
+          },
+        ],
+      },
+      include: {
+        petani: {
+          include: { poktan: true },
+        },
+      },
+    });
+
+    if (existingDuplicate) {
+      console.log(`[POST /api/lahan] Pencegahan duplikasi data ganda aktif untuk petani ${finalPetaniId} (${namaLahan}). Mengembalikan petak tersimpan: ${existingDuplicate.kodeLahan}`);
+      return NextResponse.json(
+        {
+          success: true,
+          data: existingDuplicate,
+          isDuplicatePrevented: true,
+          message: 'Data petak sudah tersimpan (duplikasi ganda dicegah).',
+        },
+        { status: 200 }
+      );
     }
 
     // Generate kodeLahan anti-bentrok (collision-proof)
