@@ -113,7 +113,8 @@ export default async function CetakLahanPage({ params }: Props) {
   const petaniSig =
     petaniUser?.signatureUrl ||
     generateAutoSignatureSvg(lahan.petani?.nama || 'Petani');
-  const poktanName = poktanUser?.name || lahan.petani?.poktan?.ketua || 'H. Suparman';
+  const rawPoktanName = poktanUser?.name || lahan.petani?.poktan?.ketua || 'Samsi';
+  const poktanName = rawPoktanName.replace(/\s*\([^)]*\)/g, '').trim() || 'Samsi';
   const poktanSig =
     poktanUser?.signatureUrl || generateAutoSignatureSvg(poktanName);
   const poktanStamp =
@@ -607,6 +608,9 @@ export default async function CetakLahanPage({ params }: Props) {
 
             <div>
               <p className="font-semibold text-slate-600">Ketua Kelompok Tani,</p>
+              <p className="font-bold text-slate-800 text-[11px] uppercase tracking-wide">
+                {lahan.petani?.poktan?.nama ? `POKTAN ${lahan.petani.poktan.nama}` : 'POKTAN'}
+              </p>
               <div className="h-20 flex items-center justify-center relative my-1">
                 {poktanStamp ? (
                   <img
@@ -629,7 +633,6 @@ export default async function CetakLahanPage({ params }: Props) {
                 {poktanName}
               </p>
               <p className="text-[10px] font-mono text-slate-500">{poktanNip}</p>
-              <p className="text-[10px] text-slate-400">{lahan.petani?.poktan?.nama}</p>
             </div>
 
             <div>

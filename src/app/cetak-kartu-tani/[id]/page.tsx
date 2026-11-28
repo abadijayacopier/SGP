@@ -83,7 +83,8 @@ export default async function CetakKartuTaniPage({ params }: Props) {
 
   const petaniSig =
     petaniUser?.signatureUrl || generateAutoSignatureSvg(petani.nama);
-  const poktanName = poktanUser?.name || petani.poktan?.ketua || 'H. Suparman';
+  const rawPoktanName = poktanUser?.name || petani.poktan?.ketua || 'Samsi';
+  const poktanName = rawPoktanName.replace(/\s*\([^)]*\)/g, '').trim() || 'Samsi';
   const poktanSig =
     poktanUser?.signatureUrl || generateAutoSignatureSvg(poktanName);
   const poktanStamp =
@@ -357,7 +358,10 @@ export default async function CetakKartuTaniPage({ params }: Props) {
             </p>
           </div>
           <div>
-            <p className="text-slate-600 font-semibold print:text-[10px]">Ketua {petani.poktan?.nama},</p>
+            <p className="text-slate-600 font-semibold print:text-[10px]">Ketua Kelompok Tani,</p>
+            <p className="font-bold text-slate-800 text-[10px] print:text-[10px] uppercase">
+              {petani.poktan?.nama ? `Poktan ${petani.poktan.nama}` : 'Poktan'}
+            </p>
             <div className="h-16 sm:h-20 flex items-center justify-center relative my-0.5 sm:my-1">
               {poktanStamp ? (
                 <img
@@ -378,7 +382,6 @@ export default async function CetakKartuTaniPage({ params }: Props) {
             </div>
             <p className="font-bold text-slate-900 underline uppercase print:text-[11px]">{poktanName}</p>
             <p className="text-[9px] sm:text-[10px] font-mono text-slate-600">{poktanNip}</p>
-            <p className="text-[9px] sm:text-[10px] text-slate-400">Desa {petani.desa}</p>
           </div>
           <div>
             <p className="text-slate-600 font-semibold print:text-[10px]">Penyuluh Pertanian Lapangan (PPL),</p>

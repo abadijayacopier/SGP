@@ -79,8 +79,9 @@ export default async function CetakNotaPage({ params }: Props) {
   }
 
   const resolvedKiosName = kiosUser?.name || penyaluran.petugasKios;
-  const resolvedPoktanKetua =
-    poktanUser?.name || penyaluran.petani?.poktan?.ketua || 'H. Suparman';
+  const rawPoktanKetua =
+    poktanUser?.name || penyaluran.petani?.poktan?.ketua || 'Samsi';
+  const resolvedPoktanKetua = rawPoktanKetua.replace(/\s*\([^)]*\)/g, '').trim() || 'Samsi';
 
   // Serialisasi data untuk Client Component (sinkron dengan profil, TTD, stempel & NIP terbaru)
   const serializedData = {

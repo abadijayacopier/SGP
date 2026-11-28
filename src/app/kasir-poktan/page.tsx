@@ -2697,6 +2697,7 @@ export default function KasirPoktanPage() {
               <div className="pt-4 border-t border-slate-400 grid grid-cols-5 gap-2 text-center text-[10px] font-sans">
                 <div>
                   <p className="text-slate-600">Ketua Kelompok Tani,</p>
+                  <p className="font-bold text-slate-800 text-[10px] uppercase">{activePoktanName ? `POKTAN ${activePoktanName}` : 'POKTAN'}</p>
                   <div className="h-14 flex items-center justify-center relative my-1">
                     <img
                       src={generateOfficialStampSvg('POKTAN', activePoktanName)}
