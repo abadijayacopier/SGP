@@ -49,6 +49,7 @@ export default function PetaniPage() {
   const [search, setSearch] = useState('');
   const [filterDesa, setFilterDesa] = useState('SEMUA');
   const [filterPoktan, setFilterPoktan] = useState('SEMUA');
+  const [filterStatusLahan, setFilterStatusLahan] = useState<'SEMUA' | 'SUDAH' | 'BELUM'>('SEMUA');
 
   // Pagination Petani
   const [currentPage, setCurrentPage] = useState(1);
@@ -57,7 +58,7 @@ export default function PetaniPage() {
   // Reset pagination saat pencarian atau filter desa/poktan berubah
   useEffect(() => {
     setCurrentPage(1);
-  }, [search, filterDesa, filterPoktan]);
+  }, [search, filterDesa, filterPoktan, filterStatusLahan]);
 
   // State Edit Kepala Desa
   const [editingKades, setEditingKades] = useState<any | null>(null);
@@ -568,6 +569,13 @@ export default function PetaniPage() {
 
   const filteredPetani = useMemo(() => {
     return petaniList.filter((p) => {
+      // Filter Status Pemetaan Lahan GIS
+      if (filterStatusLahan === 'SUDAH') {
+        if (!p.lahan || p.lahan.length === 0) return false;
+      } else if (filterStatusLahan === 'BELUM') {
+        if (p.lahan && p.lahan.length > 0) return false;
+      }
+
       // Filter Desa (client-side safety check)
       if (filterDesa !== 'SEMUA') {
         const dTarget = filterDesa.toLowerCase().trim();
@@ -591,7 +599,12 @@ export default function PetaniPage() {
         (p.alamat && p.alamat.toLowerCase().includes(q))
       );
     });
-  }, [petaniList, search, filterDesa, filterPoktan]);
+  }, [petaniList, search, filterDesa, filterPoktan, filterStatusLahan]);
+
+  const countSudahDipetak = useMemo(() => {
+    return petaniList.filter((p) => p.lahan && p.lahan.length > 0).length;
+  }, [petaniList]);
+  const countBelumDipetak = Math.max(0, petaniList.length - countSudahDipetak);
 
   // Pagination Calculations
   const totalPages = Math.ceil(filteredPetani.length / pageSize) || 1;
@@ -761,6 +774,47 @@ export default function PetaniPage() {
                   </button>
                 )}
               </div>
+            </div>
+
+            {/* Tab Filter Status Pemetaan Lahan GIS */}
+            <div className="flex flex-wrap items-center gap-2 pt-1 pb-0.5">
+              <span className="text-[11px] font-extrabold text-slate-600 mr-1 flex items-center gap-1">
+                <Compass className="w-3.5 h-3.5 text-emerald-600" />
+                Status GIS:
+              </span>
+              <button
+                type="button"
+                onClick={() => setFilterStatusLahan('SEMUA')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                  filterStatusLahan === 'SEMUA'
+                    ? 'bg-slate-900 text-white shadow-xs'
+                    : 'bg-slate-100 hover:bg-slate-200 text-slate-700'
+                }`}
+              >
+                <span>Semua ({petaniList.length})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterStatusLahan('BELUM')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                  filterStatusLahan === 'BELUM'
+                    ? 'bg-amber-600 text-white shadow-xs'
+                    : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-200'
+                }`}
+              >
+                <span>⚠️ Belum Dipetakan ({countBelumDipetak})</span>
+              </button>
+              <button
+                type="button"
+                onClick={() => setFilterStatusLahan('SUDAH')}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition flex items-center gap-1.5 cursor-pointer ${
+                  filterStatusLahan === 'SUDAH'
+                    ? 'bg-emerald-600 text-white shadow-xs'
+                    : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200'
+                }`}
+              >
+                <span>✅ Sudah Terpetakan ({countSudahDipetak})</span>
+              </button>
             </div>
 
             {/* Filter Bertingkat: Cascading Dropdown Desa & Kelompok Tani */}
