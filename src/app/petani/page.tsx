@@ -2002,7 +2002,7 @@ export default function PetaniPage() {
       {/* Modal Detail Profil Petani & DAFTAR LENGKAP BLOK-BLOK SAWAH */}
       {detailModalOpen && selectedPetani && (
         <div className="fixed inset-0 z-[2000] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 pb-20 sm:pb-4 overflow-y-auto">
-          <div className="bg-white rounded-3xl max-w-3xl w-full p-4 sm:p-6 shadow-2xl border border-slate-100 max-h-[85vh] sm:max-h-[90vh] overflow-y-auto my-auto space-y-4">
+          <div className="bg-white rounded-3xl max-w-4xl w-full p-4 sm:p-6 shadow-2xl border border-slate-100 max-h-[85vh] sm:max-h-[90vh] overflow-y-auto my-auto space-y-4">
             {/* Header Profil Petani */}
             <div className="flex items-start justify-between pb-4 border-b border-slate-100 gap-3">
               <div className="space-y-1">
@@ -2199,30 +2199,30 @@ export default function PetaniPage() {
             {/* Footer Aksi Responsif & Rapi */}
             <div className="pt-4 border-t border-slate-200 mt-6 flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
               {/* Sisi Kiri (Desktop) / Sisi Bawah (Mobile): Tombol Hapus */}
-              <div className="order-last sm:order-first">
+              <div className="order-last sm:order-first shrink-0">
                 {(permissions.canVerifyPpl || permissions.canApproveDinas || permissions.canManageUsers || currentUser.role === 'ADMIN_DINAS' || currentUser.role === 'PPL') && (
                   <button
                     type="button"
                     onClick={() => handleDeletePetani(selectedPetani)}
-                    className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-rose-50 hover:bg-rose-100 active:scale-95 text-rose-700 font-bold rounded-xl text-xs border border-rose-200/90 transition shadow-2xs cursor-pointer"
+                    className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-rose-50 hover:bg-rose-100 active:scale-95 text-rose-700 font-bold rounded-xl text-xs border border-rose-200/90 transition shadow-2xs cursor-pointer"
                   >
-                    <Trash2 className="w-3.5 h-3.5 text-rose-600" />
+                    <Trash2 className="w-3.5 h-3.5 text-rose-600 shrink-0" />
                     <span>Hapus Petani Ini</span>
                   </button>
                 )}
               </div>
 
-              {/* Sisi Kanan (Desktop) / Sisi Atas (Mobile): Deretan Tombol Aksi (Lihat Peta Sawah, Cetak Kartu Lahan, Cetak Kartu Tani, Tutup) */}
-              <div className="flex flex-wrap items-center justify-end gap-2">
+              {/* Sisi Kanan: Deretan Tombol Aksi Terstruktur & Responsif */}
+              <div className="grid grid-cols-2 sm:flex sm:flex-wrap lg:flex-nowrap items-center justify-end gap-2">
                 {/* 1. Tombol Lihat Peta Sawah */}
                 <Link
                   href="/peta"
                   onClick={() => setDetailModalOpen(false)}
-                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-emerald-50 hover:bg-emerald-100 active:scale-95 text-emerald-800 font-bold rounded-xl text-xs border border-emerald-300 transition shadow-2xs text-center cursor-pointer"
+                  className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-emerald-50 hover:bg-emerald-100 active:scale-95 text-emerald-800 font-bold rounded-xl text-xs border border-emerald-300 transition shadow-2xs text-center cursor-pointer"
                   title="Buka Peta GIS & Pantau Lokasi Sawah Petani"
                 >
                   <Compass className="w-4 h-4 text-emerald-600 shrink-0" />
-                  <span>Lihat Peta Sawah</span>
+                  <span className="truncate">Lihat Peta Sawah</span>
                 </Link>
 
                 {/* 2. Tombol Cetak Kartu Lahan */}
@@ -2230,11 +2230,11 @@ export default function PetaniPage() {
                   <Link
                     href={`/cetak-lahan/${selectedPetani.lahan[0].id}`}
                     target="_blank"
-                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 font-bold rounded-xl text-xs border border-slate-300 transition shadow-2xs text-center cursor-pointer"
+                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-100 hover:bg-slate-200 active:scale-95 text-slate-800 font-bold rounded-xl text-xs border border-slate-300 transition shadow-2xs text-center cursor-pointer"
                     title="Cetak Surat Kepemilikan & Peta Petak Lahan Resmi"
                   >
                     <Printer className="w-4 h-4 text-emerald-700 shrink-0" />
-                    <span>Cetak Kartu Lahan</span>
+                    <span className="truncate">Cetak Kartu Lahan</span>
                   </Link>
                 ) : (
                   <button
@@ -2245,11 +2245,11 @@ export default function PetaniPage() {
                         'Petani ini belum memiliki koordinat poligon petak sawah yang dipetakan untuk dicetak.'
                       )
                     }
-                    className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2.5 bg-slate-50 text-slate-400 font-semibold rounded-xl text-xs border border-slate-200 transition text-center cursor-not-allowed"
+                    className="inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-slate-50 text-slate-400 font-semibold rounded-xl text-xs border border-slate-200 transition text-center cursor-not-allowed"
                     title="Petani belum memiliki data pemetaan petak sawah"
                   >
                     <Printer className="w-4 h-4 text-slate-400 shrink-0" />
-                    <span>Cetak Kartu Lahan</span>
+                    <span className="truncate">Cetak Kartu Lahan</span>
                   </button>
                 )}
 
@@ -2257,19 +2257,19 @@ export default function PetaniPage() {
                 <Link
                   href={`/cetak-kartu-tani/${selectedPetani.id}`}
                   target="_blank"
-                  className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-amber-400 hover:bg-amber-500 active:scale-95 text-slate-950 font-black rounded-xl text-xs transition shadow-2xs text-center"
+                  className="inline-flex items-center justify-center gap-1.5 px-3.5 py-2 bg-amber-400 hover:bg-amber-500 active:scale-95 text-slate-950 font-black rounded-xl text-xs transition shadow-2xs text-center"
                 >
                   <CreditCard className="w-4 h-4 shrink-0" />
-                  <span>Cetak Kartu Tani Digital</span>
+                  <span className="truncate">Cetak Kartu Tani</span>
                 </Link>
 
                 {/* 4. Tombol Tutup Rincian */}
                 <button
                   type="button"
                   onClick={() => setDetailModalOpen(false)}
-                  className="inline-flex items-center justify-center px-4 py-2.5 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white font-bold rounded-xl text-xs transition shadow-2xs cursor-pointer"
+                  className="inline-flex items-center justify-center px-4 py-2 bg-slate-900 hover:bg-slate-800 active:scale-95 text-white font-bold rounded-xl text-xs transition shadow-2xs cursor-pointer text-center"
                 >
-                  Tutup Rincian
+                  <span className="truncate">Tutup Rincian</span>
                 </button>
               </div>
             </div>
