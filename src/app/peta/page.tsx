@@ -55,6 +55,7 @@ export default function PetaPage() {
   const [komoditasFilter, setKomoditasFilter] = useState('SEMUA');
   const [desaFilter, setDesaFilter] = useState('SEMUA');
   const [flyToTarget, setFlyToTarget] = useState<FlyToTarget | null>(null);
+  const [selectedPoktanFilter, setSelectedPoktanFilter] = useState('SEMUA');
   const [selectedPetaniFilter, setSelectedPetaniFilter] = useState('SEMUA');
   const [searchQuery, setSearchQuery] = useState('');
   const [tableSearchQuery, setTableSearchQuery] = useState('');
@@ -152,6 +153,7 @@ export default function PetaPage() {
         params.append('poktanId', currentUser.poktanId);
         if (selectedPetaniFilter !== 'SEMUA') params.append('petaniId', selectedPetaniFilter);
       } else {
+        if (selectedPoktanFilter !== 'SEMUA') params.append('poktanId', selectedPoktanFilter);
         if (selectedPetaniFilter !== 'SEMUA') params.append('petaniId', selectedPetaniFilter);
       }
 
@@ -213,7 +215,7 @@ export default function PetaPage() {
 
   useEffect(() => {
     fetchLahan();
-  }, [komoditasFilter, selectedPetaniFilter, currentUser.role, currentUser.petaniId, currentUser.poktanId]);
+  }, [komoditasFilter, selectedPoktanFilter, selectedPetaniFilter, currentUser.role, currentUser.petaniId, currentUser.poktanId]);
 
   useEffect(() => {
     fetchPetani();
@@ -593,19 +595,50 @@ export default function PetaPage() {
     }
   };
 
+  // Filter Poktan berdasarkan Desa yang dipilih
+  const filteredPoktanOptions = useMemo(() => {
+    if (desaFilter === 'SEMUA') return poktanList;
+    return poktanList.filter(
+      (pok) => (pok.desa || '').toLowerCase() === desaFilter.toLowerCase()
+    );
+  }, [poktanList, desaFilter]);
+
+  // Filter Petani berdasarkan Poktan & Desa yang dipilih
+  const filteredPetaniOptions = useMemo(() => {
+    let list = petaniList;
+    if (desaFilter !== 'SEMUA') {
+      list = list.filter(
+        (p) =>
+          (p.desa || p.poktan?.desa || '').toLowerCase() === desaFilter.toLowerCase()
+      );
+    }
+    if (selectedPoktanFilter !== 'SEMUA') {
+      list = list.filter(
+        (p) =>
+          p.poktanId === selectedPoktanFilter || p.poktan?.id === selectedPoktanFilter
+      );
+    }
+    return list;
+  }, [petaniList, desaFilter, selectedPoktanFilter]);
+
   // Filtered List Petak Lahan
   const filteredLahan: LahanItem[] = useMemo(() => {
     return lahanList.filter((l: any): l is LahanItem => {
-      // 1. Filter Petani jika dipilih
-      if (selectedPetaniFilter !== 'SEMUA' && l.petani?.id !== selectedPetaniFilter) {
-        return false;
-      }
-      // 2. Filter Desa jika dipilih
+      // 1. Filter Desa jika dipilih
       if (desaFilter !== 'SEMUA') {
         const lDesa = l.desa || l.petani?.desa || l.petani?.poktan?.desa;
         if (lDesa !== desaFilter) return false;
       }
-      // 3. Filter Pencarian Teks (Form Atas)
+      // 2. Filter Poktan jika dipilih
+      if (selectedPoktanFilter !== 'SEMUA') {
+        const lPoktanId = l.petani?.poktanId || l.petani?.poktan?.id;
+        if (lPoktanId !== selectedPoktanFilter) return false;
+      }
+      // 3. Filter Petani jika dipilih
+      if (selectedPetaniFilter !== 'SEMUA' && l.petani?.id !== selectedPetaniFilter) {
+        return false;
+      }
+      // 4. Filter Pencarian Teks (Form Atas)
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase().trim();
         const namaMatch = (l.namaLahan || '').toLowerCase().includes(q);
@@ -615,7 +648,7 @@ export default function PetaPage() {
         const poktanMatch = (l.petani?.poktan?.nama || '').toLowerCase().includes(q);
         if (!(namaMatch || kodeMatch || petaniMatch || nikMatch || poktanMatch)) return false;
       }
-      // 4. Filter Pencarian Teks Tabel
+      // 5. Filter Pencarian Teks Tabel
       if (tableSearchQuery.trim()) {
         const tq = tableSearchQuery.toLowerCase().trim();
         const namaMatch = (l.namaLahan || '').toLowerCase().includes(tq);
@@ -631,12 +664,12 @@ export default function PetaPage() {
       }
       return true;
     });
-  }, [lahanList, selectedPetaniFilter, desaFilter, searchQuery, tableSearchQuery]);
+  }, [lahanList, selectedPetaniFilter, selectedPoktanFilter, desaFilter, searchQuery, tableSearchQuery]);
 
   // Reset pagination ke halaman 1 jika filter berubah
   useEffect(() => {
     setCurrentPage(1);
-  }, [tableSearchQuery, searchQuery, selectedPetaniFilter, desaFilter, pageSize]);
+  }, [tableSearchQuery, searchQuery, selectedPoktanFilter, selectedPetaniFilter, desaFilter, pageSize]);
 
   // Pagination Calculation
   const totalPages = Math.max(1, Math.ceil(filteredLahan.length / pageSize));
@@ -791,69 +824,126 @@ export default function PetaPage() {
         </div>
       )}
 
-      {/* Filter and Search Bar Row */}
-      <div className="bg-white p-3.5 sm:p-5 rounded-3xl border border-slate-200/80 shadow-xs max-w-full overflow-hidden">
-        <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3 max-w-full">
-          {/* Sisi Kiri: Filter Petani & Filter Desa */}
-          <div className="flex flex-col sm:flex-row sm:items-center gap-2 flex-1 min-w-0">
-            {/* Filter Pilih Petani */}
-            <div className="flex items-center gap-1.5 flex-1 min-w-0">
-              <span className="text-xs font-bold text-slate-700 flex items-center gap-1 shrink-0">
-                <User className="w-4 h-4 text-emerald-600" /> Petani:
-              </span>
-              <select
-                value={selectedPetaniFilter}
-                onChange={(e) => setSelectedPetaniFilter(e.target.value)}
-                className="w-full min-w-0 px-3 py-2 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:ring-2 focus:ring-emerald-500 bg-slate-50 truncate cursor-pointer"
-              >
-                <option value="SEMUA">Semua Petani ({petaniList.length} Orang)</option>
-                {petaniList.map((p) => {
-                  const countBlok = lahanList.filter((l) => l.petani?.id === p.id).length;
-                  return (
-                    <option key={p.id} value={p.id}>
-                      {p.nama} ({countBlok} Blok &bull; {p.totalLuasLahan} Ha)
+      {/* Filter Bertingkat: 1. Desa -> 2. Poktan -> 3. Petani & Pencarian */}
+      <div className="bg-white p-4 sm:p-5 rounded-3xl border border-slate-200/80 shadow-xs max-w-full space-y-3">
+        <div className="flex flex-col xl:flex-row xl:items-center justify-between gap-3">
+          {/* 3 Dropdown Bertingkat */}
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2.5 flex-1 min-w-0">
+            {/* 1. Filter Desa / Kelurahan */}
+            <div className="flex items-center gap-1.5 min-w-0 bg-slate-50 border border-slate-200 rounded-2xl px-3 py-1.5 focus-within:ring-2 focus-within:ring-emerald-500">
+              <MapPin className="w-4 h-4 text-emerald-600 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-none">
+                  1. Desa / Kelurahan:
+                </span>
+                <select
+                  value={desaFilter}
+                  onChange={(e) => {
+                    const newDesa = e.target.value;
+                    setDesaFilter(newDesa);
+                    setSelectedPoktanFilter('SEMUA');
+                    setSelectedPetaniFilter('SEMUA');
+                    setSelectedLahanId(null);
+                    if (newDesa !== 'SEMUA') {
+                      const c = DESA_COORDINATES_LEMBEYAN[newDesa];
+                      if (c) {
+                        setFlyToTarget({
+                          lat: c.lat,
+                          lng: c.lng,
+                          zoom: 15,
+                          label: `Desa ${newDesa}`,
+                          keterangan: 'Pusat Wilayah Desa',
+                          timestamp: Date.now(),
+                        });
+                      }
+                    }
+                  }}
+                  className="w-full bg-transparent text-xs font-bold text-slate-800 outline-none truncate cursor-pointer mt-0.5"
+                >
+                  <option value="SEMUA">Semua Desa (10 Desa)</option>
+                  {DESA_LEMBEYAN_LIST.map((d) => (
+                    <option key={d} value={d}>
+                      Desa {d}
                     </option>
-                  );
-                })}
-              </select>
+                  ))}
+                </select>
+              </div>
             </div>
 
-            {/* Filter Desa */}
-            <div className="flex items-center gap-1.5 flex-1 min-w-0 sm:max-w-xs">
-              <span className="text-xs font-bold text-slate-700 flex items-center gap-1 shrink-0">
-                <MapPin className="w-4 h-4 text-emerald-600" /> Desa:
-              </span>
-              <select
-                value={desaFilter}
-                onChange={(e) => {
-                  setDesaFilter(e.target.value);
-                  setSelectedLahanId(null);
-                }}
-                className="w-full min-w-0 px-3 py-2 border border-slate-200 rounded-xl text-xs font-bold text-slate-800 bg-slate-50 focus:ring-2 focus:ring-emerald-500 cursor-pointer truncate"
-              >
-                <option value="SEMUA">Semua Desa (Kec. Lembeyan)</option>
-                {DESA_LEMBEYAN_LIST.map((d) => (
-                  <option key={d} value={d}>
-                    Desa / Kel. {d}
+            {/* 2. Filter Kelompok Tani (Poktan) */}
+            <div className="flex items-center gap-1.5 min-w-0 bg-slate-50 border border-slate-200 rounded-2xl px-3 py-1.5 focus-within:ring-2 focus-within:ring-emerald-500">
+              <Users className="w-4 h-4 text-emerald-600 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-none">
+                  2. Kelompok Tani:
+                </span>
+                <select
+                  value={selectedPoktanFilter}
+                  onChange={(e) => {
+                    setSelectedPoktanFilter(e.target.value);
+                    setSelectedPetaniFilter('SEMUA');
+                    setSelectedLahanId(null);
+                  }}
+                  className="w-full bg-transparent text-xs font-bold text-slate-800 outline-none truncate cursor-pointer mt-0.5"
+                >
+                  <option value="SEMUA">
+                    {desaFilter === 'SEMUA'
+                      ? `Semua Poktan (${filteredPoktanOptions.length} Kelompok)`
+                      : `Semua Poktan di ${desaFilter} (${filteredPoktanOptions.length})`}
                   </option>
-                ))}
-              </select>
+                  {filteredPoktanOptions.map((pok) => (
+                    <option key={pok.id} value={pok.id}>
+                      {pok.nama} ({pok.jumlahAnggota || 0} Anggota)
+                    </option>
+                  ))}
+                </select>
+              </div>
+            </div>
+
+            {/* 3. Filter Petani */}
+            <div className="flex items-center gap-1.5 min-w-0 bg-slate-50 border border-slate-200 rounded-2xl px-3 py-1.5 focus-within:ring-2 focus-within:ring-emerald-500">
+              <User className="w-4 h-4 text-emerald-600 shrink-0" />
+              <div className="flex-1 min-w-0">
+                <span className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider leading-none">
+                  3. Pilih Petani:
+                </span>
+                <select
+                  value={selectedPetaniFilter}
+                  onChange={(e) => {
+                    setSelectedPetaniFilter(e.target.value);
+                    setSelectedLahanId(null);
+                  }}
+                  className="w-full bg-transparent text-xs font-bold text-slate-800 outline-none truncate cursor-pointer mt-0.5"
+                >
+                  <option value="SEMUA">
+                    Semua Petani ({filteredPetaniOptions.length} Orang)
+                  </option>
+                  {filteredPetaniOptions.map((p) => {
+                    const countBlok = lahanList.filter((l) => l.petani?.id === p.id).length;
+                    return (
+                      <option key={p.id} value={p.id}>
+                        {p.nama} ({countBlok} Blok &bull; {p.totalLuasLahan || 0} Ha)
+                      </option>
+                    );
+                  })}
+                </select>
+              </div>
             </div>
           </div>
 
           {/* Sisi Kanan: Form Pencarian Petak & NIK Petani dengan Tombol Cari */}
           <form
             onSubmit={handleSearchLahanSubmit}
-            className="flex items-center gap-2 w-full lg:w-auto shrink-0"
+            className="flex items-center gap-2 w-full xl:w-auto shrink-0"
           >
-            <div className="relative flex-1 sm:w-72">
+            <div className="relative flex-1 sm:w-64">
               <Search className="w-4 h-4 absolute left-3 top-2.5 text-slate-400" />
               <input
                 type="text"
                 placeholder="Cari petak, NIK, petani..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="w-full pl-9 pr-7 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
+                className="w-full pl-9 pr-7 py-2 bg-slate-50 border border-slate-200 rounded-2xl text-xs font-medium text-slate-800 focus:outline-none focus:ring-2 focus:ring-emerald-500"
               />
               {searchQuery && (
                 <button
@@ -867,7 +957,7 @@ export default function PetaPage() {
             </div>
             <button
               type="submit"
-              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-xl transition shadow-xs cursor-pointer shrink-0 flex items-center gap-1 active:scale-95"
+              className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold rounded-2xl transition shadow-xs cursor-pointer shrink-0 flex items-center gap-1 active:scale-95"
             >
               <Search className="w-3.5 h-3.5" />
               <span>Cari Petak</span>
@@ -980,6 +1070,8 @@ export default function PetaPage() {
         flyToTarget={flyToTarget}
         onSelectDesaFromMap={(desaKey) => {
           setDesaFilter(desaKey);
+          setSelectedPoktanFilter('SEMUA');
+          setSelectedPetaniFilter('SEMUA');
           const c = DESA_COORDINATES_LEMBEYAN[desaKey] || DESA_COORDINATES_LEMBEYAN.SEMUA;
           if (c) {
             setFlyToTarget({
@@ -1079,12 +1171,18 @@ export default function PetaPage() {
               <span>Cari</span>
             </button>
 
-            {selectedPetaniFilter !== 'SEMUA' && (
+            {(selectedPetaniFilter !== 'SEMUA' || selectedPoktanFilter !== 'SEMUA' || desaFilter !== 'SEMUA') && (
               <button
-                onClick={() => setSelectedPetaniFilter('SEMUA')}
-                className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-2 rounded-xl border border-emerald-200 hover:bg-emerald-100 transition shrink-0"
+                onClick={() => {
+                  setDesaFilter('SEMUA');
+                  setSelectedPoktanFilter('SEMUA');
+                  setSelectedPetaniFilter('SEMUA');
+                  setTableSearchQuery('');
+                  setSearchQuery('');
+                }}
+                className="text-xs font-bold text-emerald-700 bg-emerald-50 px-3 py-2 rounded-xl border border-emerald-200 hover:bg-emerald-100 transition shrink-0 cursor-pointer"
               >
-                Reset Filter Petani
+                Reset Semua Filter
               </button>
             )}
           </div>
