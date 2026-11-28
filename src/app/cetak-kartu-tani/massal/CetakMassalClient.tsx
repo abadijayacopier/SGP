@@ -331,10 +331,9 @@ export function CetakMassalClient({ petaniList, poktanList }: Props) {
                             ? `${window.location.origin}/verifikasi?q=KARTUTANI:${p.nik}`
                             : `/verifikasi?q=KARTUTANI:${p.nik}`;
                         const fotoPetani =
-                          p.fotoUrl ||
-                          `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(
-                            p.nama
-                          )}`;
+                          p.fotoUrl && !p.fotoUrl.includes('dicebear')
+                            ? p.fotoUrl
+                            : '/images/default-avatar.png';
 
                         return (
                           <div key={`front-${p.id}`} className="card-cell">

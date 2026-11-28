@@ -37,8 +37,9 @@ export default async function EditorKartuTaniPage({
     poktanId: p.poktanId,
     desaKecamatan: `Desa ${p.desa}, Kec. ${p.kecamatan || 'Lembeyan'}`,
     fotoUrl:
-      p.fotoUrl ||
-      `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(p.nama)}`,
+      p.fotoUrl && !p.fotoUrl.includes('dicebear')
+        ? p.fotoUrl
+        : '/images/default-avatar.png',
   }));
 
   const initialPetaniData = selectedPetani
@@ -52,8 +53,9 @@ export default async function EditorKartuTaniPage({
         poktanId: selectedPetani.poktanId,
         desaKecamatan: `Desa ${selectedPetani.desa}, Kec. ${selectedPetani.kecamatan || 'Lembeyan'}`,
         fotoUrl:
-          selectedPetani.fotoUrl ||
-          `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(selectedPetani.nama)}`,
+          selectedPetani.fotoUrl && !selectedPetani.fotoUrl.includes('dicebear')
+            ? selectedPetani.fotoUrl
+            : '/images/default-avatar.png',
         qrPayload: `/verifikasi?q=KARTUTANI:${selectedPetani.nik}`,
       }
     : null;

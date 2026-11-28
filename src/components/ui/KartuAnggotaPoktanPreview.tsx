@@ -37,7 +37,7 @@ export function KartuAnggotaPoktanPreview({
         WebkitPrintColorAdjust: 'exact',
       }}
     >
-      {/* 1. LAYER LATAR BELAKANG GAMBAR ASLI TEMPLATE */}
+      {/* 1. LAYER LATAR BELAKANG GAMBAR ASLI TEMPLATE (Sudah memiliki logo, judul KARTU TANI, dan KELOMPOK TANI bawaan) */}
       {/* eslint-disable-next-line @next/next/no-img-element */}
       <img
         src="/images/kartu-tani-template.jpg"
@@ -45,35 +45,20 @@ export function KartuAnggotaPoktanPreview({
         className="absolute inset-0 w-full h-full object-cover pointer-events-none z-0"
       />
 
-      {/* 2. OVERLAY HEADER BERSIH (MENUTUP TEXT BAWAAN AGAR TIDAK DOUBLE/TABRAKAN) */}
-      <div className="absolute top-[74px] left-[96px] z-10 bg-[#FAF9F6] w-[220px] h-[42px] flex flex-col justify-center pointer-events-none">
-        <div className="font-extrabold text-[19px] tracking-wider text-[#0B5D3B] uppercase font-sans leading-none">
-          KARTU TANI
-        </div>
-        <div className="font-bold text-[11px] tracking-wider text-[#137A4E] uppercase font-sans leading-none mt-1 truncate">
-          POKTAN {data.kelompokTani ? data.kelompokTani.replace(/^POKTAN\s+/i, '') : 'SRI MULYO'}
-        </div>
-      </div>
-
-      {/* 3. BINGKAI FOTO PASFOTO (Posisi pas pada kotak di template) */}
+      {/* 2. BINGKAI FOTO PASFOTO (Posisi pas pada kotak di template) */}
       <div
         className="absolute left-[102px] top-[128px] w-[92px] h-[115px] rounded-[6px] overflow-hidden border-[2.5px] border-[#D4AF37] shadow-inner bg-[#E5E5E5] z-10 flex items-center justify-center"
       >
-        {data.fotoUrl ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img
-            src={data.fotoUrl}
-            alt={data.nama}
-            className="w-full h-full object-cover"
-          />
-        ) : (
-          <div className="flex flex-col items-center justify-center text-slate-400 p-2 text-center bg-slate-100 w-full h-full">
-            <svg className="w-8 h-8 text-slate-400" fill="currentColor" viewBox="0 0 24 24">
-              <path d="M12 12c2.21 0 4-1.79 4-4s-1.79-4-4-4-4 1.79-4 4 1.79 4 4 4zm0 2c-2.67 0-8 1.34-8 4v2h16v-2c0-2.66-5.33-4-8-4z" />
-            </svg>
-            <span className="text-[9px] mt-1 font-semibold text-slate-500 leading-tight">Pasfoto 3:4</span>
-          </div>
-        )}
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={
+            data.fotoUrl && !data.fotoUrl.includes('dicebear')
+              ? data.fotoUrl
+              : '/images/default-avatar.png'
+          }
+          alt={data.nama}
+          className="w-full h-full object-cover"
+        />
       </div>
 
       {/* 4. AREA DATA ANGGOTA (Dengan latar putih bersih agar tidak bertabrakan dengan gambar bukit hijau) */}

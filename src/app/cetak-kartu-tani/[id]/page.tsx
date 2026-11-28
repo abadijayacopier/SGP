@@ -104,10 +104,10 @@ export default async function CetakKartuTaniPage({ params }: Props) {
   const qrPayload = `/verifikasi?q=KARTUTANI:${petani.nik}`;
   const alokasiAktif = petani.alokasiPupuk?.[0];
   const fotoPetani =
-    petani.fotoUrl ||
-    petaniUser?.avatarUrl ||
-    petani.penyaluranPupuk?.[0]?.fotoDiri ||
-    '/uploads/sample_petani_face.svg';
+    (petani.fotoUrl && !petani.fotoUrl.includes('dicebear') && petani.fotoUrl) ||
+    (petaniUser?.avatarUrl && !petaniUser.avatarUrl.includes('dicebear') && petaniUser.avatarUrl) ||
+    (petani.penyaluranPupuk?.[0]?.fotoDiri && !petani.penyaluranPupuk[0].fotoDiri.includes('dicebear') && petani.penyaluranPupuk[0].fotoDiri) ||
+    '/images/default-avatar.png';
 
   const now = new Date();
   const tanggalCetak = `${now.getDate()} ${BULAN_INDONESIA[now.getMonth()]} ${now.getFullYear()}`;

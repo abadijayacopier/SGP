@@ -58,8 +58,8 @@ export default function EditorKartuTaniClient({
     poktanId: initialData?.poktanId || '',
     desaKecamatan: initialData?.desaKecamatan || 'Desa Kediren, Kec. Lembeyan',
     fotoUrl:
-      initialData?.fotoUrl ||
-      'https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&q=80&w=300',
+      (initialData?.fotoUrl && !initialData.fotoUrl.includes('dicebear') && initialData.fotoUrl) ||
+      '/images/default-avatar.png',
     qrPayload: initialData?.qrPayload || '',
   });
 
@@ -94,7 +94,9 @@ export default function EditorKartuTaniClient({
         kelompokTani: sel.kelompokTani || 'POKTAN',
         poktanId: sel.poktanId || '',
         desaKecamatan: sel.desaKecamatan,
-        fotoUrl: sel.fotoUrl,
+        fotoUrl:
+          (sel.fotoUrl && !sel.fotoUrl.includes('dicebear') && sel.fotoUrl) ||
+          '/images/default-avatar.png',
         qrPayload: `/verifikasi?q=KARTUTANI:${sel.nik}`,
       });
       setSaveSuccess(false);
@@ -126,15 +128,22 @@ export default function EditorKartuTaniClient({
     }
   };
 
-  const handleResetToDefaultPhoto = () => {
-    const defaultAvatar = `https://api.dicebear.com/7.x/bottts/svg?seed=${encodeURIComponent(
-      data.nama
-    )}`;
+  const handleSetAvatar = (type: 'male' | 'female' | 'default') => {
+    const avatarUrl =
+      type === 'female'
+        ? '/images/default-avatar-female.jpg'
+        : type === 'male'
+        ? '/images/default-avatar-male.png'
+        : '/images/default-avatar.png';
     setData((prev) => ({
       ...prev,
-      fotoUrl: defaultAvatar,
+      fotoUrl: avatarUrl,
     }));
     setSaveSuccess(false);
+  };
+
+  const handleResetToDefaultPhoto = () => {
+    handleSetAvatar('default');
   };
 
   const handleSaveToDatabase = async () => {
@@ -331,22 +340,30 @@ export default function EditorKartuTaniClient({
                   onChange={handlePhotoUpload}
                   className="hidden"
                 />
-                <div className="flex items-center gap-2">
+                <div className="flex flex-wrap items-center gap-1.5">
                   <button
                     type="button"
                     onClick={() => fileInputRef.current?.click()}
-                    className="flex-1 inline-flex items-center justify-center gap-1.5 text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 py-2 px-3 rounded-xl transition"
+                    className="flex-1 inline-flex items-center justify-center gap-1.5 text-xs font-bold bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 py-1.5 px-2.5 rounded-xl transition"
                   >
                     <Upload className="w-3.5 h-3.5" />
-                    Pilih Pasfoto
+                    Upload Foto
                   </button>
                   <button
                     type="button"
-                    onClick={handleResetToDefaultPhoto}
-                    title="Gunakan Avatar Default"
-                    className="px-2.5 py-2 text-xs font-bold bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl transition"
+                    onClick={() => handleSetAvatar('male')}
+                    title="Gunakan Avatar Pria Resmi"
+                    className="px-2.5 py-1.5 text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl transition"
                   >
-                    Reset
+                    Avatar Pria
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => handleSetAvatar('female')}
+                    title="Gunakan Avatar Wanita Resmi"
+                    className="px-2.5 py-1.5 text-xs font-bold bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-200 rounded-xl transition"
+                  >
+                    Avatar Wanita
                   </button>
                 </div>
                 <p className="text-[10px] text-slate-400 leading-tight">
