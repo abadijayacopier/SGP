@@ -267,22 +267,10 @@ export default function PetaniPage() {
   }, [filterDesa, filterPoktan, currentUser.role, currentUser.poktanId, currentUser.petaniId]);
 
   const handleOpenCreatePetani = () => {
-    setEditingPetaniId(null);
-    setFormData({
-      nik: '',
-      nama: '',
-      noKk: '',
-      tempatLahir: 'Magetan',
-      tanggalLahir: '',
-      namaIbuKandung: '',
-      telepon: '',
-      alamat: '',
-      desa: 'Kediren',
-      kecamatan: 'Lembeyan',
-      kabupaten: 'Magetan',
-      poktanId: poktanList[0]?.id || '',
-    });
-    setModalOpen(true);
+    // Seluruh pendaftaran petani baru dialihkan ke alur resmi e-RDKK 2027
+    if (typeof window !== 'undefined') {
+      window.location.href = '/pengajuan-erdkk-2027';
+    }
   };
 
   const handleOpenEditPetani = (p: any) => {
@@ -672,13 +660,13 @@ export default function PetaniPage() {
           )}
 
           {activeTab === 'petani' && (permissions.canDigitasiGis || currentUser.role === 'ADMIN_DINAS' || currentUser.role === 'POKTAN') && (
-            <button
-              onClick={handleOpenCreatePetani}
+            <Link
+              href="/pengajuan-erdkk-2027"
               className="inline-flex items-center gap-1.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow-sm transition cursor-pointer"
             >
-              <Plus className="w-4 h-4" />
-              Tambah Petani Baru
-            </button>
+              <FileText className="w-4 h-4" />
+              Pendaftaran via e-RDKK 2027
+            </Link>
           )}
 
           {activeTab === 'kades' && (permissions.canDigitasiGis || currentUser.role === 'ADMIN_DINAS' || currentUser.role === 'PPL') && (
@@ -1786,14 +1774,14 @@ export default function PetaniPage() {
         </div>
       )}
 
-      {/* Modal Tambah Petani Baru */}
+      {/* Modal Perbarui Data Petani Terdaftar / Info Alur e-RDKK */}
       {modalOpen && (
         <div className="fixed inset-0 z-[2000] bg-slate-900/60 backdrop-blur-xs flex items-center justify-center p-3 sm:p-4 pb-20 sm:pb-4 overflow-y-auto">
           <div className="bg-white rounded-3xl max-w-lg w-full p-5 sm:p-6 shadow-2xl border border-slate-100 max-h-[85vh] sm:max-h-[90vh] overflow-y-auto my-auto">
             <div className="flex items-center justify-between pb-3 border-b border-slate-100">
               <h3 className="font-black text-slate-800 text-lg flex items-center gap-2">
                 <Users className="w-5 h-5 text-emerald-600" />
-                {editingPetaniId ? 'Perbarui Data Petani' : 'Daftarkan Petani Baru'}
+                {editingPetaniId ? 'Perbarui Data Petani' : 'Pendaftaran Petani Dialihkan'}
               </h3>
               <button
                 onClick={() => setModalOpen(false)}
@@ -1803,7 +1791,8 @@ export default function PetaniPage() {
               </button>
             </div>
 
-            <form onSubmit={handleSubmitPetani} className="space-y-4 my-4 text-xs">
+            {editingPetaniId ? (
+              <form onSubmit={handleSubmitPetani} className="space-y-4 my-4 text-xs">
               <div>
                 <label className="block font-bold text-slate-700 mb-1">Nama Lengkap Petani *</label>
                 <input
@@ -1954,13 +1943,42 @@ export default function PetaniPage() {
                   disabled={submitting}
                   className="px-5 py-2.5 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold shadow-md transition"
                 >
-                  {submitting ? 'Menyimpan...' : 'Simpan Petani'}
+                  {submitting ? 'Menyimpan...' : 'Simpan Perubahan'}
                 </button>
               </div>
             </form>
-          </div>
+          ) : (
+            <div className="my-6 space-y-4 text-center">
+              <div className="w-14 h-14 bg-emerald-100 text-emerald-700 rounded-2xl flex items-center justify-center mx-auto shadow-xs">
+                <FileText className="w-7 h-7" />
+              </div>
+              <div className="space-y-1">
+                <h4 className="font-black text-slate-900 text-base">Alur Pendaftaran Melalui e-RDKK</h4>
+                <p className="text-xs text-slate-600 max-w-sm mx-auto leading-relaxed">
+                  Sesuai ketentuan Kementerian Pertanian RI, pendaftaran petani baru dilakukan secara resmi melalui formulir e-RDKK agar terintegrasi dengan pemetaan lahan, komoditas tanam 3 musim, dan kuota pupuk bersubsidi.
+                </p>
+              </div>
+              <div className="pt-2 flex items-center justify-center gap-2.5">
+                <button
+                  type="button"
+                  onClick={() => setModalOpen(false)}
+                  className="px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-xs transition"
+                >
+                  Tutup
+                </button>
+                <Link
+                  href="/pengajuan-erdkk-2027"
+                  className="px-4.5 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-xl text-xs shadow-md transition flex items-center gap-2"
+                >
+                  <FileText className="w-4 h-4" />
+                  Buka Pendaftaran e-RDKK 2027
+                </Link>
+              </div>
+            </div>
+          )}
         </div>
-      )}
+      </div>
+    )}
 
       {/* Modal Detail Profil Petani & DAFTAR LENGKAP BLOK-BLOK SAWAH */}
       {detailModalOpen && selectedPetani && (

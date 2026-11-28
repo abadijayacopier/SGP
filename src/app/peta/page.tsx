@@ -1515,34 +1515,16 @@ export default function PetaPage() {
               <div>
                 <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
                   <label className="block font-bold text-slate-800 text-xs">
-                    Petani Pemilik / Penggarap *
+                    Petani Pemilik / Penggarap (Terdaftar e-RDKK) *
                   </label>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (!isQuickAddPetani && desaFilter !== 'SEMUA') {
-                        setQuickPetaniData((prev) => ({ ...prev, desa: desaFilter }));
-                      }
-                      setIsQuickAddPetani(!isQuickAddPetani);
-                    }}
-                    className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer shadow-xs ${
-                      isQuickAddPetani
-                        ? 'bg-slate-200 hover:bg-slate-300 text-slate-800 border border-slate-300'
-                        : 'bg-emerald-600 hover:bg-emerald-700 text-white border border-emerald-700'
-                    }`}
+                  <Link
+                    href="/pengajuan-erdkk-2027"
+                    target="_blank"
+                    className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition cursor-pointer shadow-xs bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300"
                   >
-                    {isQuickAddPetani ? (
-                      <>
-                        <Users className="w-3.5 h-3.5 text-slate-700" />
-                        Pilih dari Petani Terdaftar ({petaniList.length})
-                      </>
-                    ) : (
-                      <>
-                        <Plus className="w-4 h-4 text-white" />
-                        + Jalan Pintas: Tambah Petani Baru
-                      </>
-                    )}
-                  </button>
+                    <FileText className="w-3.5 h-3.5 text-emerald-700" />
+                    + Daftar e-RDKK 2027
+                  </Link>
                 </div>
 
                 {!isQuickAddPetani ? (
@@ -1550,13 +1532,6 @@ export default function PetaPage() {
                     <select
                       value={formData.petaniId || (petaniList.length > 0 ? petaniList[0].id : '')}
                       onChange={(e) => {
-                        if (e.target.value === '__QUICK_ADD__') {
-                          if (desaFilter !== 'SEMUA') {
-                            setQuickPetaniData((prev) => ({ ...prev, desa: desaFilter }));
-                          }
-                          setIsQuickAddPetani(true);
-                          return;
-                        }
                         setFormData({ ...formData, petaniId: e.target.value });
                       }}
                       className="w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 focus:outline-none bg-white font-medium"
@@ -1569,19 +1544,16 @@ export default function PetaPage() {
                           </option>
                         );
                       })}
-                      <option value="__QUICK_ADD__" className="font-bold text-emerald-700 bg-emerald-50">
-                        + Petani Belum Ada? Klik untuk Tambah Petani / Penggarap Baru...
-                      </option>
                     </select>
                     <div className="flex items-center justify-between text-[11px] text-slate-500 mt-1.5">
                       <span>*Memilih petani akan mengakumulasi total luas lahan ke akun petani tersebut.</span>
-                      <button
-                        type="button"
-                        onClick={() => setIsQuickAddPetani(true)}
-                        className="text-emerald-700 font-bold underline hover:text-emerald-800 cursor-pointer shrink-0 ml-2"
+                      <Link
+                        href="/pengajuan-erdkk-2027"
+                        target="_blank"
+                        className="text-emerald-700 font-bold underline hover:text-emerald-800 shrink-0 ml-2"
                       >
-                        + Input Petani Baru
-                      </button>
+                        Petani Belum Terdaftar? Buka e-RDKK 2027 &rarr;
+                      </Link>
                     </div>
                   </>
                 ) : (
