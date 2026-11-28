@@ -742,7 +742,7 @@ export default function RoleDashboardClient({
 
               <div className="flex flex-wrap items-center gap-3 pt-2">
                 <Link
-                  href="/penyaluran"
+                  href="/kasir-poktan"
                   className="inline-flex items-center gap-2 bg-amber-400 hover:bg-amber-500 text-slate-950 font-black px-5 py-2.5 rounded-xl shadow-md transition text-xs sm:text-sm"
                 >
                   <QrCode className="w-4 h-4" />
@@ -1601,7 +1601,7 @@ export default function RoleDashboardClient({
                 </div>
 
                 <Link
-                  href="/penyaluran"
+                  href="/kasir-poktan"
                   className="text-xs font-bold text-emerald-700 hover:text-emerald-800 hover:underline flex items-center gap-1"
                 >
                   Lihat Semua <ArrowRight className="w-3.5 h-3.5" />

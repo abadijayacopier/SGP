@@ -11,7 +11,9 @@ export async function GET(req: Request) {
     const { searchParams } = new URL(req.url);
     const role = searchParams.get('role');
 
-    const whereClause: any = {};
+    const whereClause: any = {
+      role: { not: 'PETANI' },
+    };
     if (role && role !== 'SEMUA') {
       whereClause.role = role;
     }
@@ -42,6 +44,13 @@ export async function POST(req: Request) {
     if (!username || !name || !role) {
       return NextResponse.json(
         { success: false, error: 'Username, Nama Lengkap, dan Peran (Role) wajib diisi!' },
+        { status: 400 }
+      );
+    }
+
+    if (role === 'PETANI') {
+      return NextResponse.json(
+        { success: false, error: 'Data Petani tidak dibuat sebagai akun user login. Petani bersifat cek data mandiri.' },
         { status: 400 }
       );
     }

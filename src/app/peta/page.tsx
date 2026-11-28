@@ -64,7 +64,25 @@ export default function PetaPage() {
   const [selectedLahanId, setSelectedLahanId] = useState<string | null>(null);
   const autoFocusDoneRef = useRef(false);
 
-  // Deteksi data Petani login jika user ber-role PETANI
+  const [activeFarmerParam, setActiveFarmerParam] = useState<{
+    nik: string | null;
+    petaniId: string | null;
+    lahanId: string | null;
+  }>({ nik: null, petaniId: null, lahanId: null });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const params = new URLSearchParams(window.location.search);
+      const qNik = params.get('nik') || localStorage.getItem('farmer_nik');
+      const qPetaniId = params.get('petaniId');
+      const qLahanId = params.get('lahanId');
+      if (qNik || qPetaniId || qLahanId) {
+        setActiveFarmerParam({ nik: qNik, petaniId: qPetaniId, lahanId: qLahanId });
+      }
+    }
+  }, []);
+
+  // Deteksi data Petani login jika user ber-role PETANI atau dari parameter NIK / localStorage
   const myPetaniObj = useMemo(() => {
     if (currentUser.role === 'PETANI') {
       return (
@@ -73,10 +91,30 @@ export default function PetaPage() {
         ) || (petaniList.length > 0 ? petaniList[0] : null)
       );
     }
+    if (activeFarmerParam.petaniId) {
+      const found = petaniList.find((p) => p.id === activeFarmerParam.petaniId);
+      if (found) return found;
+    }
+    if (activeFarmerParam.nik) {
+      const clean = activeFarmerParam.nik.replace(/\D/g, '');
+      const found = petaniList.find(
+        (p) => p.nik === activeFarmerParam.nik || (p.nik && p.nik.replace(/\D/g, '') === clean)
+      );
+      if (found) return found;
+    }
+    if (activeFarmerParam.lahanId) {
+      const matchedLahan = lahanList.find((l) => l.id === activeFarmerParam.lahanId);
+      if (matchedLahan?.petani) {
+        const found = petaniList.find((p) => p.id === matchedLahan.petani?.id) || matchedLahan.petani;
+        return found as any;
+      }
+    }
     return null;
-  }, [currentUser, petaniList]);
+  }, [currentUser, petaniList, activeFarmerParam, lahanList]);
 
-  // Daftar petak lahan milik petani login
+  const isFarmerView = currentUser.role === 'PETANI' || (Boolean(activeFarmerParam.nik || activeFarmerParam.petaniId || activeFarmerParam.lahanId) && Boolean(myPetaniObj));
+
+  // Daftar petak lahan milik petani login / aktif
   const myLahanList = useMemo(() => {
     if (myPetaniObj) {
       return lahanList.filter(
@@ -274,32 +312,38 @@ export default function PetaPage() {
     };
   }, [currentUser.role, currentUser.petaniId, currentUser.poktanId]);
 
-  // Auto-set filter petani jika user login adalah Petani
+  // Auto-set filter petani jika user login adalah Petani atau membuka via profil petani
   useEffect(() => {
-    if (currentUser.role === 'PETANI' && myPetaniObj) {
+    if ((currentUser.role === 'PETANI' || isFarmerView) && myPetaniObj) {
       setSelectedPetaniFilter(myPetaniObj.id);
       if (myPetaniObj.desa) setDesaFilter(myPetaniObj.desa);
       if (myPetaniObj.poktanId) setSelectedPoktanFilter(myPetaniObj.poktanId);
     }
-  }, [currentUser.role, myPetaniObj]);
+  }, [currentUser.role, isFarmerView, myPetaniObj]);
 
-  // Auto-fokus langsung ke petak sawah milik petani login
+  // Auto-fokus langsung ke petak sawah milik petani login / aktif
   useEffect(() => {
     if (autoFocusDoneRef.current) return;
-    if (currentUser.role === 'PETANI' && myLahanList.length > 0) {
+    if ((currentUser.role === 'PETANI' || isFarmerView) && myPetaniObj && myLahanList.length > 0) {
       autoFocusDoneRef.current = true;
-      const first = myLahanList[0];
-      setSelectedLahanId(first.id);
+      const targetLahan = activeFarmerParam.lahanId
+        ? myLahanList.find((l) => l.id === activeFarmerParam.lahanId) || myLahanList[0]
+        : myLahanList[0];
+
+      setSelectedPetaniFilter(myPetaniObj.id);
+      if (myPetaniObj.desa) setDesaFilter(myPetaniObj.desa);
+      if (myPetaniObj.poktanId) setSelectedPoktanFilter(myPetaniObj.poktanId);
+      setSelectedLahanId(targetLahan.id);
       setFlyToTarget({
-        lat: first.centerLat,
-        lng: first.centerLng,
+        lat: targetLahan.centerLat,
+        lng: targetLahan.centerLng,
         zoom: 18,
-        label: `${first.kodeLahan || 'LHN'} - ${first.namaLahan}`,
-        keterangan: `Milik ${myPetaniObj?.nama || currentUser.name} (${first.luasHa} Ha)`,
+        label: `${targetLahan.kodeLahan || 'LHN'} - ${targetLahan.namaLahan}`,
+        keterangan: `Milik ${myPetaniObj?.nama || currentUser.name} (${targetLahan.luasHa} Ha)`,
         timestamp: Date.now(),
       });
     }
-  }, [currentUser.role, myLahanList, myPetaniObj]);
+  }, [currentUser.role, isFarmerView, myLahanList, myPetaniObj, activeFarmerParam]);
 
   // Simpan Cepat Petani Baru dari dalam Modal Digitasi Lahan
   const handleSaveQuickPetani = async (): Promise<string | null> => {
@@ -673,7 +717,7 @@ export default function PetaPage() {
 
   // Filtered List Petak Lahan
   const filteredLahan: LahanItem[] = useMemo(() => {
-    if (currentUser.role === 'PETANI' && myPetaniObj) {
+    if ((currentUser.role === 'PETANI' || isFarmerView) && myPetaniObj && myLahanList.length > 0) {
       return myLahanList;
     }
     return lahanList.filter((l: any): l is LahanItem => {
@@ -877,8 +921,8 @@ export default function PetaPage() {
         </div>
       )}
 
-      {/* JIKA USER ADALAH PETANI: Tampilkan Header Khusus Pemilik Lahan Langsung */}
-      {currentUser.role === 'PETANI' ? (
+      {/* JIKA USER ADALAH PETANI ATAU MEMBUKA PROFIL PEMILIK LAHAN: Tampilkan Header Khusus Pemilik Lahan Langsung */}
+      {isFarmerView ? (
         <div className="bg-gradient-to-r from-emerald-950 via-slate-900 to-emerald-900 p-5 rounded-3xl border border-emerald-700/60 shadow-md text-white">
           <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
             <div className="flex items-start sm:items-center gap-3.5">
@@ -950,6 +994,23 @@ export default function PetaPage() {
               >
                 <Plus className="w-4 h-4 text-emerald-700" />
                 Digitasi / Tambah Petak
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setActiveFarmerParam({ nik: null, petaniId: null, lahanId: null });
+                  setSelectedPetaniFilter('SEMUA');
+                  setDesaFilter('SEMUA');
+                  setSelectedPoktanFilter('SEMUA');
+                  setSelectedLahanId(null);
+                  if (typeof window !== 'undefined') {
+                    localStorage.removeItem('farmer_nik');
+                  }
+                  showToast('Beralih ke mode peta seluruh kecamatan', 'info');
+                }}
+                className="px-3.5 py-2.5 rounded-2xl bg-white/10 hover:bg-white/20 text-white font-bold text-xs border border-white/20 transition cursor-pointer"
+              >
+                Tampilkan Semua Peta
               </button>
             </div>
           </div>

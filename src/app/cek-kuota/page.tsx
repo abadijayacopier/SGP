@@ -28,6 +28,7 @@ import {
   Copy,
   Info,
   ExternalLink,
+  Compass,
 } from 'lucide-react';
 import QrScannerModal from '@/components/ui/QrScannerModal';
 import QrCodeView from '@/components/ui/QrCodeView';
@@ -40,19 +41,9 @@ import 'sweetalert2/dist/sweetalert2.min.css';
 export default function CekKuotaPage() {
   const router = useRouter();
   const { currentUser, isMounted } = useAuth();
+  const isPetaniLocked = currentUser?.role === 'PETANI';
+  const myFarmerKey = currentUser?.role === 'PETANI' ? (currentUser.nik || currentUser.username) : '';
 
-  // Privasi Petani: Akun Petani dikunci hanya ke data dan kuotanya sendiri
-  const isPetaniLocked = isMounted && currentUser.role === 'PETANI';
-
-  // NIK / ID milik Petani yang sedang login
-  const myFarmerKey =
-    currentUser.nik ||
-    (currentUser.username && /^\d{16}$/.test(currentUser.username) ? currentUser.username : null) ||
-    (currentUser.nip?.replace(/[^0-9]/g, '')?.length === 16
-      ? currentUser.nip.replace(/[^0-9]/g, '')
-      : null) ||
-    currentUser.petaniId ||
-    '3509012304750001';
   const [activeTab, setActiveTab] = useState<'verifikasi' | 'kalkulator'>('verifikasi');
   const [query, setQuery] = useState('');
   const [loading, setLoading] = useState(false);
@@ -73,16 +64,9 @@ export default function CekKuotaPage() {
   const [selectedLahanObj, setSelectedLahanObj] = useState<any | null>(null);
   const [copiedWa, setCopiedWa] = useState(false);
 
-  // Muat data awal: petani terkunci -> data miliknya; selain itu daftar sampel
+  // Muat data awal: Petani cek data mandiri tanpa perlu login
   useEffect(() => {
     if (!isMounted) return;
-
-    // Pastikan ada sesi aktif; jika belum login sama sekali, arahkan ke login untuk verifikasi 16 digit NIK
-    const saved = typeof window !== 'undefined' ? localStorage.getItem('pertanian_user_session') : null;
-    if (!saved) {
-      router.push('/login?cekKuota=1');
-      return;
-    }
 
     // Muat seluruh lahan GIS untuk dropdown kalkulator
     fetch('/api/lahan')
@@ -97,6 +81,7 @@ export default function CekKuotaPage() {
             const tabParam = params.get('tab');
             const lahanIdParam = params.get('lahanId');
             const mtParam = params.get('mt') as 'MT-1' | 'MT-2' | 'MT-3' | null;
+            const nikParam = params.get('nik') || params.get('q');
 
             if (tabParam === 'kalkulator') {
               setActiveTab('kalkulator');
@@ -114,24 +99,27 @@ export default function CekKuotaPage() {
                 setActiveTab('kalkulator');
               }
             }
+            if (nikParam) {
+              setQuery(nikParam);
+              handleSearch(nikParam);
+            }
           }
         }
       })
       .catch((err) => console.error(err));
 
-    if (isPetaniLocked) {
-      setSamplePetani([]);
-      handleSearch(myFarmerKey);
-      return;
-    }
     const loadSamples = async () => {
       try {
         const res = await fetch('/api/cek-kuota');
         const json = await res.json();
         if (json.success && json.samples) {
           setSamplePetani(json.samples);
-          if (json.samples.length > 0) {
-            handleSearch(json.samples[0].nik);
+          // Jika ada NIK di query string, sudah ditangani di atas
+          if (typeof window !== 'undefined') {
+            const params = new URLSearchParams(window.location.search);
+            if (!params.get('nik') && !params.get('q') && json.samples.length > 0) {
+              handleSearch(json.samples[0].nik);
+            }
           }
         }
       } catch (e) {
@@ -140,47 +128,10 @@ export default function CekKuotaPage() {
     };
     loadSamples();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [isMounted, isPetaniLocked, myFarmerKey]);
+  }, [isMounted]);
 
   const handleSearch = async (overrideQuery?: string) => {
     let target = (overrideQuery !== undefined ? overrideQuery : query).trim();
-
-    // Privasi Petani: Akun Petani hanya boleh melihat kuota miliknya sendiri
-    if (isPetaniLocked) {
-      const isSearchingOwn =
-        !target ||
-        target === myFarmerKey ||
-        target === currentUser.petaniId ||
-        target === currentUser.nik ||
-        (currentUser.name && target.toLowerCase() === currentUser.name.toLowerCase());
-
-      if (!isSearchingOwn) {
-        Swal.fire({
-          icon: 'warning',
-          title: 'Akses Kuota Terbatas',
-          html: `
-            <div style="font-size: 13px; text-align: left; color: #334155; line-height: 1.6;">
-              <div style="background-color: #fef3c7; border: 1px solid #fde68a; border-radius: 12px; padding: 12px; margin-bottom: 12px;">
-                <p style="color: #92400e; font-weight: bold; margin: 0;">Pemberitahuan Hak Akses Mandiri</p>
-                <p style="color: #78350f; font-size: 12px; margin: 4px 0 0 0;">
-                  Anda saat ini login sebagai Petani <strong>${currentUser.name}</strong>.
-                </p>
-              </div>
-              <p>Berdasarkan ketentuan privasi data petani penerima pupuk subsidi e-RDKK, Anda <strong>hanya berhak melihat kuota dan dokumen milik Anda sendiri</strong>.</p>
-            </div>
-          `,
-          confirmButtonColor: '#059669',
-          confirmButtonText: 'Tampilkan Kuota Saya',
-          customClass: {
-            popup: 'rounded-3xl shadow-2xl',
-            confirmButton: 'rounded-xl text-xs font-bold px-4 py-2.5',
-          },
-        });
-        target = myFarmerKey;
-      } else if (!target) {
-        target = myFarmerKey;
-      }
-    }
 
     if (!target) {
       setErrorMsg('Silakan masukkan 16 Digit NIK KTP Petani terdaftar.');
@@ -201,6 +152,9 @@ export default function CekKuotaPage() {
       if (json.success) {
         setResultData(json);
         if (json.petani) {
+          if (typeof window !== 'undefined' && json.petani.nik) {
+            localStorage.setItem('farmer_nik', json.petani.nik);
+          }
           const matchedLahan = json.petani.lahan?.[0];
           if (matchedLahan) {
             setSelectedLahanId(matchedLahan.id);
@@ -1002,6 +956,13 @@ export default function CekKuotaPage() {
                               <Sparkles className="w-3.5 h-3.5 text-amber-600" />
                               Kalender Tanam
                             </button>
+                            <Link
+                              href={`/peta?nik=${encodeURIComponent(petani.nik)}&lahanId=${l.id}`}
+                              className="inline-flex items-center gap-1 text-[11px] font-bold text-blue-700 hover:text-blue-900 bg-blue-50 hover:bg-blue-100 px-2.5 py-1 rounded-lg border border-blue-200 transition"
+                            >
+                              <Compass className="w-3.5 h-3.5 text-blue-600" />
+                              Peta Sawah
+                            </Link>
                             <Link
                               href={`/cetak-lahan/${l.id}`}
                               target="_blank"

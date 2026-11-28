@@ -90,37 +90,8 @@ function LoginFormContent() {
       return;
     }
 
-    try {
-      setNikLoading(true);
-
-      const res = await fetch('/api/auth/login-petani', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ nik: cleanNik }),
-      });
-
-      const json = await res.json();
-
-      if (json.success && json.data) {
-        // Otentikasi murni role PETANI (bukan admin)
-        loginUser(json.data);
-        showSuccess(
-          'Verifikasi NIK Berhasil',
-          `Selamat datang Bpk/Ibu <strong>${json.data.name}</strong>.<br/>Membuka Portal Mandiri Petani...`
-        );
-        setShowNikModal(false);
-        window.location.href = json.redirectUrl || '/cek-kuota';
-      } else {
-        setNikError(
-          json.error ||
-            `NIK "${cleanNik}" belum terdaftar dalam sistem e-RDKK Kecamatan Lembeyan. Pastikan NIK sudah sesuai e-KTP dan terdaftar di Kelompok Tani setempat.`
-        );
-      }
-    } catch (err: any) {
-      setNikError('Terjadi gangguan jaringan: ' + err.message);
-    } finally {
-      setNikLoading(false);
-    }
+    setShowNikModal(false);
+    router.push(`/cek-kuota?nik=${cleanNik}`);
   };
 
   // Otomatis bersihkan stale cache login saat pertama kali membuka halaman login
@@ -431,14 +402,14 @@ function LoginFormContent() {
               <form onSubmit={handleLoginSubmit} className="space-y-4 text-xs" suppressHydrationWarning>
                 <div>
                   <label className="block font-bold text-slate-700 mb-1.5">
-                    Username Petugas / NIK Petani Terdaftar *
+                    Username Petugas / Operator *
                   </label>
                   <div className="relative">
                     <User className="w-4 h-4 text-slate-400 absolute left-3.5 top-3" />
                     <input
                       type="text"
                       required
-                      placeholder="Masukkan username petugas atau NIK..."
+                      placeholder="Masukkan username petugas..."
                       value={username}
                       onChange={(e) => setUsername(e.target.value)}
                       autoComplete="username"
@@ -483,18 +454,13 @@ function LoginFormContent() {
                   </button>
 
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1">
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setNikError(null);
-                        setNikInput('');
-                        setShowNikModal(true);
-                      }}
+                    <Link
+                      href="/cek-kuota"
                       className="w-full bg-slate-900 hover:bg-slate-800 text-amber-300 font-bold py-2.5 px-3 rounded-xl transition flex items-center justify-center gap-1.5 text-xs border border-slate-800 cursor-pointer shadow-xs active:scale-[0.99]"
                     >
                       <QrCode className="w-3.5 h-3.5 text-emerald-400 shrink-0" />
-                      <span>Cek Kuota NIK Mandiri</span>
-                    </button>
+                      <span>Petani: Cek Kuota Mandiri</span>
+                    </Link>
 
                     <button
                       type="button"

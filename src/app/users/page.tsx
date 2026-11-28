@@ -378,6 +378,18 @@ export default function UsersManagementPage() {
         </button>
       </div>
 
+      {/* Ketentuan Akun Pengguna: Petani Bersifat Cek Data Mandiri Tanpa Login */}
+      <div className="bg-emerald-50/80 border border-emerald-200 rounded-2xl p-4 flex items-start gap-3 text-xs text-emerald-950">
+        <ShieldCheck className="w-5 h-5 text-emerald-600 shrink-0 mt-0.5" />
+        <div>
+          <h4 className="font-black text-emerald-900">Ketentuan Manajemen Akun Pengguna:</h4>
+          <p className="mt-0.5 text-emerald-800 leading-relaxed">
+            Database Akun &amp; RBAC ini khusus diperuntukkan bagi <strong>Petugas &amp; Operator Sistem</strong> (Admin Kecamatan, Penyuluh Lapangan PPL, Pengurus Poktan, Petugas Kios KPL, dan Surveyor GIS).
+            <strong> Data Petani tidak memerlukan akun login</strong> dan tidak perlu ada di database user karena petani bersifat cek data mandiri (cukup memasukkan 16 digit NIK di menu <strong>Cek Kuota &amp; Pendaftaran e-RDKK 2027</strong>).
+          </p>
+        </div>
+      </div>
+
       {/* SECTION 1: MATRIKS OTORISASI HAK AKSES PER JABATAN (RBAC) */}
       <div className="bg-white rounded-3xl border border-slate-200/80 shadow-xs p-6 overflow-hidden space-y-4">
         <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
@@ -449,7 +461,9 @@ export default function UsersManagementPage() {
               </tr>
             </thead>
             <tbody className="divide-y divide-slate-100">
-              {(Object.keys(ROLE_PERMISSIONS) as UserRole[]).map((roleKey) => {
+              {(Object.keys(ROLE_PERMISSIONS) as UserRole[])
+                .filter((r) => r !== 'PETANI')
+                .map((roleKey) => {
                 const perm = matrixPermissions[roleKey] || ROLE_PERMISSIONS[roleKey];
                 const meta = ROLE_BADGE_MAP[roleKey];
                 const isCurrent = currentUser.role === roleKey;
@@ -635,7 +649,7 @@ export default function UsersManagementPage() {
               { id: 'PPL', label: 'Petugas PPL' },
               { id: 'POKTAN', label: 'Pengurus Poktan' },
               { id: 'KIOS', label: 'Kios KPL' },
-              { id: 'PETANI', label: 'Akun Petani' },
+              { id: 'SURVEYOR', label: 'Petugas Surveyor' },
             ].map((tab) => (
               <button
                 key={tab.id}
@@ -930,7 +944,7 @@ export default function UsersManagementPage() {
                     <option value="PPL">Penyuluh Lapangan (PPL)</option>
                     <option value="POKTAN">Pengurus Kelompok Tani (Poktan)</option>
                     <option value="KIOS">Petugas Kios Resmi (KPL)</option>
-                    <option value="PETANI">Petani Terdaftar</option>
+                    <option value="SURVEYOR">Petugas Surveyor Lapangan</option>
                   </select>
                 </div>
               </div>

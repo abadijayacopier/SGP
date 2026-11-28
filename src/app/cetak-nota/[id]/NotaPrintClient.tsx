@@ -121,11 +121,11 @@ export default function NotaPrintClient({ data }: PenyaluranProps) {
       {/* Top Action Bar (Hidden during print) */}
       <div className="max-w-4xl mx-auto px-4 mb-6 flex flex-wrap items-center justify-between gap-4 no-print">
         <Link
-          href="/penyaluran"
+          href="/kasir-poktan"
           className="inline-flex items-center gap-1.5 text-xs font-bold text-slate-600 hover:text-emerald-700 transition"
         >
           <ArrowLeft className="w-4 h-4" />
-          <span>Kembali ke Penyaluran</span>
+          <span>Kembali ke Kasir Poktan</span>
         </Link>
 
         {/* Format Selector Pills & Print Button */}

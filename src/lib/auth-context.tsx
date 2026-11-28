@@ -376,7 +376,7 @@ export const ROLE_PERMISSIONS: Record<
     ],
     menuItems: [
       { label: 'Workspace Kios', href: '/dashboard', iconName: 'dashboard' },
-      { label: 'Kasir Penebusan', href: '/penyaluran', iconName: 'penyaluran' },
+      { label: 'Kasir Penebusan Poktan', href: '/kasir-poktan', iconName: 'kasir-poktan' },
       {
         label: 'Gudang & Distribusi',
         iconName: 'kios',
@@ -438,7 +438,7 @@ export const ROLE_PERMISSIONS: Record<
   },
 };
 
-export const DEMO_USERS: Record<UserRole, UserSession> = {
+export const DEMO_USERS: Record<Exclude<UserRole, 'PETANI'>, UserSession> = {
   ADMIN_DINAS: {
     username: 'admin',
     name: 'MANTRI TANI',
@@ -456,15 +456,6 @@ export const DEMO_USERS: Record<UserRole, UserSession> = {
     wilayah: 'BPP Kecamatan Lembeyan',
     badgeColor: 'bg-blue-100 text-blue-800 border-blue-300',
     avatarText: 'PL',
-  },
-  SURVEYOR: {
-    username: 'surveyor_bpp',
-    name: 'Budi Santoso (Surveyor BPP)',
-    role: 'SURVEYOR',
-    roleLabel: 'Petugas Surveyor Lapangan',
-    wilayah: 'Unit Pemetaan BPP Lembeyan',
-    badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300',
-    avatarText: 'SV',
   },
   POKTAN: {
     username: 'poktan_suparman',
@@ -486,17 +477,14 @@ export const DEMO_USERS: Record<UserRole, UserSession> = {
     nip: 'Reg. KPL: KPL-LMB-008/2026',
     kiosName: 'CV. BUMI SUBUR',
   },
-  PETANI: {
-    username: 'petani_sukirno',
-    name: 'Sukirno',
-    role: 'PETANI',
-    roleLabel: 'Petani Terdaftar e-RDKK',
-    wilayah: 'Poktan Tani Makmur I - Kediren, Lembeyan',
-    badgeColor: 'bg-green-100 text-green-800 border-green-300',
-    avatarText: 'PT',
-    nik: '3509012304750001',
-    nip: 'NIK: 3509012304750001',
-    petaniId: 'cmvxfxr000009t0nc7z587tuy',
+  SURVEYOR: {
+    username: 'gis_supriyanto',
+    name: 'Supriyanto',
+    role: 'SURVEYOR',
+    roleLabel: 'Petugas Surveyor Lapangan',
+    wilayah: 'Tim Geodesi Kec. Lembeyan',
+    badgeColor: 'bg-emerald-100 text-emerald-800 border-emerald-300',
+    avatarText: 'SV',
   },
 };
 
@@ -594,7 +582,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const handleSetRole = async (role: UserRole) => {
     // Ambil sesi lengkap (beserta petaniId/poktanId) dari server agar data terisolasi
-    const fallback = DEMO_USERS[role];
+    const fallback = (DEMO_USERS as Record<string, UserSession>)[role] || DEMO_USERS.ADMIN_DINAS;
     persist(fallback);
     const session = await fetchSession(fallback.username);
     if (session) persist(session);

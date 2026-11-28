@@ -2,6 +2,7 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useAuth } from '@/lib/auth-context';
 import {
   formatRupiah,
@@ -68,7 +69,12 @@ interface PenyaluranItem {
 }
 
 export default function PenyaluranPage() {
+  const router = useRouter();
   const { currentUser } = useAuth();
+
+  useEffect(() => {
+    router.replace('/kasir-poktan');
+  }, [router]);
   const [activeTab, setActiveTab] = useState<'transaksi' | 'riwayat'>('transaksi');
   const [penyaluranList, setPenyaluranList] = useState<PenyaluranItem[]>([]);
   const [petaniList, setPetaniList] = useState<any[]>([]);
