@@ -79,7 +79,7 @@ export async function GET(request: Request) {
 
     let targetKiosName = selectedKios;
     if (!targetKiosName || !availableKiosNames.some((n) => n.toLowerCase() === targetKiosName.toLowerCase())) {
-      targetKiosName = availableKiosNames[0] || 'UD. BUMI SUBUR';
+      targetKiosName = availableKiosNames[0] || 'CV. BUMI SUBUR';
     }
 
     const matchedUser = kiosUsers.find(

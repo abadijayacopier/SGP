@@ -124,8 +124,8 @@ export async function POST(request: Request) {
         data: {
           nomorNota,
           petaniId,
-          namaKios: namaKios || 'UD. Tani Subur Barokah',
-          petugasKios: petugasKios || 'Petugas Kios',
+          namaKios: namaKios || 'CV. BUMI SUBUR',
+          petugasKios: petugasKios || 'H. Giarno',
           namaPengurusPoktan: namaPengurusPoktan || 'Pengurus Poktan Terverifikasi',
           tanggalPenyaluran: new Date(),
           jumlahUreaKg: ureaAmbil,
@@ -146,7 +146,7 @@ export async function POST(request: Request) {
       });
 
       // 3. Potong stok fisik Kios dan catat Mutasi Pengeluaran (Penyaluran Petani)
-      const targetKiosName = namaKios || 'UD. Tani Subur Barokah';
+      const targetKiosName = namaKios || 'CV. BUMI SUBUR';
       const itemsToDeduct = [
         { type: 'Urea', qty: ureaAmbil },
         { type: 'NPK', qty: npkAmbil },

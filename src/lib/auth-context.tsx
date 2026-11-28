@@ -477,14 +477,14 @@ export const DEMO_USERS: Record<UserRole, UserSession> = {
   },
   KIOS: {
     username: 'kios_bumisubur',
-    name: 'GIARNO',
+    name: 'H. Giarno',
     role: 'KIOS',
     roleLabel: 'Petugas Kios Resmi (KPL)',
     wilayah: 'Kios Resmi Kec. Lembeyan',
     badgeColor: 'bg-amber-100 text-amber-800 border-amber-300',
     avatarText: 'KP',
     nip: 'Reg. KPL: KPL-LMB-008/2026',
-    kiosName: 'UD. BUMI SUBUR',
+    kiosName: 'CV. BUMI SUBUR',
   },
   PETANI: {
     username: 'petani_sukirno',

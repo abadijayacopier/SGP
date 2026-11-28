@@ -28,10 +28,10 @@ export async function GET() {
         id: relatedStok[0]?.id || namaKios,
         namaKios,
         kodeKios: 'KPL-LMB-008',
-        pengelola: 'Petugas Kios',
+        pengelola: 'H. Giarno',
         username: 'kios_bumisubur',
         phone: '082155667788',
-        email: null,
+        email: 'kios.bumisubur@gmail.com',
         wilayah: 'Kecamatan Lembeyan',
         totalSisaKg,
         stokItems: relatedStok,
@@ -40,7 +40,7 @@ export async function GET() {
 
     // Perkaya atau tambahkan dari User role KIOS
     kiosUsers.forEach((u) => {
-      const kName = u.kiosName || 'UD. Tani Subur Barokah';
+      const kName = u.kiosName || 'CV. BUMI SUBUR';
       const existing = kiosListMap[kName];
       const relatedStok = allStok.filter((s) => s.namaKios === kName);
       const totalSisaKg = relatedStok.reduce((acc, s) => acc + s.stokSisaKg, 0);

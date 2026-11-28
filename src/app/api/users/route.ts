@@ -184,7 +184,7 @@ export async function PATCH(req: Request) {
         });
       } else if (updated.role === 'KIOS') {
         const oldKiosName = existingUser?.kiosName;
-        const newKiosName = updated.kiosName || 'UD. Tani Subur Barokah';
+        const newKiosName = updated.kiosName || 'CV. BUMI SUBUR';
         if (oldKiosName && newKiosName && oldKiosName !== newKiosName) {
           await prisma.stokKios.updateMany({
             where: { namaKios: oldKiosName },

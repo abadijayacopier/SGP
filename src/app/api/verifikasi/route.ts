@@ -405,7 +405,7 @@ export async function GET(request: Request) {
         statusColor: 'emerald',
         verifiedAt: timestamp,
         pihakTerkait: {
-          instansiPengecer: 'KPL UD. Tani Subur Barokah / BUMI SUBUR',
+          instansiPengecer: 'KPL CV. BUMI SUBUR',
           pengelola: 'Penanggung Jawab Kios Pengecer Lengkap',
           wilayahKerja: 'Kecamatan Lembeyan, Kab. Magetan',
           distributor: 'CV. Agro Tani Makmur / PT. Petrokimia Gresik',

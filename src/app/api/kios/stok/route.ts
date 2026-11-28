@@ -4,7 +4,7 @@ import { prisma } from '@/lib/prisma';
 export async function GET(request: Request) {
   try {
     const { searchParams } = new URL(request.url);
-    const namaKios = searchParams.get('namaKios') || 'UD. Tani Subur Barokah';
+    const namaKios = searchParams.get('namaKios') || 'CV. BUMI SUBUR';
 
     const stokList = await prisma.stokKios.findMany({
       where: { namaKios },

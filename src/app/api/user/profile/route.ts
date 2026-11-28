@@ -182,14 +182,15 @@ export async function GET(req: Request) {
         };
       }
     } else if (user.role === 'KIOS') {
-      const activeKios = user.kiosName || 'UD. Tani Subur Barokah';
+      const activeKios = user.kiosName || 'CV. BUMI SUBUR';
       const stokList = await prisma.stokKios.findMany({
         where: { namaKios: activeKios },
       });
       roleSpecificData = {
         namaKios: activeKios,
         kodeKios: 'KPL-LMB-008',
-        alamatKios: 'Jl. Raya Lembeyan No. 45, Kecamatan Lembeyan',
+        alamatKios: 'Kecamatan Lembeyan, Kabupaten Magetan',
+        pengelola: user.name || 'H. Giarno',
         totalStokSisaKg: stokList.reduce((acc, s) => acc + s.stokSisaKg, 0),
         jenisPupukCount: stokList.length,
       };
@@ -403,7 +404,7 @@ export async function PUT(req: Request) {
           });
         }
       } else if (user.role === 'KIOS') {
-        const newKiosName = user.kiosName || 'UD. Tani Subur Barokah';
+        const newKiosName = user.kiosName || 'CV. BUMI SUBUR';
         // Jika nama Kios / UD berubah, mutasikan ke semua data riwayat dan tabel gudang
         if (oldKiosName && newKiosName && oldKiosName !== newKiosName) {
           await prisma.stokKios.updateMany({

@@ -235,7 +235,7 @@ export default function CetakModelF6Page() {
                 </option>
               ))}
               {kiosList.length === 0 && (
-                <option value="UD. BUMI SUBUR">UD. BUMI SUBUR</option>
+                <option value="CV. BUMI SUBUR">CV. BUMI SUBUR</option>
               )}
             </select>
           </div>

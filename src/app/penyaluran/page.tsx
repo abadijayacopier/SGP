@@ -92,7 +92,7 @@ export default function PenyaluranPage() {
       ? `${currentUser.name} (Ketua ${currentUser.wilayah || 'Poktan'})`
       : 'H. Suparman (Ketua Poktan Tani Makmur I)'
   );
-  const [namaKios, setNamaKios] = useState(currentUser.kiosName || 'UD. Tani Subur Barokah');
+  const [namaKios, setNamaKios] = useState(currentUser.kiosName || 'CV. BUMI SUBUR');
   const [petugasKios, setPetugasKios] = useState(currentUser.name);
   const [fotoKtp, setFotoKtp] = useState('/uploads/sample_ktp.svg');
   const [fotoDiri, setFotoDiri] = useState('/uploads/sample_petani_face.svg');

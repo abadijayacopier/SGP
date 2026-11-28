@@ -98,7 +98,7 @@ export default function KiosPage() {
   // Multi-Kios & Switcher State
   const [kiosList, setKiosList] = useState<KiosSummary[]>([]);
   const [selectedKios, setSelectedKios] = useState<string>(
-    currentUser?.kiosName || 'UD. Tani Subur Barokah'
+    currentUser?.kiosName || 'CV. BUMI SUBUR'
   );
   const [showTambahKiosModal, setShowTambahKiosModal] = useState(false);
   const [submittingKios, setSubmittingKios] = useState(false);
@@ -188,7 +188,7 @@ export default function KiosPage() {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const activeKios = selectedKios || currentUser?.kiosName || 'UD. Tani Subur Barokah';
+      const activeKios = selectedKios || currentUser?.kiosName || 'CV. BUMI SUBUR';
       const [resStok, resMutasi] = await Promise.all([
         fetch(`/api/kios/stok?namaKios=${encodeURIComponent(activeKios)}`),
         fetch(`/api/kios/mutasi?namaKios=${encodeURIComponent(activeKios)}&limit=100`),
@@ -560,11 +560,11 @@ export default function KiosPage() {
 
       {/* INFO BANNER KIOS */}
       {(() => {
-        const activeKios = selectedKios || currentUser?.kiosName || 'UD. Tani Subur Barokah';
+        const activeKios = selectedKios || currentUser?.kiosName || 'CV. BUMI SUBUR';
         const activeKiosObj = kiosList.find((k) => k.namaKios === activeKios);
         const displayKode = activeKiosObj?.kodeKios || 'KPL-LMB-008';
-        const displayWilayah = activeKiosObj?.wilayah || 'Wilayah Kecamatan Lembeyan';
-        const displayPengelola = activeKiosObj?.pengelola || currentUser?.name || 'Petugas KPL';
+        const displayWilayah = activeKiosObj?.wilayah || 'Kecamatan Lembeyan';
+        const displayPengelola = activeKiosObj?.pengelola || (currentUser?.role === 'KIOS' ? currentUser?.name : 'H. Giarno');
 
         return (
           <div className="bg-gradient-to-r from-emerald-900 via-slate-900 to-emerald-950 rounded-3xl p-6 sm:p-7 text-white shadow-md relative overflow-hidden">
@@ -1608,10 +1608,10 @@ export default function KiosPage() {
                   <p className="font-bold text-slate-900 underline uppercase">
                     {currentUser?.role === 'KIOS'
                       ? currentUser.name
-                      : selectedMutasiBast.petugas || 'Hj. Siti Romlah'}
+                      : selectedMutasiBast.petugas || 'H. Giarno'}
                   </p>
                   <p className="text-[10px] text-slate-400">
-                    {currentUser?.kiosName || 'UD. Tani Subur Barokah'}
+                    {currentUser?.kiosName || 'CV. BUMI SUBUR'}
                   </p>
                 </div>
               </div>

@@ -62,7 +62,7 @@
 | **Admin Dinas** | `admin` | `123456` | Pemerintah Kecamatan Lembeyan |
 | **PPL Pertanian** | `ppl_iissugiarti` | `123456` | BPP Kecamatan Lembeyan |
 | **Ketua Poktan** | `poktan_suparman` | `123456` | Poktan Wilayah Desa Kediren |
-| **Kios Pupuk (KPL)** | `kios_subur` | `123456` | Kios UD. Tani Subur Barokah |
+| **Kios Pupuk (KPL)** | `kios_subur` | `123456` | Kios CV. BUMI SUBUR |
 
 ---
 
