@@ -492,7 +492,7 @@ export default function AlokasiPoktanPage() {
         if (available.length > 0) {
           const first = available[0];
           setSelectedNewPetaniId(first.id);
-          const luas = Number(first.totalLuasLahan) || 0.5;
+          const luas = Number(first.totalLuasLahan) || Number(first.lahan?.[0]?.luasHa) || 0;
           setTambahForm({
             komoditas: first.lahan?.[0]?.komoditas || 'Padi',
             luasHa: luas,
@@ -1463,7 +1463,7 @@ export default function AlokasiPoktanPage() {
                     setSelectedNewPetaniId(id);
                     const found = petaniCandidates.find((p) => p.id === id);
                     if (found) {
-                      const luas = Number(found.totalLuasLahan) || 0.5;
+                      const luas = Number(found.totalLuasLahan) || Number(found.lahan?.[0]?.luasHa) || 0;
                       setTambahForm({
                         ...tambahForm,
                         luasHa: luas,
@@ -1479,7 +1479,7 @@ export default function AlokasiPoktanPage() {
                   <option value="">-- Pilih Petani --</option>
                   {petaniCandidates.map((p) => (
                     <option key={p.id} value={p.id}>
-                      {p.nama} (NIK: {p.nik} - Luas: {p.totalLuasLahan || 0.5} Ha)
+                      {p.nama} (NIK: {p.nik} - Luas: {p.totalLuasLahan || 0} Ha)
                     </option>
                   ))}
                 </select>

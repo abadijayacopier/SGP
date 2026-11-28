@@ -28,10 +28,15 @@ export async function GET(request: Request) {
 
     const data = petaniList.map((petani, index) => {
       const alokasi = petani.alokasiPupuk[0];
+      const sumLahan = petani.lahan.reduce((acc, l) => acc + (l.luasHa || 0), 0);
       const totalLuas =
         petani.totalLuasLahan > 0
           ? petani.totalLuasLahan
-          : petani.lahan.reduce((acc, l) => acc + (l.luasHa || 0), 0) || 0.5;
+          : alokasi?.luasTanamHa && Number(alokasi.luasTanamHa) > 0
+          ? Number(alokasi.luasTanamHa)
+          : sumLahan > 0
+          ? sumLahan
+          : 0;
 
       return {
         no: index + 1,

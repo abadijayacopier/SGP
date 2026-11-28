@@ -124,12 +124,14 @@ export async function POST(request: Request) {
       const ureaStr = String(getVal(['urea'])).trim();
       const npkStr = String(getVal(['npk', 'phonska', 'npk/phonska'])).trim();
       const organikStr = String(getVal(['organik', 'petroganik'])).trim();
+      const luasStr = String(getVal(['luas', 'luas tanam', 'luas lahan'])).trim();
 
       if (!nik && !nama) continue;
 
       const jatahUrea = parseFloat(ureaStr.replace(/[^0-9.]/g, '')) || 0;
       const jatahNpk = parseFloat(npkStr.replace(/[^0-9.]/g, '')) || 0;
       const jatahOrganik = parseFloat(organikStr.replace(/[^0-9.]/g, '')) || 0;
+      const luasRow = parseFloat(luasStr.replace(/,/g, '.').replace(/[^0-9.]/g, '')) || 0;
 
       // Cari petani di database berdasarkan NIK atau Nama
       let petani = null;
@@ -166,7 +168,7 @@ export async function POST(request: Request) {
               kecamatan: 'Lembeyan',
               kabupaten: 'Magetan',
               poktanId: defaultPoktan,
-              totalLuasLahan: 0.5,
+              totalLuasLahan: luasRow > 0 ? luasRow : 0,
               telepon: telpRow,
             },
             include: { lahan: true },
@@ -178,10 +180,15 @@ export async function POST(request: Request) {
         }
       }
 
+      const sumLahan = petani.lahan.reduce((acc, l) => acc + (l.luasHa || 0), 0);
       const totalLuas =
         petani.totalLuasLahan > 0
           ? petani.totalLuasLahan
-          : petani.lahan.reduce((acc, l) => acc + (l.luasHa || 0), 0) || 0.5;
+          : sumLahan > 0
+          ? sumLahan
+          : luasRow > 0
+          ? luasRow
+          : 0;
 
       // Cek apakah alokasi sudah ada untuk tahun & musim tanam ini
       const existing = await prisma.alokasiPupuk.findFirst({
