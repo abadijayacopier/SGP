@@ -11,7 +11,7 @@ interface LahanPrintHeaderProps {
     id: string;
     kodeLahan: string;
     namaLahan: string;
-    komoditas: string;
+    komoditas?: string;
     luasHa: number;
     petani?: {
       id: string;
@@ -23,7 +23,13 @@ interface LahanPrintHeaderProps {
     id: string;
     kodeLahan: string;
     namaLahan: string;
+    komoditas?: string;
     luasHa: number;
+    petani?: {
+      id: string;
+      nama: string;
+      desa?: string;
+    } | null;
   }>;
   namaPetani?: string;
 }
@@ -35,6 +41,21 @@ export default function LahanPrintHeader({
   namaPetani = '',
 }: LahanPrintHeaderProps) {
   const router = useRouter();
+
+  // Pisahkan lahan milik petani saat ini dengan lahan milik petani lain
+  const currentPetaniLahan = React.useMemo(() => {
+    if (lahanPetaniList && lahanPetaniList.length > 0) {
+      return lahanPetaniList;
+    }
+    const current = allLahanList.find((l) => l.id === currentLahanId);
+    if (!current?.petani?.id) return [];
+    return allLahanList.filter((l) => l.petani?.id === current.petani?.id);
+  }, [lahanPetaniList, allLahanList, currentLahanId]);
+
+  const otherLahanList = React.useMemo(() => {
+    const currentIds = new Set(currentPetaniLahan.map((l) => l.id));
+    return allLahanList.filter((l) => !currentIds.has(l.id));
+  }, [allLahanList, currentPetaniLahan]);
 
   return (
     <div className="max-w-4xl mx-auto px-4 mb-6 space-y-2.5 no-print">
@@ -58,9 +79,9 @@ export default function LahanPrintHeader({
 
         {/* Dropdown Ganti Lahan */}
         <div className="flex-1 flex items-center gap-2 min-w-0">
-          <label className="text-[11px] font-bold text-slate-500 shrink-0 hidden sm:flex items-center gap-1">
+          <label className="text-[11px] font-bold text-slate-600 shrink-0 hidden sm:flex items-center gap-1">
             <Layers className="w-3.5 h-3.5 text-emerald-600" />
-            Ganti Lahan:
+            <span>Pilih Blok Lahan:</span>
           </label>
           <div className="relative w-full">
             <select
@@ -72,11 +93,36 @@ export default function LahanPrintHeader({
               }}
               className="w-full bg-slate-50 hover:bg-slate-100/80 focus:bg-white border border-slate-300 text-slate-800 rounded-xl pl-3 pr-8 py-2 text-xs font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500 transition cursor-pointer appearance-none truncate"
             >
-              {allLahanList.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.kodeLahan} • {item.petani?.nama || '-'} ({item.komoditas || 'Padi'} - {item.luasHa} Ha) — Desa {item.petani?.desa || '-'}
-                </option>
-              ))}
+              {/* Grup 1: Seluruh Blok Petak Milik Petani Ini (Prioritas Utama) */}
+              {currentPetaniLahan.length > 0 ? (
+                <optgroup
+                  label={`📍 Blok Lahan Milik ${namaPetani || 'Petani Ini'} (${currentPetaniLahan.length} Petak Terdaftar)`}
+                >
+                  {currentPetaniLahan.map((item, idx) => (
+                    <option key={item.id} value={item.id}>
+                      {currentPetaniLahan.length > 1 ? `Blok ${idx + 1}: ` : ''}
+                      {item.kodeLahan} • {item.namaLahan} ({item.komoditas || 'Padi'} - {item.luasHa} Ha)
+                    </option>
+                  ))}
+                </optgroup>
+              ) : (
+                allLahanList.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.kodeLahan} • {item.petani?.nama || '-'} ({item.komoditas || 'Padi'} - {item.luasHa} Ha)
+                  </option>
+                ))
+              )}
+
+              {/* Grup 2: Opsi beralih ke Lahan Petani Lainnya se-Kecamatan */}
+              {otherLahanList.length > 0 && (
+                <optgroup label="── Ganti ke Petani Lainnya (Se-Kecamatan) ──">
+                  {otherLahanList.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.petani?.nama || '-'} • {item.kodeLahan} - {item.namaLahan} ({item.luasHa} Ha)
+                    </option>
+                  ))}
+                </optgroup>
+              )}
             </select>
             <ChevronDown className="w-4 h-4 text-slate-400 absolute right-2.5 top-1/2 -translate-y-1/2 pointer-events-none" />
           </div>
@@ -103,25 +149,25 @@ export default function LahanPrintHeader({
       </div>
 
       {/* Shortcut Lahan Lain Milik Petani yang Sama */}
-      {lahanPetaniList.length > 1 && (
+      {currentPetaniLahan.length > 1 && (
         <div className="flex items-center gap-2 px-1 text-xs">
           <span className="text-[11px] font-bold text-slate-500">
-            Petak lain milik {namaPetani} ({lahanPetaniList.length} Petak):
+            Blok lain milik {namaPetani} ({currentPetaniLahan.length} Blok):
           </span>
           <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar">
-            {lahanPetaniList.map((p) => {
+            {currentPetaniLahan.map((p, idx) => {
               const isCurrent = p.id === currentLahanId;
               return (
                 <Link
                   key={p.id}
                   href={`/cetak-lahan/${p.id}`}
-                  className={`px-2.5 py-0.5 rounded-lg text-[10px] font-bold border transition ${
+                  className={`px-2.5 py-1 rounded-lg text-[11px] font-bold border transition ${
                     isCurrent
                       ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs'
-                      : 'bg-white hover:bg-emerald-50 text-slate-700 border-slate-200'
+                      : 'bg-white hover:bg-emerald-50 text-slate-700 border-slate-300'
                   }`}
                 >
-                  {p.kodeLahan} ({p.luasHa} Ha)
+                  Blok {idx + 1}: {p.namaLahan} ({p.luasHa} Ha)
                 </Link>
               );
             })}

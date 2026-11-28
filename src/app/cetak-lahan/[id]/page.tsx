@@ -34,6 +34,7 @@ export default async function CetakLahanPage({ params }: Props) {
   let lahan: any = null;
   let pplUser: any = null;
   let allLahanList: any[] = [];
+  let lahanPetaniList: any[] = [];
   let petaniUser: any = null;
   let poktanUser: any = null;
 
@@ -78,6 +79,18 @@ export default async function CetakLahanPage({ params }: Props) {
     ]);
     pplUser = pplResult;
     allLahanList = lahanListResult;
+
+    if (lahan?.petaniId) {
+      lahanPetaniList = await prisma.lahan.findMany({
+        where: { petaniId: lahan.petaniId },
+        include: {
+          petani: {
+            select: { id: true, nama: true, desa: true },
+          },
+        },
+        orderBy: { kodeLahan: 'asc' },
+      });
+    }
 
     if (lahan) {
       const userResults = await Promise.all([
@@ -218,7 +231,7 @@ export default async function CetakLahanPage({ params }: Props) {
       <LahanPrintHeader
         currentLahanId={lahan.id}
         allLahanList={allLahanList}
-        lahanPetaniList={lahan.petani?.lahan || []}
+        lahanPetaniList={lahanPetaniList}
         namaPetani={lahan.petani?.nama || ''}
       />
 
