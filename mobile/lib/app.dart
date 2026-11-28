@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'core/constants/app_colors.dart';
-import 'features/auth/presentation/screens/role_select_screen.dart';
+import 'features/dashboard/presentation/screens/gojek_style_home_screen.dart';
 
 class PertanianApp extends StatelessWidget {
   const PertanianApp({super.key});
@@ -23,7 +23,7 @@ class PertanianApp extends StatelessWidget {
           centerTitle: false,
         ),
       ),
-      home: const RoleSelectScreen(),
+      home: const GojekStyleHomeScreen(),
     );
   }
 }
