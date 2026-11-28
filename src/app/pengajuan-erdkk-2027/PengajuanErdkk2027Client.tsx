@@ -72,11 +72,11 @@ export default function PengajuanErdkk2027Client({ poktanList }: Props) {
     catatan: '',
     // 3 Musim Tanam 2027
     rencanaMt1Komoditas: 'Padi',
-    rencanaMt1LuasHa: 0.5,
+    rencanaMt1LuasHa: 0.14,
     rencanaMt2Komoditas: 'Jagung',
-    rencanaMt2LuasHa: 0.5,
+    rencanaMt2LuasHa: 0.14,
     rencanaMt3Komoditas: 'Padi',
-    rencanaMt3LuasHa: 0.5,
+    rencanaMt3LuasHa: 0.14,
     // Berkas
     fileKtp: '',
     fileKk: '',
@@ -832,24 +832,82 @@ export default function PengajuanErdkk2027Client({ poktanList }: Props) {
                     </select>
                   </div>
 
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
-                      Luas Tanam (Ha):
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0.05"
-                      max="10"
-                      value={formData.rencanaMt1LuasHa}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          rencanaMt1LuasHa: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      className="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-mono font-bold text-emerald-900"
-                    />
+                  {/* Kolom Input Pipil (m²) & Otomatis Konversi ke Hektar (Ha) */}
+                  <div className="space-y-1.5">
+                    <div className="grid grid-cols-2 gap-2">
+                      {/* Kolom 1: Luas Pipil (m²) */}
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 block mb-1 truncate">
+                          Luas Pipil (m²):
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            step="1"
+                            min="0"
+                            placeholder="Misal: 1400"
+                            value={
+                              formData.rencanaMt1LuasHa
+                                ? Math.round(formData.rencanaMt1LuasHa * 10000)
+                                : ''
+                            }
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              const m2 = val === '' ? 0 : parseFloat(val);
+                              const ha = Math.round((m2 / 10000) * 10000) / 10000;
+                              setFormData({
+                                ...formData,
+                                rencanaMt1LuasHa: ha,
+                              });
+                            }}
+                            className="w-full bg-white border border-slate-300 rounded-xl pl-2.5 pr-7 py-1.5 text-xs font-mono font-bold text-emerald-900 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-2xs"
+                          />
+                          <span className="absolute right-2 top-2 text-[10px] font-bold text-slate-400 pointer-events-none">
+                            m²
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Kolom 2: Konversi Otomatis Hektar (Ha) - Masuk ke e-RDKK */}
+                      <div>
+                        <label className="text-[11px] font-bold text-emerald-800 block mb-1 truncate flex items-center justify-between">
+                          <span>Konversi (Ha):</span>
+                          <span className="text-[9px] bg-emerald-200/80 text-emerald-900 px-1.5 py-0.2 rounded font-black">
+                            e-RDKK
+                          </span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            step="0.0001"
+                            min="0"
+                            placeholder="0,14"
+                            value={formData.rencanaMt1LuasHa || ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              const ha = val === '' ? 0 : parseFloat(val);
+                              setFormData({
+                                ...formData,
+                                rencanaMt1LuasHa: ha,
+                              });
+                            }}
+                            className="w-full bg-emerald-100/70 border border-emerald-300 rounded-xl pl-2.5 pr-7 py-1.5 text-xs font-mono font-extrabold text-emerald-950 focus:outline-none focus:ring-2 focus:ring-emerald-500 shadow-2xs"
+                          />
+                          <span className="absolute right-2 top-2 text-[10px] font-extrabold text-emerald-700 pointer-events-none">
+                            Ha
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-[10px] text-emerald-800/80 flex items-center justify-between pt-0.5 font-medium">
+                      <span>
+                        Pipil: <strong>{formData.rencanaMt1LuasHa ? (formData.rencanaMt1LuasHa * 10000).toLocaleString('id-ID') : 0} m²</strong>
+                      </span>
+                      <span>
+                        &rarr; Masuk e-RDKK: <strong className="text-emerald-900">{formData.rencanaMt1LuasHa || 0} Ha</strong>
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -883,24 +941,82 @@ export default function PengajuanErdkk2027Client({ poktanList }: Props) {
                     </select>
                   </div>
 
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
-                      Luas Tanam (Ha):
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      max="10"
-                      value={formData.rencanaMt2LuasHa}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          rencanaMt2LuasHa: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      className="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-mono font-bold text-amber-900"
-                    />
+                  {/* Kolom Input Pipil (m²) & Otomatis Konversi ke Hektar (Ha) */}
+                  <div className="space-y-1.5">
+                    <div className="grid grid-cols-2 gap-2">
+                      {/* Kolom 1: Luas Pipil (m²) */}
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 block mb-1 truncate">
+                          Luas Pipil (m²):
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            step="1"
+                            min="0"
+                            placeholder="Misal: 1400"
+                            value={
+                              formData.rencanaMt2LuasHa
+                                ? Math.round(formData.rencanaMt2LuasHa * 10000)
+                                : ''
+                            }
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              const m2 = val === '' ? 0 : parseFloat(val);
+                              const ha = Math.round((m2 / 10000) * 10000) / 10000;
+                              setFormData({
+                                ...formData,
+                                rencanaMt2LuasHa: ha,
+                              });
+                            }}
+                            className="w-full bg-white border border-slate-300 rounded-xl pl-2.5 pr-7 py-1.5 text-xs font-mono font-bold text-amber-900 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs"
+                          />
+                          <span className="absolute right-2 top-2 text-[10px] font-bold text-slate-400 pointer-events-none">
+                            m²
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Kolom 2: Konversi Otomatis Hektar (Ha) - Masuk ke e-RDKK */}
+                      <div>
+                        <label className="text-[11px] font-bold text-amber-900 block mb-1 truncate flex items-center justify-between">
+                          <span>Konversi (Ha):</span>
+                          <span className="text-[9px] bg-amber-200/80 text-amber-900 px-1.5 py-0.2 rounded font-black">
+                            e-RDKK
+                          </span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            step="0.0001"
+                            min="0"
+                            placeholder="0,14"
+                            value={formData.rencanaMt2LuasHa || ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              const ha = val === '' ? 0 : parseFloat(val);
+                              setFormData({
+                                ...formData,
+                                rencanaMt2LuasHa: ha,
+                              });
+                            }}
+                            className="w-full bg-amber-100/70 border border-amber-300 rounded-xl pl-2.5 pr-7 py-1.5 text-xs font-mono font-extrabold text-amber-950 focus:outline-none focus:ring-2 focus:ring-amber-500 shadow-2xs"
+                          />
+                          <span className="absolute right-2 top-2 text-[10px] font-extrabold text-amber-800 pointer-events-none">
+                            Ha
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-[10px] text-amber-900/80 flex items-center justify-between pt-0.5 font-medium">
+                      <span>
+                        Pipil: <strong>{formData.rencanaMt2LuasHa ? (formData.rencanaMt2LuasHa * 10000).toLocaleString('id-ID') : 0} m²</strong>
+                      </span>
+                      <span>
+                        &rarr; Masuk e-RDKK: <strong className="text-amber-950">{formData.rencanaMt2LuasHa || 0} Ha</strong>
+                      </span>
+                    </div>
                   </div>
                 </div>
 
@@ -934,24 +1050,82 @@ export default function PengajuanErdkk2027Client({ poktanList }: Props) {
                     </select>
                   </div>
 
-                  <div>
-                    <label className="text-[11px] font-bold text-slate-700 block mb-1">
-                      Luas Tanam (Ha):
-                    </label>
-                    <input
-                      type="number"
-                      step="0.01"
-                      min="0"
-                      max="10"
-                      value={formData.rencanaMt3LuasHa}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          rencanaMt3LuasHa: parseFloat(e.target.value) || 0,
-                        })
-                      }
-                      className="w-full bg-white border border-slate-300 rounded-xl px-2.5 py-1.5 text-xs font-mono font-bold text-teal-900"
-                    />
+                  {/* Kolom Input Pipil (m²) & Otomatis Konversi ke Hektar (Ha) */}
+                  <div className="space-y-1.5">
+                    <div className="grid grid-cols-2 gap-2">
+                      {/* Kolom 1: Luas Pipil (m²) */}
+                      <div>
+                        <label className="text-[11px] font-bold text-slate-700 block mb-1 truncate">
+                          Luas Pipil (m²):
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            step="1"
+                            min="0"
+                            placeholder="Misal: 1400"
+                            value={
+                              formData.rencanaMt3LuasHa
+                                ? Math.round(formData.rencanaMt3LuasHa * 10000)
+                                : ''
+                            }
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              const m2 = val === '' ? 0 : parseFloat(val);
+                              const ha = Math.round((m2 / 10000) * 10000) / 10000;
+                              setFormData({
+                                ...formData,
+                                rencanaMt3LuasHa: ha,
+                              });
+                            }}
+                            className="w-full bg-white border border-slate-300 rounded-xl pl-2.5 pr-7 py-1.5 text-xs font-mono font-bold text-teal-900 focus:outline-none focus:ring-2 focus:ring-teal-500 shadow-2xs"
+                          />
+                          <span className="absolute right-2 top-2 text-[10px] font-bold text-slate-400 pointer-events-none">
+                            m²
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Kolom 2: Konversi Otomatis Hektar (Ha) - Masuk ke e-RDKK */}
+                      <div>
+                        <label className="text-[11px] font-bold text-teal-900 block mb-1 truncate flex items-center justify-between">
+                          <span>Konversi (Ha):</span>
+                          <span className="text-[9px] bg-teal-200/80 text-teal-900 px-1.5 py-0.2 rounded font-black">
+                            e-RDKK
+                          </span>
+                        </label>
+                        <div className="relative">
+                          <input
+                            type="number"
+                            step="0.0001"
+                            min="0"
+                            placeholder="0,14"
+                            value={formData.rencanaMt3LuasHa || ''}
+                            onChange={(e) => {
+                              const val = e.target.value;
+                              const ha = val === '' ? 0 : parseFloat(val);
+                              setFormData({
+                                ...formData,
+                                rencanaMt3LuasHa: ha,
+                              });
+                            }}
+                            className="w-full bg-teal-100/70 border border-teal-300 rounded-xl pl-2.5 pr-7 py-1.5 text-xs font-mono font-extrabold text-teal-950 focus:outline-none focus:ring-2 focus:ring-teal-500 shadow-2xs"
+                          />
+                          <span className="absolute right-2 top-2 text-[10px] font-extrabold text-teal-700 pointer-events-none">
+                            Ha
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-[10px] text-teal-900/80 flex items-center justify-between pt-0.5 font-medium">
+                      <span>
+                        Pipil: <strong>{formData.rencanaMt3LuasHa ? (formData.rencanaMt3LuasHa * 10000).toLocaleString('id-ID') : 0} m²</strong>
+                      </span>
+                      <span>
+                        &rarr; Masuk e-RDKK: <strong className="text-teal-950">{formData.rencanaMt3LuasHa || 0} Ha</strong>
+                      </span>
+                    </div>
                   </div>
                 </div>
               </div>
